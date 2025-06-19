@@ -1,7 +1,7 @@
 """API ViewSet for Thread model."""
 
 from django.conf import settings
-from django.db.models import Exists, OuterRef, Count, Q
+from django.db.models import Count, Exists, OuterRef, Q
 
 
 import rest_framework as drf
@@ -18,7 +18,7 @@ from rest_framework import mixins, viewsets, status
 
 from rest_framework.response import Response
 
-from core import models, enums
+from core import enums, models
 from core.search import search_threads
 from core.ai.thread_summarizer import summarize_thread, generate_answer
 
@@ -121,7 +121,6 @@ class ThreadViewSet(
                 location=OpenApiParameter.QUERY,
                 description="Search threads by content (subject, sender, recipients, message body).",
             ),
-
             OpenApiParameter(
                 name="has_trashed",
                 type=OpenApiTypes.INT,
@@ -151,8 +150,7 @@ class ThreadViewSet(
                 type=OpenApiTypes.STR,
                 location=OpenApiParameter.QUERY,
                 required=True,
-                description=
-                """Comma-separated list of fields to aggregate.
+                description="""Comma-separated list of fields to aggregate.
                 Special values: 'all' (count all threads), 'all_unread' (count all unread threads).
                 Boolean fields: has_trashed, has_draft, has_starred, has_sender, has_active, is_spam, has_messages.
                 Unread variants ('_unread' suffix): count threads where the condition is true AND the thread is unread.
@@ -208,8 +206,13 @@ class ThreadViewSet(
 
         # Define valid base fields that can be counted
         valid_base_fields = {
-            "has_trashed", "has_draft", "has_starred",
-            "has_sender", "has_active", "is_spam", "has_messages"
+            "has_trashed",
+            "has_draft",
+            "has_starred",
+            "has_sender",
+            "has_active",
+            "is_spam",
+            "has_messages",
         }
 
         # Special fields
@@ -242,19 +245,21 @@ class ThreadViewSet(
 
             if field == "all":
                 # Count all threads matching the filter
-                aggregations[agg_key] = Count('pk')
+                aggregations[agg_key] = Count("pk")
             elif field == "all_unread":
                 # Count all unread threads matching the filter
-                aggregations[agg_key] = Count('pk', filter=Q(has_unread=True))
+                aggregations[agg_key] = Count("pk", filter=Q(has_unread=True))
             elif field.endswith("_unread"):
                 # Count threads that match the condition AND are unread
                 base_field = field[:-7]  # Remove "_unread" suffix
                 base_condition = Q(**{base_field: True})
                 unread_condition = Q(has_unread=True)
-                aggregations[agg_key] = Count('pk', filter=base_condition & unread_condition)
+                aggregations[agg_key] = Count(
+                    "pk", filter=base_condition & unread_condition
+                )
             else:
                 # Count threads where the boolean field is True
-                aggregations[agg_key] = Count('pk', filter=Q(**{field: True}))
+                aggregations[agg_key] = Count("pk", filter=Q(**{field: True}))
 
         if not aggregations:
             return drf.response.Response(
@@ -294,7 +299,6 @@ class ThreadViewSet(
                 location=OpenApiParameter.QUERY,
                 description="Search threads by content (subject, sender, recipients, message body).",
             ),
-
             OpenApiParameter(
                 name="has_trashed",
                 type=OpenApiTypes.INT,
