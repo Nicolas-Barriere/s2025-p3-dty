@@ -545,6 +545,301 @@ class AlbertChatbot:
         logger.info(f"Completed batch processing: {len(results)} results")
         return results
 
+    def detect_intent(self, user_message: str) -> Dict[str, Any]:
+        """
+        Detect user intent from their message using keyword analysis and AI assistance.
+        
+        Args:
+            user_message: The user's input message
+            
+        Returns:
+            Dictionary containing intent information
+        """
+        try:
+            logger.info("Detecting user intent")
+            
+            # Simple keyword-based detection first
+            message_lower = user_message.lower()
+            
+            # High confidence keyword detection
+            if any(keyword in message_lower for keyword in ['résume', 'résumé', 'synthèse', 'analyse cet email', 'que dit cet email']):
+                return {
+                    'success': True,
+                    'intent': 'summarize_email',
+                    'confidence': 0.9,
+                    'extracted_content': user_message,
+                    'reasoning': 'Mots-clés de résumé détectés'
+                }
+            
+            if any(keyword in message_lower for keyword in ['réponds', 'réponse', 'écris une réponse', 'réponds à cet email', 'génère une réponse']):
+                return {
+                    'success': True,
+                    'intent': 'generate_reply',
+                    'confidence': 0.9,
+                    'extracted_content': user_message,
+                    'reasoning': 'Mots-clés de réponse détectés'
+                }
+            
+            if any(keyword in message_lower for keyword in ['classe', 'catégorise', 'quel type', 'priorité', 'classifie']):
+                return {
+                    'success': True,
+                    'intent': 'classify_email',
+                    'confidence': 0.9,
+                    'extracted_content': user_message,
+                    'reasoning': 'Mots-clés de classification détectés'
+                }
+            
+            # Try AI-based detection as fallback using simple text analysis
+            system_prompt = """
+            Analyse ce message utilisateur et détermine son intention principale. Réponds uniquement avec l'un de ces mots:
+            - "summarize_email" si l'utilisateur veut résumer un email
+            - "generate_reply" si l'utilisateur veut générer une réponse à un email  
+            - "classify_email" si l'utilisateur veut classer/catégoriser un email
+            - "conversation" pour tout autre cas (discussion, questions générales, etc.)
+            
+            Sois strict: choisis "conversation" si tu n'es pas sûr à 80% que c'est une demande email spécifique.
+            """
+            
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Message: {user_message}"}
+            ]
+            
+            response = self._make_request(messages)
+            
+            # Extract response content
+            choice = response.get('choices', [{}])[0]
+            message = choice.get('message', {})
+            content = message.get('content', '').strip().lower()
+            
+            # Parse AI response
+            if 'summarize_email' in content:
+                intent = 'summarize_email'
+                confidence = 0.8
+            elif 'generate_reply' in content:
+                intent = 'generate_reply'
+                confidence = 0.8
+            elif 'classify_email' in content:
+                intent = 'classify_email'
+                confidence = 0.8
+            else:
+                intent = 'conversation'
+                confidence = 0.9
+            
+            logger.info(f"AI detected intent: {intent} with confidence: {confidence}")
+            return {
+                'success': True,
+                'intent': intent,
+                'confidence': confidence,
+                'extracted_content': user_message,
+                'reasoning': f'Détection IA: {content}'
+            }
+            
+        except Exception as e:
+            logger.error(f"Error detecting intent: {e}")
+            return {
+                'success': True,
+                'intent': 'conversation',
+                'confidence': 0.5,
+                'reasoning': f'Error occurred, defaulting to conversation: {str(e)}'
+            }
+
+    def chat_conversation(self, user_message: str, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
+        """
+        Handle conversational chat with the user.
+        
+        Args:
+            user_message: The user's message
+            conversation_history: Previous conversation messages (optional)
+            
+        Returns:
+            Dictionary containing the conversational response
+        """
+        try:
+            logger.info("Generating conversational response")
+            
+            if conversation_history is None:
+                conversation_history = []
+            
+            system_prompt = """
+            Tu es un assistant intelligent et amical spécialisé dans la gestion d'emails. Tu peux aider les utilisateurs avec:
+            - La gestion et l'organisation de leurs emails
+            - La rédaction de réponses professionnelles
+            - L'analyse et le résumé de contenu d'emails
+            - Des conseils sur la communication par email
+            - Des questions générales liées à la productivité
+
+            Réponds toujours en français de manière claire, utile et engageante. Si l'utilisateur semble vouloir effectuer une action spécifique sur un email (résumer, répondre, classer), guide-le gentiment.
+            """
+            
+            messages = [{"role": "system", "content": system_prompt}]
+            
+            # Add conversation history
+            messages.extend(conversation_history)
+            
+            # Add current user message
+            messages.append({"role": "user", "content": user_message})
+            
+            response = self._make_request(messages)
+            
+            # Extract response content
+            choice = response.get('choices', [{}])[0]
+            message = choice.get('message', {})
+            content = message.get('content', '').strip()
+            
+            if content:
+                logger.info("Successfully generated conversational response")
+                return {
+                    'success': True,
+                    'response': content,
+                    'type': 'conversation'
+                }
+            
+            logger.warning("No content in conversational response")
+            return {
+                'success': True,
+                'response': 'Je suis désolé, je n\'ai pas pu générer une réponse appropriée. Pouvez-vous reformuler votre question ?',
+                'type': 'conversation'
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in conversational chat: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'response': 'Une erreur s\'est produite. Comment puis-je vous aider autrement ?',
+                'type': 'conversation'
+            }
+
+    def process_user_message(self, user_message: str, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
+        """
+        Main entry point for processing user messages with intent detection and function calling.
+        
+        Args:
+            user_message: The user's input message
+            conversation_history: Previous conversation messages (optional)
+            
+        Returns:
+            Dictionary containing the appropriate response based on detected intent
+        """
+        try:
+            logger.info(f"Processing user message: {user_message[:100]}...")
+            
+            # Step 1: Detect user intent
+            intent_result = self.detect_intent(user_message)
+            
+            if not intent_result.get('success'):
+                return self.chat_conversation(user_message, conversation_history)
+            
+            intent = intent_result.get('intent', 'conversation')
+            confidence = intent_result.get('confidence', 0.5)
+            
+            logger.info(f"Detected intent: {intent} with confidence: {confidence}")
+            
+            # Step 2: Route to appropriate handler based on intent
+            if intent == 'conversation' or confidence < 0.7:
+                # Default to conversation for low confidence or explicit conversation intent
+                return self.chat_conversation(user_message, conversation_history)
+            
+            elif intent == 'summarize_email':
+                # Extract content and summarize
+                extracted_content = intent_result.get('extracted_content', user_message)
+                result = self.summarize_mail(extracted_content, "user@frontend.com", "Email à résumer")
+                
+                if result.get('success'):
+                    summary_data = result.get('summary', {})
+                    if isinstance(summary_data, dict):
+                        summary_text = summary_data.get('summary', 'Résumé généré avec succès.')
+                    else:
+                        summary_text = str(summary_data)
+                    
+                    return {
+                        'success': True,
+                        'response': f"📧 **Résumé de l'email:**\n\n{summary_text}",
+                        'type': 'email_summary',
+                        'function_used': 'summarize_mail',
+                        'original_intent': intent
+                    }
+                else:
+                    return {
+                        'success': True,
+                        'response': "Je n'ai pas pu résumer cet email. Pouvez-vous vérifier le contenu et réessayer ?",
+                        'type': 'error',
+                        'original_intent': intent
+                    }
+            
+            elif intent == 'generate_reply':
+                # Extract content and generate reply
+                extracted_content = intent_result.get('extracted_content', user_message)
+                result = self.generate_mail_answer(extracted_content, "", "professional", "french")
+                
+                if result.get('success'):
+                    response_data = result.get('response', {})
+                    if isinstance(response_data, dict):
+                        reply_text = response_data.get('response', 'Réponse générée avec succès.')
+                        subject = response_data.get('subject', 'Re: Votre email')
+                        response_text = f"✉️ **Réponse proposée:**\n\n**Sujet:** {subject}\n\n{reply_text}"
+                    else:
+                        response_text = f"✉️ **Réponse proposée:**\n\n{str(response_data)}"
+                    
+                    return {
+                        'success': True,
+                        'response': response_text,
+                        'type': 'email_reply',
+                        'function_used': 'generate_mail_answer',
+                        'original_intent': intent
+                    }
+                else:
+                    return {
+                        'success': True,
+                        'response': "Je n'ai pas pu générer une réponse à cet email. Pouvez-vous vérifier le contenu et réessayer ?",
+                        'type': 'error',
+                        'original_intent': intent
+                    }
+            
+            elif intent == 'classify_email':
+                # Extract content and classify
+                extracted_content = intent_result.get('extracted_content', user_message)
+                result = self.classify_mail(extracted_content, "user@frontend.com", "Email à classer")
+                
+                if result.get('success'):
+                    classification_data = result.get('classification', {})
+                    if isinstance(classification_data, dict):
+                        category = classification_data.get('category', 'Non classé')
+                        confidence = classification_data.get('confidence', 0.5)
+                        reasoning = classification_data.get('reasoning', 'Aucune explication disponible')
+                        response_text = f"🏷️ **Classification de l'email:**\n\n**Catégorie:** {category}\n**Confiance:** {confidence:.0%}\n**Explication:** {reasoning}"
+                    else:
+                        response_text = f"🏷️ **Classification de l'email:**\n\n{str(classification_data)}"
+                    
+                    return {
+                        'success': True,
+                        'response': response_text,
+                        'type': 'email_classification',
+                        'function_used': 'classify_mail',
+                        'original_intent': intent
+                    }
+                else:
+                    return {
+                        'success': True,
+                        'response': "Je n'ai pas pu classer cet email. Pouvez-vous vérifier le contenu et réessayer ?",
+                        'type': 'error',
+                        'original_intent': intent
+                    }
+            
+            else:
+                # Fallback to conversation
+                return self.chat_conversation(user_message, conversation_history)
+                
+        except Exception as e:
+            logger.error(f"Error processing user message: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'response': 'Une erreur s\'est produite lors du traitement de votre message. Comment puis-je vous aider autrement ?',
+                'type': 'error'
+            }
+
     def _parse_summary_content(self, content: str) -> Dict[str, Any]:
         """
         Parse content response from Albert API to extract structured summary information.

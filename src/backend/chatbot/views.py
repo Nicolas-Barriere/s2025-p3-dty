@@ -361,11 +361,20 @@ def chatbot_health_check(request):
 @csrf_exempt
 def simple_chat_api(request):
     """
-    Simple chat endpoint that accepts a message and returns a response.
+    Enhanced chat endpoint that accepts a message and returns an intelligent response.
+    
+    The endpoint now supports:
+    - Intent detection (conversation, email summarization, reply generation, classification)
+    - Function calling based on detected intent
+    - Conversational responses as default behavior
     
     POST data:
     {
-        "message": "User's message"
+        "message": "User's message",
+        "conversation_history": [  // optional
+            {"role": "user", "content": "previous message"},
+            {"role": "assistant", "content": "previous response"}
+        ]
     }
     """
     try:
@@ -375,6 +384,7 @@ def simple_chat_api(request):
             data = request.POST
             
         message = data.get('message', '')
+        conversation_history = data.get('conversation_history', [])
         
         if not message:
             return JsonResponse({
@@ -382,36 +392,31 @@ def simple_chat_api(request):
                 'error': 'message is required'
             }, status=400)
         
-        # For now, use the summarize function as a simple response generator
-        # We can enhance this later to be more conversational
+        # Use the enhanced chatbot with intent detection and function calling
         chatbot = get_chatbot()
-        result = chatbot.summarize_mail(
-            message, 
-            "user@frontend.com", 
-            "Chat message"
-        )
+        result = chatbot.process_user_message(message, conversation_history)
         
         if result.get('success'):
-            # The result contains a summary field which might be nested
-            summary_data = result.get('summary', '')
-            if isinstance(summary_data, dict):
-                response_text = summary_data.get('summary', 'Je vous ai bien compris.')
-            else:
-                response_text = summary_data or 'Je vous ai bien compris.'
-            
             return JsonResponse({
                 'success': True,
-                'response': response_text
+                'response': result.get('response', 'Je vous ai bien compris.'),
+                'type': result.get('type', 'conversation'),
+                'function_used': result.get('function_used'),
+                'original_intent': result.get('original_intent')
             })
         else:
             return JsonResponse({
                 'success': True,
-                'response': 'Je suis désolé, je n\'ai pas pu traiter votre message.'
+                'response': result.get('response', 'Je suis désolé, je n\'ai pas pu traiter votre message.'),
+                'type': 'error',
+                'error': result.get('error')
             })
             
     except Exception as e:
         logger.error(f"Error in simple_chat_api: {e}")
         return JsonResponse({
             'success': True,
-            'response': 'Une erreur s\'est produite lors du traitement de votre message.'
+            'response': 'Une erreur s\'est produite lors du traitement de votre message.',
+            'type': 'error',
+            'error': str(e)
         })
