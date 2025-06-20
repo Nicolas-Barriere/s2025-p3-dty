@@ -8,6 +8,9 @@ from . import views
 app_name = 'chatbot'
 
 urlpatterns = [
+    # Simple chat endpoint for frontend
+    path('', views.simple_chat_api, name='simple_chat'),
+    
     # Class-based API view (handles multiple operations)
     path('api/', views.ChatbotAPIView.as_view(), name='chatbot_api'),
     

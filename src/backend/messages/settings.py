@@ -284,6 +284,7 @@ class Base(Configuration):
     # Django applications from the highest priority to the lowest
     INSTALLED_APPS = [
         "core",
+        "chatbot",
         "drf_spectacular",
         # Third party apps
         "corsheaders",

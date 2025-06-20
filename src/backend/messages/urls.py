@@ -15,6 +15,7 @@ from drf_spectacular.views import (
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("core.urls")),
+    path("mails/chatbot/", include("chatbot.urls")),
 ]
 
 if settings.DEBUG:

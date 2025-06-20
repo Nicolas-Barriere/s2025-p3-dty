@@ -13,15 +13,21 @@ export const ChatWindow = () => {
         setInput("")
 
         try {
-            const res = await fetch("http://localhost:8000/mails/chatbot/", {
+            const res = await fetch("http://localhost:8071/mails/chatbot/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: input }),
             })
 
             const data = await res.json()
-            const botMsg: ChatMessage = { role: "bot", text: data.response || data.summary || JSON.stringify(data) }
-            setMessages(prev => [...prev, botMsg])
+            
+            if (data.success && data.response) {
+                const botMsg: ChatMessage = { role: "bot", text: data.response }
+                setMessages(prev => [...prev, botMsg])
+            } else {
+                const botMsg: ChatMessage = { role: "bot", text: "Désolé, je n'ai pas pu traiter votre message." }
+                setMessages(prev => [...prev, botMsg])
+            }
         } catch (err) {
             setMessages(prev => [...prev, { role: "bot", text: "Erreur lors de l'envoi" }])
         }

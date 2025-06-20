@@ -354,3 +354,64 @@ def chatbot_health_check(request):
             'error': str(e),
             'timestamp': '2025-06-19T00:00:00Z'
         }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+# Simple chat endpoint for frontend integration
+@api_view(['POST'])
+@csrf_exempt
+def simple_chat_api(request):
+    """
+    Simple chat endpoint that accepts a message and returns a response.
+    
+    POST data:
+    {
+        "message": "User's message"
+    }
+    """
+    try:
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+            
+        message = data.get('message', '')
+        
+        if not message:
+            return JsonResponse({
+                'success': False,
+                'error': 'message is required'
+            }, status=400)
+        
+        # For now, use the summarize function as a simple response generator
+        # We can enhance this later to be more conversational
+        chatbot = get_chatbot()
+        result = chatbot.summarize_mail(
+            message, 
+            "user@frontend.com", 
+            "Chat message"
+        )
+        
+        if result.get('success'):
+            # The result contains a summary field which might be nested
+            summary_data = result.get('summary', '')
+            if isinstance(summary_data, dict):
+                response_text = summary_data.get('summary', 'Je vous ai bien compris.')
+            else:
+                response_text = summary_data or 'Je vous ai bien compris.'
+            
+            return JsonResponse({
+                'success': True,
+                'response': response_text
+            })
+        else:
+            return JsonResponse({
+                'success': True,
+                'response': 'Je suis désolé, je n\'ai pas pu traiter votre message.'
+            })
+            
+    except Exception as e:
+        logger.error(f"Error in simple_chat_api: {e}")
+        return JsonResponse({
+            'success': True,
+            'response': 'Une erreur s\'est produite lors du traitement de votre message.'
+        })
