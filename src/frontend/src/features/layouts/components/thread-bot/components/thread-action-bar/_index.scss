@@ -1,0 +1,18 @@
+.thread-action-bar {
+    justify-content: space-between;
+}
+
+.thread-action-bar>div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--c--theme--spacings--2xs);
+}
+
+.thread-action-bar__left {
+    justify-content: flex-start;
+}
+
+.thread-action-bar__right {
+    justify-content: flex-end;
+}
