@@ -82,6 +82,6 @@ db.sqlite3
 # AI tooling
 .claude
 CLAUDE.md
-
+chatbot_env
 # Various
 .turbo
