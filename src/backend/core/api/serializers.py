@@ -595,3 +595,88 @@ class ImportIMAPSerializer(ImportBaseSerializer):
         default=0,
         min_value=0,
     )
+
+
+class ChatbotInputSerializer(serializers.Serializer):
+    operation = serializers.ChoiceField(
+        choices=["summarize", "answer", "classify", "batch"],
+        help_text="Type d'opération à effectuer"
+    )
+    # Champs communs
+    mail_content = serializers.CharField(
+        required=False, help_text="Contenu de l'email à traiter"
+    )
+    sender = serializers.CharField(
+        required=False, help_text="Expéditeur de l'email"
+    )
+    subject = serializers.CharField(
+        required=False, help_text="Sujet de l'email"
+    )
+    # Pour 'answer'
+    original_mail = serializers.CharField(
+        required=False, help_text="Contenu de l'email original pour la génération de réponse"
+    )
+    context = serializers.CharField(
+        required=False, help_text="Contexte additionnel pour la génération de réponse"
+    )
+    tone = serializers.CharField(
+        required=False, default="professional", help_text="Tonalité de la réponse"
+    )
+    language = serializers.CharField(
+        required=False, default="french", help_text="Langue de la réponse"
+    )
+    # Pour 'classify'
+    custom_categories = serializers.ListField(
+        child=serializers.CharField(), required=False, help_text="Catégories personnalisées"
+    )
+    # Pour 'batch'
+    mails = serializers.ListField(
+        child=serializers.DictField(), required=False, help_text="Liste d'emails pour le traitement batch"
+    )
+    batch_operation = serializers.CharField(
+        required=False, default="summarize", help_text="Opération à effectuer en batch"
+    )
+
+    def validate(self, data):
+        op = data.get("operation")
+        if op == "summarize":
+            if not data.get("mail_content"):
+                raise serializers.ValidationError({"mail_content": "Ce champ est requis pour 'summarize'."})
+        elif op == "answer":
+            if not data.get("original_mail"):
+                raise serializers.ValidationError({"original_mail": "Ce champ est requis pour 'answer'."})
+        elif op == "classify":
+            if not data.get("mail_content"):
+                raise serializers.ValidationError({"mail_content": "Ce champ est requis pour 'classify'."})
+        elif op == "batch":
+            if not data.get("mails"):
+                raise serializers.ValidationError({"mails": "Ce champ est requis pour 'batch'."})
+        return data
+
+class ChatbotBaseOutputSerializer(serializers.Serializer):
+    """Serializer de base pour toutes les réponses chatbot."""
+    success = serializers.BooleanField()
+    error = serializers.CharField(required=False)
+
+class ChatbotSummarizeOutputSerializer(ChatbotBaseOutputSerializer):
+    """Réponse pour l'opération de résumé."""
+    summary = serializers.CharField(required=False)
+    operation = serializers.CharField(default="summarize")
+
+class ChatbotAnswerOutputSerializer(ChatbotBaseOutputSerializer):
+    """Réponse pour la génération de réponse."""
+    response = serializers.CharField(required=False)
+    tone = serializers.CharField(required=False)
+    language = serializers.CharField(required=False)
+
+class ChatbotClassifyOutputSerializer(ChatbotBaseOutputSerializer):
+    """Réponse pour la classification."""
+    classification = serializers.CharField(required=False)
+    confidence = serializers.FloatField(required=False)
+    categories = serializers.ListField(child=serializers.CharField(), required=False)
+
+class ChatbotBatchOutputSerializer(ChatbotBaseOutputSerializer):
+    """Réponse pour le traitement batch."""
+    results = serializers.ListField(child=serializers.DictField(), required=False)
+    total_processed = serializers.IntegerField(required=False)
+    operation = serializers.CharField(required=False)

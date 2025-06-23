@@ -10,6 +10,7 @@ from core.api.viewsets.config import ConfigView
 from core.api.viewsets.draft import DraftMessageView
 from core.api.viewsets.flag import ChangeFlagViewSet
 from core.api.viewsets.import_message import ImportViewSet
+from core.api.viewsets.chatbot import ChatbotViewSet
 from core.api.viewsets.label import LabelViewSet
 from core.api.viewsets.mailbox import MailboxViewSet
 from core.api.viewsets.mailbox_access import MailboxAccessViewSet
@@ -118,4 +119,25 @@ urlpatterns = [
         ImportViewSet.as_view({"post": "import_imap"}),
         name="import-imap",
     ),
+    path(
+        f"api/{settings.API_VERSION}/chatbot/api/summarize",
+        ChatbotViewSet.as_view({"post": "summarize"}),
+        name='summarize_mail',
+    ),
+    path(
+        f"api/{settings.API_VERSION}/chatbot/api/answer",
+        ChatbotViewSet.as_view({"post": "generate"}),
+        name='generate_answer',
+    ),
+    path(
+        f"api/{settings.API_VERSION}/chatbot/api/classify",
+        ChatbotViewSet.as_view({"post": "classify"}),
+        name='classify_mail',
+    ),
+    path(
+        f"api/{settings.API_VERSION}/chatbot/api/batch",
+        ChatbotViewSet.as_view({"post": "batch"}),
+        name='batch_process',
+    ),
+
 ]

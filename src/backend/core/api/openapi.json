@@ -124,6 +124,150 @@
                 }
             }
         },
+        "/api/v1.0/chatbot/api/answer": {
+            "post": {
+                "operationId": "chatbot_api_answer_create",
+                "description": "\n        Generate an AI response to an email.\n        \n        Requires original_mail content. Optional context, tone (professional/friendly/formal),\n        and language (french/english) parameters can customize the response style.\n        ",
+                "tags": [
+                    "chatbot"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatbotInputRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatbotAnswerOutput"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/chatbot/api/batch": {
+            "post": {
+                "operationId": "chatbot_api_batch_create",
+                "description": "\n        Process multiple emails in batch using AI operations.\n        \n        Requires an array of mail objects and an operation type (summarize/classify/answer).\n        Each mail object should contain content, sender, and subject fields. Optional\n        context and tone fields for answer generation.\n        ",
+                "tags": [
+                    "chatbot"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatbotInputRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatbotBatchOutput"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/chatbot/api/classify": {
+            "post": {
+                "operationId": "chatbot_api_classify_create",
+                "description": "\n        Classify an email into predefined or custom categories using AI.\n        \n        Requires mail_content as input. Optional custom_categories array can override\n        default classification categories. Returns the predicted category and confidence score.\n        ",
+                "tags": [
+                    "chatbot"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatbotInputRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatbotClassifyOutput"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/chatbot/api/summarize": {
+            "post": {
+                "operationId": "chatbot_api_summarize_create",
+                "description": "\n        Generate a summary of an email using AI.\n        \n        Requires mail_content as input. Optional sender and subject fields\n        can provide additional context for better summarization.\n        ",
+                "tags": [
+                    "chatbot"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatbotInputRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatbotSummarizeOutput"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/config/": {
             "get": {
                 "operationId": "config_retrieve",
@@ -3571,6 +3715,183 @@
                     "value"
                 ]
             },
+            "ChatbotAnswerOutput": {
+                "type": "object",
+                "description": "Réponse pour la génération de réponse.",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "response": {
+                        "type": "string"
+                    },
+                    "tone": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "success"
+                ]
+            },
+            "ChatbotBatchOutput": {
+                "type": "object",
+                "description": "Réponse pour le traitement batch.",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        }
+                    },
+                    "total_processed": {
+                        "type": "integer"
+                    },
+                    "operation": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "success"
+                ]
+            },
+            "ChatbotClassifyOutput": {
+                "type": "object",
+                "description": "Réponse pour la classification.",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "classification": {
+                        "type": "string"
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "success"
+                ]
+            },
+            "ChatbotInputRequest": {
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OperationEnum"
+                            }
+                        ],
+                        "description": "Type d'opération à effectuer\n\n* `summarize` - summarize\n* `answer` - answer\n* `classify` - classify\n* `batch` - batch"
+                    },
+                    "mail_content": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Contenu de l'email à traiter"
+                    },
+                    "sender": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Expéditeur de l'email"
+                    },
+                    "subject": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Sujet de l'email"
+                    },
+                    "original_mail": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Contenu de l'email original pour la génération de réponse"
+                    },
+                    "context": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Contexte additionnel pour la génération de réponse"
+                    },
+                    "tone": {
+                        "type": "string",
+                        "minLength": 1,
+                        "default": "professional",
+                        "description": "Tonalité de la réponse"
+                    },
+                    "language": {
+                        "type": "string",
+                        "minLength": 1,
+                        "default": "french",
+                        "description": "Langue de la réponse"
+                    },
+                    "custom_categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "description": "Catégories personnalisées"
+                    },
+                    "mails": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "description": "Liste d'emails pour le traitement batch"
+                    },
+                    "batch_operation": {
+                        "type": "string",
+                        "minLength": 1,
+                        "default": "summarize",
+                        "description": "Opération à effectuer en batch"
+                    }
+                },
+                "required": [
+                    "operation"
+                ]
+            },
+            "ChatbotSummarizeOutput": {
+                "type": "object",
+                "description": "Réponse pour l'opération de résumé.",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "summary": {
+                        "type": "string"
+                    },
+                    "operation": {
+                        "type": "string",
+                        "default": "summarize"
+                    }
+                },
+                "required": [
+                    "success"
+                ]
+            },
             "Contact": {
                 "type": "object",
                 "description": "Serialize contacts.",
@@ -4288,6 +4609,16 @@
                     "to",
                     "updated_at"
                 ]
+            },
+            "OperationEnum": {
+                "enum": [
+                    "summarize",
+                    "answer",
+                    "classify",
+                    "batch"
+                ],
+                "type": "string",
+                "description": "* `summarize` - summarize\n* `answer` - answer\n* `classify` - classify\n* `batch` - batch"
             },
             "PaginatedMailDomainAdminList": {
                 "type": "object",

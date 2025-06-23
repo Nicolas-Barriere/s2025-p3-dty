@@ -15,7 +15,6 @@ import logging
 from typing import Dict, List, Optional, Any
 from enum import Enum
 from dataclasses import dataclass
-
 import requests
 from django.conf import settings
 

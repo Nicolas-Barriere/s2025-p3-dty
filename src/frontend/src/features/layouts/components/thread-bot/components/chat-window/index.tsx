@@ -1,36 +1,51 @@
 import { useState } from "react"
+import { useChatbotApiAnswerCreate } from "@/features/api/gen/chatbot/chatbot";
 
 export const ChatWindow = () => {
     type ChatMessage = { role: "user" | "bot"; text: string }
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [input, setInput] = useState("")
 
+    const { mutate: sendToChatbot, isPending } = useChatbotApiAnswerCreate({
+        mutation: {
+            onSuccess: (response) => {
+                console.log("Structure de la réponse:", response.data);
+                console.log("Contenu response:", response.data.response);
+
+                // Traite la réponse du chatbot
+                const botMsg: ChatMessage = {
+                    role: "bot",
+                    text: (response.data.response as any)?.response || "Réponse reçue"
+                }
+                setMessages(prev => [...prev, botMsg])
+            },
+            onError: (error) => {
+                const botMsg: ChatMessage = {
+                    role: "bot",
+                    text: "Erreur lors de l'envoi"
+                }
+                setMessages(prev => [...prev, botMsg])
+            }
+        }
+    })
+
     const sendMessage = async () => {
         if (!input.trim()) return
 
         const userMsg: ChatMessage = { role: "user", text: input }
         setMessages(prev => [...prev, userMsg])
-        setInput("")
 
-        try {
-            const res = await fetch("http://localhost:8071/mails/chatbot/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: input }),
-            })
-
-            const data = await res.json()
-            
-            if (data.success && data.response) {
-                const botMsg: ChatMessage = { role: "bot", text: data.response }
-                setMessages(prev => [...prev, botMsg])
-            } else {
-                const botMsg: ChatMessage = { role: "bot", text: "Désolé, je n'ai pas pu traiter votre message." }
-                setMessages(prev => [...prev, botMsg])
+        sendToChatbot({
+            data: {
+                original_mail: input,  // Adapte selon l'API backend
+                context: "",
+                tone: "professional",
+                language: "french",
+                operation: "answer",
             }
-        } catch (err) {
-            setMessages(prev => [...prev, { role: "bot", text: "Erreur lors de l'envoi" }])
-        }
+        })
+
+        setInput("")
     }
 
     return (
@@ -48,8 +63,9 @@ export const ChatWindow = () => {
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && sendMessage()}
+                    disabled={isPending}
                 />
-                <button onClick={sendMessage}>Envoyer</button>
+                <button onClick={sendMessage}>{isPending ? "Envoi..." : "Envoyer"}</button>
             </div>
         </div>
     )
