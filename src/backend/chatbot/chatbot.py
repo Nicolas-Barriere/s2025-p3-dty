@@ -68,7 +68,7 @@ class AlbertChatbot:
 
     def _make_request(self, messages: List[Dict[str, str]], functions: Optional[List[Dict]] = None) -> Dict[str, Any]:
         """
-        Make a request to Albert API.
+        Make a request to Albert API with optional function calling.
         
         Args:
             messages: List of message objects for the conversation
@@ -88,11 +88,14 @@ class AlbertChatbot:
                 "max_tokens": 1000,
             }
             
+            # Add function calling parameters if functions are provided
             if functions:
-                payload["functions"] = functions
-                payload["function_call"] = "auto"
+                payload["tools"] = [{"type": "function", "function": func} for func in functions]
+                payload["tool_choice"] = "auto"  # Let the model decide when to use tools
             
             logger.info(f"Making request to Albert API with {len(messages)} messages")
+            if functions:
+                logger.info(f"Including {len(functions)} available tools")
             
             response = self.session.post(
                 f"{self.config.base_url}/chat/completions",
@@ -167,11 +170,12 @@ class AlbertChatbot:
                 {
                     "role": "system",
                     "content": "Tu es un assistant IA spécialisé dans l'analyse et le résumé d'emails. "
-                              "Tu dois analyser le contenu des emails et fournir des résumés clairs et concis en français."
+                              "Tu DOIS utiliser la fonction summarize_email pour analyser le contenu des emails. "
+                              "Ne réponds jamais directement sans utiliser cette fonction."
                 },
                 {
                     "role": "user",
-                    "content": f"Analyse et résume cet email:\n\n{mail_context}"
+                    "content": f"Utilise la fonction summarize_email pour analyser cet email:\n\n{mail_context}"
                 }
             ]
             
@@ -181,7 +185,23 @@ class AlbertChatbot:
             choice = response.get('choices', [{}])[0]
             message = choice.get('message', {})
             
-            if 'function_call' in message:
+            # Check for new tool_calls format first
+            if 'tool_calls' in message and message['tool_calls']:
+                tool_call = message['tool_calls'][0]
+                if tool_call['type'] == 'function':
+                    function_call = tool_call['function']
+                    if function_call['name'] == 'summarize_email':
+                        summary_data = json.loads(function_call['arguments'])
+                        logger.info("Successfully summarized email using function call")
+                        return {
+                            'success': True,
+                            'summary': summary_data,
+                            'original_sender': sender,
+                            'original_subject': subject
+                        }
+            
+            # Check for legacy function_call format
+            elif 'function_call' in message:
                 function_call = message['function_call']
                 if function_call['name'] == 'summarize_email':
                     summary_data = json.loads(function_call['arguments'])
@@ -194,8 +214,9 @@ class AlbertChatbot:
                     }
             
             # Albert API uses content-based responses (which are excellent)
-            content = message.get('content', '').strip()
+            content = message.get('content', '')
             if content:
+                content = content.strip()
                 logger.info("Successfully summarized email using content response")
                 # Parse the content to extract structured information when possible
                 summary_data = self._parse_summary_content(content)
@@ -275,7 +296,10 @@ class AlbertChatbot:
             
             system_prompt = f"""
             Tu es un assistant de rédaction d'emails professionnel. 
-            Tu dois générer des réponses appropriées aux emails en {language} avec un ton {tone}.
+            Tu DOIS utiliser la fonction generate_email_response pour générer des réponses aux emails.
+            Ne réponds jamais directement sans utiliser cette fonction.
+            
+            Génère des réponses appropriées en {language} avec un ton {tone}.
             Assure-toi que tes réponses sont:
             - Claires et concises
             - Respectueuses et professionnelles
@@ -284,7 +308,7 @@ class AlbertChatbot:
             """
             
             user_prompt = f"""
-            Génère une réponse à cet email:
+            Utilise la fonction generate_email_response pour générer une réponse à cet email:
             
             Email original:
             {original_mail}
@@ -307,7 +331,23 @@ class AlbertChatbot:
             choice = response.get('choices', [{}])[0]
             message = choice.get('message', {})
             
-            if 'function_call' in message:
+            # Check for new tool_calls format first
+            if 'tool_calls' in message and message['tool_calls']:
+                tool_call = message['tool_calls'][0]
+                if tool_call['type'] == 'function':
+                    function_call = tool_call['function']
+                    if function_call['name'] == 'generate_email_response':
+                        response_data = json.loads(function_call['arguments'])
+                        logger.info("Successfully generated email response using function call")
+                        return {
+                            'success': True,
+                            'response': response_data,
+                            'context_used': context,
+                            'tone_requested': tone
+                        }
+            
+            # Check for legacy function_call format
+            elif 'function_call' in message:
                 function_call = message['function_call']
                 if function_call['name'] == 'generate_email_response':
                     response_data = json.loads(function_call['arguments'])
@@ -320,8 +360,9 @@ class AlbertChatbot:
                     }
             
             # Albert API uses content-based responses
-            content = message.get('content', '').strip()
+            content = message.get('content', '')
             if content:
+                content = content.strip()
                 logger.info("Successfully generated email response using content response")
                 # Parse content to structure the response
                 response_data = self._parse_answer_content(content, tone)
@@ -420,6 +461,9 @@ class AlbertChatbot:
             
             system_prompt = f"""
             Tu es un système de classification d'emails expert. 
+            Tu DOIS utiliser la fonction classify_email pour analyser et classer les emails.
+            Ne réponds jamais directement sans utiliser cette fonction.
+            
             Tu dois analyser le contenu, l'expéditeur et le sujet des emails pour les classer 
             dans les catégories suivantes: {', '.join(categories)}.
             
@@ -427,7 +471,7 @@ class AlbertChatbot:
             """
             
             user_prompt = f"""
-            Classifie cet email selon les catégories disponibles:
+            Utilise la fonction classify_email pour classifier cet email selon les catégories disponibles:
             
             {mail_context}
             
@@ -445,7 +489,24 @@ class AlbertChatbot:
             choice = response.get('choices', [{}])[0]
             message = choice.get('message', {})
             
-            if 'function_call' in message:
+            # Check for new tool_calls format first
+            if 'tool_calls' in message and message['tool_calls']:
+                tool_call = message['tool_calls'][0]
+                if tool_call['type'] == 'function':
+                    function_call = tool_call['function']
+                    if function_call['name'] == 'classify_email':
+                        classification_data = json.loads(function_call['arguments'])
+                        logger.info(f"Successfully classified email as: {classification_data.get('primary_category')}")
+                        return {
+                            'success': True,
+                            'classification': classification_data,
+                            'available_categories': categories,
+                            'original_sender': sender,
+                            'original_subject': subject
+                        }
+            
+            # Check for legacy function_call format
+            elif 'function_call' in message:
                 function_call = message['function_call']
                 if function_call['name'] == 'classify_email':
                     classification_data = json.loads(function_call['arguments'])
@@ -459,8 +520,9 @@ class AlbertChatbot:
                     }
             
             # Albert API uses content-based responses
-            content = message.get('content', '').strip()
+            content = message.get('content', '')
             if content:
+                content = content.strip()
                 logger.info("Successfully classified email using content response")
                 # Parse content to extract classification information
                 classification_data = self._parse_classification_content(content, categories)
@@ -545,103 +607,218 @@ class AlbertChatbot:
         logger.info(f"Completed batch processing: {len(results)} results")
         return results
 
-    def detect_intent(self, user_message: str) -> Dict[str, Any]:
+    def _get_email_tools(self) -> List[Dict[str, Any]]:
         """
-        Detect user intent from their message using keyword analysis and AI assistance.
+        Define available email processing tools for function calling.
+        
+        Returns:
+            List of tool definitions for Albert API function calling
+        """
+        return [
+            {
+                "name": "summarize_email",
+                "description": "Résume le contenu d'un email en français avec les points clés et le niveau d'urgence",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "email_content": {
+                            "type": "string",
+                            "description": "Le contenu de l'email à résumer"
+                        },
+                        "sender": {
+                            "type": "string", 
+                            "description": "L'expéditeur de l'email"
+                        },
+                        "subject": {
+                            "type": "string",
+                            "description": "Le sujet de l'email"
+                        }
+                    },
+                    "required": ["email_content"]
+                }
+            },
+            {
+                "name": "generate_email_reply",
+                "description": "Génère une réponse professionnelle à un email",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "original_email": {
+                            "type": "string",
+                            "description": "Le contenu de l'email original auquel répondre"
+                        },
+                        "context": {
+                            "type": "string",
+                            "description": "Contexte supplémentaire pour la réponse"
+                        },
+                        "tone": {
+                            "type": "string",
+                            "enum": ["professional", "friendly", "formal"],
+                            "description": "Le ton souhaité pour la réponse"
+                        }
+                    },
+                    "required": ["original_email"]
+                }
+            },
+            {
+                "name": "classify_email",
+                "description": "Classifie un email selon différentes catégories (urgent, normal, information, etc.)",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "email_content": {
+                            "type": "string",
+                            "description": "Le contenu de l'email à classifier"
+                        },
+                        "sender": {
+                            "type": "string",
+                            "description": "L'expéditeur de l'email"
+                        },
+                        "subject": {
+                            "type": "string", 
+                            "description": "Le sujet de l'email"
+                        }
+                    },
+                    "required": ["email_content"]
+                }
+            },
+            {
+                "name": "search_emails",
+                "description": "Recherche des emails dans la boîte mail de l'utilisateur",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Termes de recherche pour trouver des emails"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Nombre maximum d'emails à retourner",
+                            "default": 10
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            {
+                "name": "get_recent_emails",
+                "description": "Récupère les emails récents de l'utilisateur",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "days": {
+                            "type": "integer",
+                            "description": "Nombre de jours en arrière pour récupérer les emails",
+                            "default": 7
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Nombre maximum d'emails à retourner",
+                            "default": 10
+                        }
+                    }
+                }
+            }
+        ]
+
+    def _execute_email_function(self, function_name: str, arguments: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
+        """
+        Execute an email-related function with the provided arguments.
         
         Args:
-            user_message: The user's input message
+            function_name: Name of the function to execute
+            arguments: Arguments for the function
+            user_id: ID of the user making the request
             
         Returns:
-            Dictionary containing intent information
+            Dictionary containing the function execution result
         """
         try:
-            logger.info("Detecting user intent")
+            logger.info(f"Executing function: {function_name}")
             
-            # Simple keyword-based detection first
-            message_lower = user_message.lower()
-            
-            # High confidence keyword detection
-            if any(keyword in message_lower for keyword in ['résume', 'résumé', 'synthèse', 'analyse cet email', 'que dit cet email']):
+            if function_name == "summarize_email":
+                email_content = arguments.get("email_content", "")
+                sender = arguments.get("sender", "")
+                subject = arguments.get("subject", "")
+                
+                result = self.summarize_mail(email_content, sender, subject)
                 return {
-                    'success': True,
-                    'intent': 'summarize_email',
-                    'confidence': 0.9,
-                    'extracted_content': user_message,
-                    'reasoning': 'Mots-clés de résumé détectés'
+                    "success": True,
+                    "function": "summarize_email",
+                    "result": result
                 }
-            
-            if any(keyword in message_lower for keyword in ['réponds', 'réponse', 'écris une réponse', 'réponds à cet email', 'génère une réponse']):
+                
+            elif function_name == "generate_email_reply":
+                original_email = arguments.get("original_email", "")
+                context = arguments.get("context", "")
+                tone = arguments.get("tone", "professional")
+                
+                result = self.generate_mail_answer(original_email, context, tone)
                 return {
-                    'success': True,
-                    'intent': 'generate_reply',
-                    'confidence': 0.9,
-                    'extracted_content': user_message,
-                    'reasoning': 'Mots-clés de réponse détectés'
+                    "success": True,
+                    "function": "generate_email_reply", 
+                    "result": result
                 }
-            
-            if any(keyword in message_lower for keyword in ['classe', 'catégorise', 'quel type', 'priorité', 'classifie']):
+                
+            elif function_name == "classify_email":
+                email_content = arguments.get("email_content", "")
+                sender = arguments.get("sender", "")
+                subject = arguments.get("subject", "")
+                
+                result = self.classify_mail(email_content, sender, subject)
                 return {
-                    'success': True,
-                    'intent': 'classify_email',
-                    'confidence': 0.9,
-                    'extracted_content': user_message,
-                    'reasoning': 'Mots-clés de classification détectés'
+                    "success": True,
+                    "function": "classify_email",
+                    "result": result
                 }
-            
-            # Try AI-based detection as fallback using simple text analysis
-            system_prompt = """
-            Analyse ce message utilisateur et détermine son intention principale. Réponds uniquement avec l'un de ces mots:
-            - "summarize_email" si l'utilisateur veut résumer un email
-            - "generate_reply" si l'utilisateur veut générer une réponse à un email  
-            - "classify_email" si l'utilisateur veut classer/catégoriser un email
-            - "conversation" pour tout autre cas (discussion, questions générales, etc.)
-            
-            Sois strict: choisis "conversation" si tu n'es pas sûr à 80% que c'est une demande email spécifique.
-            """
-            
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Message: {user_message}"}
-            ]
-            
-            response = self._make_request(messages)
-            
-            # Extract response content
-            choice = response.get('choices', [{}])[0]
-            message = choice.get('message', {})
-            content = message.get('content', '').strip().lower()
-            
-            # Parse AI response
-            if 'summarize_email' in content:
-                intent = 'summarize_email'
-                confidence = 0.8
-            elif 'generate_reply' in content:
-                intent = 'generate_reply'
-                confidence = 0.8
-            elif 'classify_email' in content:
-                intent = 'classify_email'
-                confidence = 0.8
+                
+            elif function_name == "search_emails":
+                # Import email retrieval functions
+                from .email_retrieval import search_messages
+                
+                query = arguments.get("query", "")
+                limit = arguments.get("limit", 10)
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for email search"}
+                
+                results = search_messages(user_id, query, limit)
+                return {
+                    "success": True,
+                    "function": "search_emails",
+                    "result": {"emails": results, "count": len(results)}
+                }
+                
+            elif function_name == "get_recent_emails":
+                # Import email retrieval functions
+                from .email_retrieval import get_recent_messages
+                
+                days = arguments.get("days", 7)
+                limit = arguments.get("limit", 10)
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for email retrieval"}
+                
+                results = get_recent_messages(user_id, days, limit)
+                return {
+                    "success": True,
+                    "function": "get_recent_emails",
+                    "result": {"emails": results, "count": len(results)}
+                }
+                
             else:
-                intent = 'conversation'
-                confidence = 0.9
-            
-            logger.info(f"AI detected intent: {intent} with confidence: {confidence}")
-            return {
-                'success': True,
-                'intent': intent,
-                'confidence': confidence,
-                'extracted_content': user_message,
-                'reasoning': f'Détection IA: {content}'
-            }
-            
+                return {
+                    "success": False,
+                    "error": f"Unknown function: {function_name}"
+                }
+                
         except Exception as e:
-            logger.error(f"Error detecting intent: {e}")
+            logger.error(f"Error executing function {function_name}: {e}")
             return {
-                'success': True,
-                'intent': 'conversation',
-                'confidence': 0.5,
-                'reasoning': f'Error occurred, defaulting to conversation: {str(e)}'
+                "success": False,
+                "error": str(e),
+                "function": function_name
             }
 
     def chat_conversation(self, user_message: str, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
@@ -685,7 +862,9 @@ class AlbertChatbot:
             # Extract response content
             choice = response.get('choices', [{}])[0]
             message = choice.get('message', {})
-            content = message.get('content', '').strip()
+            content = message.get('content', '')
+            if content:
+                content = content.strip()
             
             if content:
                 logger.info("Successfully generated conversational response")
@@ -711,126 +890,139 @@ class AlbertChatbot:
                 'type': 'conversation'
             }
 
-    def process_user_message(self, user_message: str, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
+    def process_user_message(self, user_message: str, user_id: str = None, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
         """
-        Main entry point for processing user messages with intent detection and function calling.
+        Main entry point for processing user messages with function calling.
         
         Args:
             user_message: The user's input message
+            user_id: User ID for email operations (optional)
             conversation_history: Previous conversation messages (optional)
             
         Returns:
-            Dictionary containing the appropriate response based on detected intent
+            Dictionary containing the appropriate response based on function calls
         """
         try:
-            logger.info(f"Processing user message: {user_message[:100]}...")
+            logger.info(f"Processing user message with function calling: {user_message[:100]}...")
             
-            # Step 1: Detect user intent
-            intent_result = self.detect_intent(user_message)
+            if conversation_history is None:
+                conversation_history = []
             
-            if not intent_result.get('success'):
-                return self.chat_conversation(user_message, conversation_history)
+            # System prompt for the AI assistant with function calling capabilities
+            system_prompt = """
+            Tu es un assistant intelligent spécialisé dans la gestion d'emails. Tu as accès à plusieurs outils et tu DOIS les utiliser quand ils sont appropriés:
             
-            intent = intent_result.get('intent', 'conversation')
-            confidence = intent_result.get('confidence', 0.5)
+            - summarize_email: UTILISE cet outil quand l'utilisateur demande de résumer un email
+            - generate_email_reply: UTILISE cet outil quand l'utilisateur demande de générer une réponse à un email
+            - classify_email: UTILISE cet outil quand l'utilisateur demande de classifier un email
+            - search_emails: UTILISE cet outil quand l'utilisateur demande de rechercher des emails
+            - get_recent_emails: UTILISE cet outil quand l'utilisateur demande ses emails récents
             
-            logger.info(f"Detected intent: {intent} with confidence: {confidence}")
+            RÈGLES IMPORTANTES:
+            - Si l'utilisateur demande une action spécifique sur un email, tu DOIS utiliser l'outil approprié
+            - Ne réponds JAMAIS directement pour les actions d'email sans utiliser les outils
+            - Pour des conversations générales sans action email spécifique, réponds normalement
             
-            # Step 2: Route to appropriate handler based on intent
-            if intent == 'conversation' or confidence < 0.7:
-                # Default to conversation for low confidence or explicit conversation intent
-                return self.chat_conversation(user_message, conversation_history)
+            Réponds toujours en français de manière claire et utile.
+            """
             
-            elif intent == 'summarize_email':
-                # Extract content and summarize
-                extracted_content = intent_result.get('extracted_content', user_message)
-                result = self.summarize_mail(extracted_content, "user@frontend.com", "Email à résumer")
-                
-                if result.get('success'):
-                    summary_data = result.get('summary', {})
-                    if isinstance(summary_data, dict):
-                        summary_text = summary_data.get('summary', 'Résumé généré avec succès.')
-                    else:
-                        summary_text = str(summary_data)
+            # Build messages for the conversation
+            messages = [{"role": "system", "content": system_prompt}]
+            messages.extend(conversation_history)
+            messages.append({"role": "user", "content": user_message})
+            
+            # Get available tools
+            tools = self._get_email_tools()
+            
+            # Make request to Albert API with function calling
+            response = self._make_request(messages, tools)
+            
+            # Process the response
+            choice = response.get('choices', [{}])[0]
+            message = choice.get('message', {})
+            
+            # Check if AI wants to call a function
+            if 'tool_calls' in message and message['tool_calls']:
+                # Handle multiple tool calls if needed
+                tool_call = message['tool_calls'][0]  # Take the first tool call
+                if tool_call['type'] == 'function':
+                    function_call = tool_call['function']
+                    function_name = function_call['name']
                     
+                    try:
+                        function_args = json.loads(function_call['arguments'])
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse function arguments: {e}")
+                        return {
+                            'success': False,
+                            'response': "Erreur lors de l'analyse des paramètres de la fonction.",
+                            'type': 'error'
+                        }
+                    
+                    logger.info(f"AI wants to call function: {function_name}")
+                    
+                    # Execute the function
+                    function_result = self._execute_email_function(function_name, function_args, user_id)
+                    
+                    if function_result.get('success'):
+                        # Format the response based on the function used
+                        return self._format_function_response(function_name, function_result, user_message)
+                    else:
+                        return {
+                            'success': False,
+                            'response': f"Erreur lors de l'exécution de {function_name}: {function_result.get('error', 'Erreur inconnue')}",
+                            'type': 'error',
+                            'function_used': function_name
+                        }
+            
+            # Fallback: check for legacy function_call format (just in case)
+            elif 'function_call' in message:
+                function_call = message['function_call']
+                function_name = function_call['name']
+                
+                try:
+                    function_args = json.loads(function_call['arguments'])
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse function arguments: {e}")
                     return {
-                        'success': True,
-                        'response': f"📧 **Résumé de l'email:**\n\n{summary_text}",
-                        'type': 'email_summary',
-                        'function_used': 'summarize_mail',
-                        'original_intent': intent
+                        'success': False,
+                        'response': "Erreur lors de l'analyse des paramètres de la fonction.",
+                        'type': 'error'
                     }
+                
+                logger.info(f"AI wants to call function (legacy): {function_name}")
+                
+                # Execute the function
+                function_result = self._execute_email_function(function_name, function_args, user_id)
+                
+                if function_result.get('success'):
+                    # Format the response based on the function used
+                    return self._format_function_response(function_name, function_result, user_message)
                 else:
                     return {
-                        'success': True,
-                        'response': "Je n'ai pas pu résumer cet email. Pouvez-vous vérifier le contenu et réessayer ?",
+                        'success': False,
+                        'response': f"Erreur lors de l'exécution de {function_name}: {function_result.get('error', 'Erreur inconnue')}",
                         'type': 'error',
-                        'original_intent': intent
+                        'function_used': function_name
                     }
             
-            elif intent == 'generate_reply':
-                # Extract content and generate reply
-                extracted_content = intent_result.get('extracted_content', user_message)
-                result = self.generate_mail_answer(extracted_content, "", "professional", "french")
-                
-                if result.get('success'):
-                    response_data = result.get('response', {})
-                    if isinstance(response_data, dict):
-                        reply_text = response_data.get('response', 'Réponse générée avec succès.')
-                        subject = response_data.get('subject', 'Re: Votre email')
-                        response_text = f"✉️ **Réponse proposée:**\n\n**Sujet:** {subject}\n\n{reply_text}"
-                    else:
-                        response_text = f"✉️ **Réponse proposée:**\n\n{str(response_data)}"
-                    
-                    return {
-                        'success': True,
-                        'response': response_text,
-                        'type': 'email_reply',
-                        'function_used': 'generate_mail_answer',
-                        'original_intent': intent
-                    }
-                else:
-                    return {
-                        'success': True,
-                        'response': "Je n'ai pas pu générer une réponse à cet email. Pouvez-vous vérifier le contenu et réessayer ?",
-                        'type': 'error',
-                        'original_intent': intent
-                    }
+            # No function call - regular conversational response
+            content = message.get('content', '').strip()
+            if content:
+                logger.info("Generated conversational response")
+                return {
+                    'success': True,
+                    'response': content,
+                    'type': 'conversation'
+                }
             
-            elif intent == 'classify_email':
-                # Extract content and classify
-                extracted_content = intent_result.get('extracted_content', user_message)
-                result = self.classify_mail(extracted_content, "user@frontend.com", "Email à classer")
-                
-                if result.get('success'):
-                    classification_data = result.get('classification', {})
-                    if isinstance(classification_data, dict):
-                        category = classification_data.get('category', 'Non classé')
-                        confidence = classification_data.get('confidence', 0.5)
-                        reasoning = classification_data.get('reasoning', 'Aucune explication disponible')
-                        response_text = f"🏷️ **Classification de l'email:**\n\n**Catégorie:** {category}\n**Confiance:** {confidence:.0%}\n**Explication:** {reasoning}"
-                    else:
-                        response_text = f"🏷️ **Classification de l'email:**\n\n{str(classification_data)}"
-                    
-                    return {
-                        'success': True,
-                        'response': response_text,
-                        'type': 'email_classification',
-                        'function_used': 'classify_mail',
-                        'original_intent': intent
-                    }
-                else:
-                    return {
-                        'success': True,
-                        'response': "Je n'ai pas pu classer cet email. Pouvez-vous vérifier le contenu et réessayer ?",
-                        'type': 'error',
-                        'original_intent': intent
-                    }
+            # Fallback response
+            return {
+                'success': True,
+                'response': 'Je suis désolé, je n\'ai pas pu traiter votre demande. Pouvez-vous la reformuler ?',
+                'type': 'conversation'
+            }
             
-            else:
-                # Fallback to conversation
-                return self.chat_conversation(user_message, conversation_history)
-                
         except Exception as e:
             logger.error(f"Error processing user message: {e}")
             return {
@@ -838,6 +1030,149 @@ class AlbertChatbot:
                 'error': str(e),
                 'response': 'Une erreur s\'est produite lors du traitement de votre message. Comment puis-je vous aider autrement ?',
                 'type': 'error'
+            }
+
+    def _format_function_response(self, function_name: str, function_result: Dict[str, Any], original_message: str) -> Dict[str, Any]:
+        """
+        Format the response based on the function that was called.
+        
+        Args:
+            function_name: Name of the function that was executed
+            function_result: Result from the function execution
+            original_message: Original user message
+            
+        Returns:
+            Formatted response dictionary
+        """
+        try:
+            result_data = function_result.get('result', {})
+            
+            if function_name == 'summarize_email':
+                if result_data.get('success'):
+                    summary_data = result_data.get('summary', {})
+                    if isinstance(summary_data, dict):
+                        summary_text = summary_data.get('summary', 'Résumé généré avec succès.')
+                        key_points = summary_data.get('key_points', [])
+                        urgency = summary_data.get('urgency_level', 'medium')
+                        
+                        response_text = f"📧 **Résumé de l'email:**\n\n{summary_text}"
+                        
+                        if key_points:
+                            response_text += f"\n\n**Points clés:**\n"
+                            for point in key_points[:3]:  # Limit to 3 key points
+                                response_text += f"• {point}\n"
+                        
+                        response_text += f"\n**Niveau d'urgence:** {urgency}"
+                    else:
+                        response_text = f"📧 **Résumé de l'email:**\n\n{str(summary_data)}"
+                else:
+                    response_text = "Je n'ai pas pu résumer cet email. Veuillez vérifier le contenu."
+                
+                return {
+                    'success': True,
+                    'response': response_text,
+                    'type': 'email_summary',
+                    'function_used': 'summarize_email'
+                }
+            
+            elif function_name == 'generate_email_reply':
+                if result_data.get('success'):
+                    response_data = result_data.get('response', {})
+                    if isinstance(response_data, dict):
+                        reply_text = response_data.get('response', 'Réponse générée avec succès.')
+                        subject = response_data.get('subject', 'Re: Votre email')
+                        tone = response_data.get('tone_used', 'professional')
+                        
+                        response_text = f"✉️ **Réponse proposée:**\n\n**Sujet:** {subject}\n**Ton:** {tone}\n\n{reply_text}"
+                    else:
+                        response_text = f"✉️ **Réponse proposée:**\n\n{str(response_data)}"
+                else:
+                    response_text = "Je n'ai pas pu générer une réponse à cet email."
+                
+                return {
+                    'success': True,
+                    'response': response_text,
+                    'type': 'email_reply',
+                    'function_used': 'generate_email_reply'
+                }
+            
+            elif function_name == 'classify_email':
+                if result_data.get('success'):
+                    classification_data = result_data.get('classification', {})
+                    if isinstance(classification_data, dict):
+                        category = classification_data.get('primary_category', 'Non classé')
+                        confidence = classification_data.get('confidence_score', 0.5)
+                        reasoning = classification_data.get('reasoning', 'Aucune explication disponible')
+                        
+                        response_text = f"🏷️ **Classification de l'email:**\n\n**Catégorie:** {category}\n**Confiance:** {confidence:.0%}\n**Explication:** {reasoning}"
+                    else:
+                        response_text = f"🏷️ **Classification de l'email:**\n\n{str(classification_data)}"
+                else:
+                    response_text = "Je n'ai pas pu classifier cet email."
+                
+                return {
+                    'success': True,
+                    'response': response_text,
+                    'type': 'email_classification',
+                    'function_used': 'classify_email'
+                }
+            
+            elif function_name == 'search_emails':
+                emails = result_data.get('emails', [])
+                count = result_data.get('count', 0)
+                
+                if count > 0:
+                    response_text = f"🔍 **Résultats de recherche:** {count} email(s) trouvé(s)\n\n"
+                    for i, email in enumerate(emails[:5], 1):  # Show first 5 results
+                        subject = email.get('subject', 'Sans sujet')
+                        sender = email.get('sender_email', 'Expéditeur inconnu')
+                        response_text += f"{i}. **{subject}** (de {sender})\n"
+                else:
+                    response_text = "🔍 Aucun email trouvé pour cette recherche."
+                
+                return {
+                    'success': True,
+                    'response': response_text,
+                    'type': 'email_search',
+                    'function_used': 'search_emails'
+                }
+            
+            elif function_name == 'get_recent_emails':
+                emails = result_data.get('emails', [])
+                count = result_data.get('count', 0)
+                
+                if count > 0:
+                    response_text = f"📬 **Emails récents:** {count} email(s) trouvé(s)\n\n"
+                    for i, email in enumerate(emails[:5], 1):
+                        subject = email.get('subject', 'Sans sujet')
+                        sender = email.get('sender_email', 'Expéditeur inconnu')
+                        date = email.get('date', 'Date inconnue')
+                        response_text += f"{i}. **{subject}** (de {sender}, {date})\n"
+                else:
+                    response_text = "📬 Aucun email récent trouvé."
+                
+                return {
+                    'success': True,
+                    'response': response_text,
+                    'type': 'recent_emails',
+                    'function_used': 'get_recent_emails'
+                }
+            
+            else:
+                return {
+                    'success': True,
+                    'response': f"Fonction {function_name} exécutée avec succès.",
+                    'type': 'function_result',
+                    'function_used': function_name
+                }
+                
+        except Exception as e:
+            logger.error(f"Error formatting function response: {e}")
+            return {
+                'success': False,
+                'response': f"Erreur lors du formatage de la réponse pour {function_name}.",
+                'type': 'error',
+                'function_used': function_name
             }
 
     def _parse_summary_content(self, content: str) -> Dict[str, Any]:

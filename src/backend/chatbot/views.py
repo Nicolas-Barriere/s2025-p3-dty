@@ -19,6 +19,17 @@ from rest_framework import status
 import json
 
 from .chatbot import get_chatbot, AlbertChatbot
+from .email_retrieval import (
+    get_user_accessible_mailboxes,
+    get_mailbox_threads,
+    get_thread_messages,
+    get_message_by_id,
+    get_parsed_message_content,
+    search_messages,
+    get_unread_messages,
+    get_recent_messages,
+    get_message_full_content
+)
 
 
 logger = logging.getLogger(__name__)
@@ -420,3 +431,120 @@ def simple_chat_api(request):
             'type': 'error',
             'error': str(e)
         })
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EmailRetrievalTestView(View):
+    """
+    Test view for email retrieval operations.
+    """
+    
+    def get(self, request, *args, **kwargs):
+        """Handle GET requests for email retrieval testing."""
+        try:
+            # Get query parameters
+            test_type = request.GET.get('test', 'basic')
+            user_id = request.GET.get('user_id')
+            message_id = request.GET.get('message_id')
+            mailbox_id = request.GET.get('mailbox_id')
+            
+            results = {'test_type': test_type, 'success': False}
+            
+            if test_type == 'basic':
+                # Test basic functionality
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                
+                users = User.objects.all()[:1]
+                if users:
+                    user = users[0]
+                    mailboxes = get_user_accessible_mailboxes(str(user.id))
+                    results.update({
+                        'success': True,
+                        'user_id': str(user.id),
+                        'user_email': str(user),
+                        'mailboxes_count': len(mailboxes),
+                        'mailboxes': [str(mb) for mb in mailboxes[:5]]
+                    })
+                else:
+                    results['error'] = 'No users found'
+                    
+            elif test_type == 'unread' and user_id:
+                # Test unread messages
+                unread = get_unread_messages(user_id, limit=10)
+                results.update({
+                    'success': True,
+                    'unread_count': len(unread),
+                    'unread_messages': unread
+                })
+                
+            elif test_type == 'recent' and user_id:
+                # Test recent messages
+                recent = get_recent_messages(user_id, days=7, limit=10)
+                results.update({
+                    'success': True,
+                    'recent_count': len(recent),
+                    'recent_messages': recent
+                })
+                
+            elif test_type == 'message' and message_id:
+                # Test specific message
+                message = get_message_by_id(message_id)
+                if message:
+                    content = get_parsed_message_content(message)
+                    full_content = get_message_full_content(message_id)
+                    results.update({
+                        'success': True,
+                        'message_found': True,
+                        'subject': message.subject,
+                        'sender': str(message.sender),
+                        'content_preview': content,
+                        'full_content_length': len(full_content)
+                    })
+                else:
+                    results['error'] = f'Message {message_id} not found'
+                    
+            elif test_type == 'threads' and mailbox_id:
+                # Test mailbox threads
+                threads = get_mailbox_threads(mailbox_id, limit=5)
+                results.update({
+                    'success': True,
+                    'threads_count': len(threads),
+                    'threads': [{'id': str(t.id), 'subject': t.subject} for t in threads]
+                })
+                
+            elif test_type == 'search' and user_id:
+                # Test search
+                query = request.GET.get('q', '')
+                search_results = search_messages(user_id, query=query, limit=10)
+                results.update({
+                    'success': True,
+                    'search_query': query,
+                    'results_count': len(search_results),
+                    'search_results': search_results
+                })
+                
+            elif test_type == 'chatbot' and message_id:
+                # Test chatbot integration
+                try:
+                    from .test_email_retrieval import test_specific_message
+                    chatbot_result = test_specific_message(message_id)
+                    results.update({
+                        'success': True,
+                        'chatbot_test': chatbot_result
+                    })
+                except Exception as e:
+                    results.update({
+                        'success': False,
+                        'error': f'Chatbot test failed: {str(e)}'
+                    })
+            else:
+                results['error'] = 'Invalid test type or missing parameters'
+            
+            return JsonResponse(results)
+            
+        except Exception as e:
+            logger.exception("Error in email retrieval test")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)

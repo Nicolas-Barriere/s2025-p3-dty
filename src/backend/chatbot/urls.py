@@ -4,6 +4,7 @@ URL configuration for the chatbot module.
 
 from django.urls import path
 from . import views
+from .views import ChatbotAPIView, EmailRetrievalTestView
 
 app_name = 'chatbot'
 
@@ -22,4 +23,8 @@ urlpatterns = [
     
     # Health check
     path('health/', views.chatbot_health_check, name='health_check'),
+
+    # Additional URL patterns
+    path('api/', ChatbotAPIView.as_view(), name='chatbot-api'),
+    path('test/email-retrieval/', EmailRetrievalTestView.as_view(), name='test-email-retrieval'),
 ]
