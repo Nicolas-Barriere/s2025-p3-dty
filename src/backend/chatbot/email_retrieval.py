@@ -463,3 +463,86 @@ def get_message_full_content(message_id: str) -> str:
     except Exception as e:
         logger.error(f"Error retrieving full content for message {message_id}: {e}")
         return ""
+
+
+def retrieve_email_content_by_query(
+    user_id: str,
+    query: str,
+    limit: int = 5
+) -> Dict[str, Any]:
+    """
+    Retrieve the full content of the email that best matches a user query.
+    
+    Args:
+        user_id: UUID of the user
+        query: User query to find the most relevant email
+        limit: Number of emails to search through to find the best match
+        
+    Returns:
+        Dictionary with the best matching email's full content and metadata
+    """
+    try:
+        # First, search for emails matching the query
+        search_results = search_messages(user_id, query, limit=limit)
+        
+        if not search_results:
+            logger.info(f"No emails found for query: {query}")
+            return {
+                'success': False,
+                'error': f'Aucun email trouvé pour la requête: {query}',
+                'query': query
+            }
+        
+        # Take the first (most relevant) result
+        best_match = search_results[0]
+        message_id = best_match['message_id']
+        
+        # Get the full content of the best matching email
+        full_content = get_message_full_content(message_id)
+        
+        if not full_content:
+            logger.error(f"Could not retrieve content for message {message_id}")
+            return {
+                'success': False,
+                'error': f'Impossible de récupérer le contenu de l\'email trouvé',
+                'query': query
+            }
+        
+        # Get additional message details
+        message = get_message_by_id(message_id)
+        if message:
+            parsed_content = get_parsed_message_content(message)
+            
+            logger.info(f"Successfully retrieved email content for query: {query}")
+            return {
+                'success': True,
+                'email_content': full_content,
+                'metadata': {
+                    'message_id': message_id,
+                    'thread_id': str(message.thread.id),
+                    'subject': parsed_content['subject'],
+                    'sender_name': parsed_content['sender']['name'],
+                    'sender_email': parsed_content['sender']['email'],
+                    'sent_at': parsed_content['sent_at'],
+                    'is_unread': parsed_content['is_unread'],
+                    'is_starred': parsed_content['is_starred'],
+                },
+                'query': query,
+                'search_results_count': len(search_results)
+            }
+        else:
+            return {
+                'success': True,
+                'email_content': full_content,
+                'metadata': best_match,
+                'query': query,
+                'search_results_count': len(search_results)
+            }
+            
+    except Exception as e:
+        logger.error(f"Error retrieving email content for query '{query}': {e}")
+        return {
+            'success': False,
+            'error': str(e),
+            'query': query
+        }

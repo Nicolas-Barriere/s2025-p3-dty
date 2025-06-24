@@ -719,6 +719,25 @@ class AlbertChatbot:
                         }
                     }
                 }
+            },
+            {
+                "name": "retrieve_email_content",
+                "description": "Récupère le contenu complet de l'email qui correspond le mieux à la requête de l'utilisateur",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Requête de l'utilisateur pour trouver l'email le plus pertinent"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Nombre maximum d'emails à rechercher",
+                            "default": 5
+                        }
+                    },
+                    "required": ["query"]
+                }
             }
         ]
 
@@ -805,6 +824,26 @@ class AlbertChatbot:
                     "success": True,
                     "function": "get_recent_emails",
                     "result": {"emails": results, "count": len(results)}
+                }
+                
+            elif function_name == "retrieve_email_content":
+                # Import email retrieval function
+                from .email_retrieval import retrieve_email_content_by_query
+                
+                query = arguments.get("query", "")
+                limit = arguments.get("limit", 5)
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for email content retrieval"}
+                
+                if not query:
+                    return {"success": False, "error": "Query is required for email content retrieval"}
+                
+                result = retrieve_email_content_by_query(user_id, query, limit)
+                return {
+                    "success": True,
+                    "function": "retrieve_email_content",
+                    "result": result
                 }
                 
             else:
@@ -908,20 +947,32 @@ class AlbertChatbot:
             if conversation_history is None:
                 conversation_history = []
             
+            # First, try to handle chained function calls (e.g., "résume l'email de Jean")
+            chained_result = self._handle_chained_function_calls(user_message, user_id, conversation_history)
+            if chained_result is not None:
+                return chained_result
+            
             # System prompt for the AI assistant with function calling capabilities
             system_prompt = """
             Tu es un assistant intelligent spécialisé dans la gestion d'emails. Tu as accès à plusieurs outils et tu DOIS les utiliser quand ils sont appropriés:
             
-            - summarize_email: UTILISE cet outil quand l'utilisateur demande de résumer un email
-            - generate_email_reply: UTILISE cet outil quand l'utilisateur demande de générer une réponse à un email
-            - classify_email: UTILISE cet outil quand l'utilisateur demande de classifier un email
+            - retrieve_email_content: UTILISE cet outil AVANT tout autre outil quand l'utilisateur fait référence à un email spécifique (ex: "résume l'email de Jean", "réponds à l'email sur le projet X")
+            - summarize_email: UTILISE cet outil quand l'utilisateur demande de résumer un email (après avoir récupéré le contenu avec retrieve_email_content si nécessaire)
+            - generate_email_reply: UTILISE cet outil quand l'utilisateur demande de générer une réponse à un email (après avoir récupéré le contenu avec retrieve_email_content si nécessaire)
+            - classify_email: UTILISE cet outil quand l'utilisateur demande de classifier un email (après avoir récupéré le contenu avec retrieve_email_content si nécessaire)
             - search_emails: UTILISE cet outil quand l'utilisateur demande de rechercher des emails
             - get_recent_emails: UTILISE cet outil quand l'utilisateur demande ses emails récents
+            
+            WORKFLOW INTELLIGENT:
+            1. Si l'utilisateur fait référence à un email spécifique sans fournir le contenu complet, utilise retrieve_email_content d'abord
+            2. Ensuite, utilise les autres outils avec le contenu récupéré
+            3. Pour les requêtes générales (recherche, emails récents), utilise directement les outils correspondants
             
             RÈGLES IMPORTANTES:
             - Si l'utilisateur demande une action spécifique sur un email, tu DOIS utiliser l'outil approprié
             - Ne réponds JAMAIS directement pour les actions d'email sans utiliser les outils
             - Pour des conversations générales sans action email spécifique, réponds normalement
+            - Quand tu utilises retrieve_email_content, utilise ensuite les autres outils automatiquement si l'utilisateur le demande
             
             Réponds toujours en français de manière claire et utile.
             """
@@ -1158,6 +1209,52 @@ class AlbertChatbot:
                     'function_used': 'get_recent_emails'
                 }
             
+            elif function_name == 'retrieve_email_content':
+                if result_data.get('success'):
+                    email_content = result_data.get('email_content', '')
+                    metadata = result_data.get('metadata', {})
+                    query = result_data.get('query', '')
+                    
+                    # Provide the email content for further processing
+                    subject = metadata.get('subject', 'Sans sujet')
+                    sender_name = metadata.get('sender_name', 'Expéditeur inconnu')
+                    sender_email = metadata.get('sender_email', '')
+                    
+                    response_text = f"📧 **Email trouvé pour votre requête:** \"{query}\"\n\n"
+                    response_text += f"**Sujet:** {subject}\n"
+                    response_text += f"**De:** {sender_name}"
+                    if sender_email:
+                        response_text += f" <{sender_email}>"
+                    response_text += f"\n\n**Contenu de l'email récupéré avec succès.**\n\n"
+                    response_text += "Vous pouvez maintenant me demander de:\n"
+                    response_text += "• Résumer cet email\n"
+                    response_text += "• Générer une réponse à cet email\n"
+                    response_text += "• Classifier cet email\n"
+                    
+                    return {
+                        'success': True,
+                        'response': response_text,
+                        'type': 'email_content_retrieved',
+                        'function_used': 'retrieve_email_content',
+                        'email_data': {
+                            'content': email_content,
+                            'subject': subject,
+                            'sender': f"{sender_name} <{sender_email}>" if sender_email else sender_name,
+                            'metadata': metadata
+                        }
+                    }
+                else:
+                    error_msg = result_data.get('error', 'Erreur inconnue')
+                    query = result_data.get('query', '')
+                    response_text = f"❌ **Impossible de récupérer l'email pour:** \"{query}\"\n\n{error_msg}"
+                    
+                    return {
+                        'success': False,
+                        'response': response_text,
+                        'type': 'email_content_retrieval_error',
+                        'function_used': 'retrieve_email_content'
+                    }
+            
             else:
                 return {
                     'success': True,
@@ -1327,6 +1424,162 @@ class AlbertChatbot:
         }
         
         return response_data
+
+    def _handle_chained_function_calls(self, user_message: str, user_id: str = None, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
+        """
+        Handle chained function calls, especially for retrieve_email_content followed by other actions.
+        
+        Args:
+            user_message: The user's input message
+            user_id: User ID for email operations
+            conversation_history: Previous conversation messages
+            
+        Returns:
+            Dictionary containing the final response after all chained function calls
+        """
+        try:
+            # Detect if the user wants to perform an action on a specific email
+            # Examples: "résume l'email de Jean", "réponds à l'email sur le projet X"
+            action_keywords = {
+                'résume': 'summarize_email',
+                'résumer': 'summarize_email',
+                'summary': 'summarize_email',
+                'répond': 'generate_email_reply',
+                'répondre': 'generate_email_reply',
+                'réponds': 'generate_email_reply',
+                'réponse': 'generate_email_reply',
+                'classifie': 'classify_email',
+                'classifier': 'classify_email',
+                'catégorise': 'classify_email',
+                'catégoriser': 'classify_email'
+            }
+            
+            # Check if user wants an action on a specific email
+            user_message_lower = user_message.lower()
+            detected_action = None
+            for keyword, action in action_keywords.items():
+                if keyword in user_message_lower:
+                    detected_action = action
+                    break
+            
+            # Check if the message refers to a specific email (contains "email" + descriptive terms)
+            references_specific_email = (
+                'email' in user_message_lower and 
+                any(word in user_message_lower for word in ['de ', 'du ', 'sur ', 'concernant', 'à propos', 'envoyé par'])
+            )
+            
+            if detected_action and references_specific_email:
+                logger.info(f"Detected chained action: {detected_action} on specific email")
+                
+                # Step 1: Retrieve email content
+                # Extract query from user message (remove action keywords)
+                query = user_message
+                for keyword in action_keywords.keys():
+                    query = query.replace(keyword, '').strip()
+                
+                # Clean up the query
+                query = query.replace('l\'email', '').replace('le mail', '').strip()
+                if query.startswith('à '):
+                    query = query[2:]
+                elif query.startswith('de '):
+                    query = query[3:]
+                
+                logger.info(f"Retrieving email with query: {query}")
+                
+                retrieve_result = self._execute_email_function(
+                    'retrieve_email_content',
+                    {'query': query, 'limit': 5},
+                    user_id
+                )
+                
+                if not retrieve_result.get('success') or not retrieve_result['result'].get('success'):
+                    return {
+                        'success': False,
+                        'response': f"❌ Je n'ai pas pu trouver l'email demandé. {retrieve_result['result'].get('error', '')}",
+                        'type': 'chained_error'
+                    }
+                
+                # Step 2: Execute the requested action with the retrieved content
+                email_data = retrieve_result['result']
+                email_content = email_data.get('email_content', '')
+                metadata = email_data.get('metadata', {})
+                
+                if detected_action == 'summarize_email':
+                    action_result = self._execute_email_function(
+                        'summarize_email',
+                        {
+                            'email_content': email_content,
+                            'sender': metadata.get('sender_name', ''),
+                            'subject': metadata.get('subject', '')
+                        },
+                        user_id
+                    )
+                elif detected_action == 'classify_email':
+                    action_result = self._execute_email_function(
+                        'classify_email',
+                        {
+                            'email_content': email_content,
+                            'sender': metadata.get('sender_name', ''),
+                            'subject': metadata.get('subject', '')
+                        },
+                        user_id
+                    )
+                elif detected_action == 'generate_email_reply':
+                    action_result = self._execute_email_function(
+                        'generate_email_reply',
+                        {
+                            'original_email': email_content,
+                            'context': f"Réponse à l'email de {metadata.get('sender_name', 'expéditeur inconnu')}",
+                            'tone': 'professional'
+                        },
+                        user_id
+                    )
+                else:
+                    return {
+                        'success': False,
+                        'response': f"❌ Action non reconnue: {detected_action}",
+                        'type': 'chained_error'
+                    }
+                
+                if action_result.get('success'):
+                    # Format the final response
+                    formatted_response = self._format_function_response(detected_action, action_result, user_message)
+                    
+                    # Add context about the email that was processed
+                    subject = metadata.get('subject', 'Sans sujet')
+                    sender = metadata.get('sender_name', 'Expéditeur inconnu')
+                    
+                    original_response = formatted_response.get('response', '')
+                    enhanced_response = f"📧 **Email traité:** {subject} (de {sender})\n\n{original_response}"
+                    
+                    formatted_response['response'] = enhanced_response
+                    formatted_response['type'] = 'chained_success'
+                    formatted_response['processed_email'] = {
+                        'subject': subject,
+                        'sender': sender,
+                        'metadata': metadata
+                    }
+                    
+                    return formatted_response
+                else:
+                    return {
+                        'success': False,
+                        'response': f"❌ Erreur lors de l'exécution de l'action: {action_result.get('error', 'Erreur inconnue')}",
+                        'type': 'chained_error',
+                        'function_used': detected_action
+                    }
+            
+            # If no chained action detected, use normal processing
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in chained function calls: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'response': 'Une erreur s\'est produite lors du traitement de votre demande.',
+                'type': 'chained_error'
+            }
 
 # Global instance for easy access
 chatbot = AlbertChatbot()
