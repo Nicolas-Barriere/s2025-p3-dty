@@ -1,15 +1,17 @@
 import { useState } from "react"
 import styles from "./ChatWindow.module.css"
+import { fetchAPI } from "@/features/api/fetch-api";
+import { boolean } from "zod";
 
 export const ChatWindow = () => {
-    type ChatMessage = { 
-        role: "user" | "bot"; 
+    type ChatMessage = {
+        role: "user" | "bot";
         text: string;
         type?: string;
         function_used?: string;
         timestamp?: Date;
     }
-    
+
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             role: "bot",
@@ -24,10 +26,10 @@ export const ChatWindow = () => {
     const sendMessage = async () => {
         if (!input.trim() || isLoading) return
 
-        const userMsg: ChatMessage = { 
-            role: "user", 
-            text: input, 
-            timestamp: new Date() 
+        const userMsg: ChatMessage = {
+            role: "user",
+            text: input,
+            timestamp: new Date()
         }
         setMessages(prev => [...prev, userMsg])
         setInput("")
@@ -40,20 +42,22 @@ export const ChatWindow = () => {
                 content: msg.text
             }))
 
-            const res = await fetch("http://localhost:8071/mails/chatbot/", {
+
+            const res = await fetchAPI<{ data: {success: boolean, response: string, type: string, function_used: string} }>("/mails/chatbot/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     message: input,
                     conversation_history: conversationHistory
                 }),
-            })
+            }
+            )
 
-            const data = await res.json()
-            
+            const data = res.data;
+
             if (data.success && data.response) {
-                const botMsg: ChatMessage = { 
-                    role: "bot", 
+                const botMsg: ChatMessage = {
+                    role: "bot",
                     text: data.response,
                     type: data.type || "conversation",
                     function_used: data.function_used,
@@ -61,8 +65,8 @@ export const ChatWindow = () => {
                 }
                 setMessages(prev => [...prev, botMsg])
             } else {
-                const botMsg: ChatMessage = { 
-                    role: "bot", 
+                const botMsg: ChatMessage = {
+                    role: "bot",
                     text: "Désolé, je n'ai pas pu traiter votre message.",
                     type: "error",
                     timestamp: new Date()
@@ -70,8 +74,8 @@ export const ChatWindow = () => {
                 setMessages(prev => [...prev, botMsg])
             }
         } catch (err) {
-            const errorMsg: ChatMessage = { 
-                role: "bot", 
+            const errorMsg: ChatMessage = {
+                role: "bot",
                 text: "Erreur lors de l'envoi. Veuillez réessayer.",
                 type: "error",
                 timestamp: new Date()
