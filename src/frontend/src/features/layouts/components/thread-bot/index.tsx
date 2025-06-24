@@ -5,7 +5,6 @@ export const ChatbotView = () => {
     return (
         <div className="thread-bot">
             <ActionBar />
-            <h3>Hello</h3>
             <ChatWindow />
         </div>
     )
