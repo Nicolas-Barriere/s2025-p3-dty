@@ -64,6 +64,7 @@ export const ChatWindow = () => {
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && sendMessage()}
                     disabled={isPending}
+                    placeholder="Tapez votre message..."
                 />
                 <button onClick={sendMessage}>{isPending ? "Envoi..." : "Envoyer"}</button>
             </div>
