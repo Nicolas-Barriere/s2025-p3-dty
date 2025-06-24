@@ -369,7 +369,7 @@ def chatbot_health_check(request):
 
 # Simple chat endpoint for frontend integration
 @api_view(['POST'])
-@csrf_exempt
+@permission_classes([IsAuthenticated])
 def simple_chat_api(request):
     """
     Enhanced chat endpoint that accepts a message and returns an intelligent response.
@@ -389,162 +389,156 @@ def simple_chat_api(request):
     }
     """
     try:
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-        else:
-            data = request.POST
+        # Use DRF's request.data instead of manually parsing JSON
+        data = request.data
             
         message = data.get('message', '')
         conversation_history = data.get('conversation_history', [])
         
         if not message:
-            return JsonResponse({
+            return Response({
                 'success': False,
                 'error': 'message is required'
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get user ID from authenticated user only (security: no fallback)
+        if not hasattr(request, 'user') or not request.user.is_authenticated:
+            return Response({
+                'success': False,
+                'error': 'Authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        user_id = str(request.user.id)
+        logger.info(f"Processing message for authenticated user: {user_id}")
         
         # Use the enhanced chatbot with intent detection and function calling
         chatbot = get_chatbot()
-        result = chatbot.process_user_message(message, conversation_history)
+        result = chatbot.process_user_message(message, user_id, conversation_history)
         
         if result.get('success'):
-            return JsonResponse({
+            return Response({
                 'success': True,
                 'response': result.get('response', 'Je vous ai bien compris.'),
                 'type': result.get('type', 'conversation'),
                 'function_used': result.get('function_used'),
                 'original_intent': result.get('original_intent')
-            })
+            }, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({
+            return Response({
                 'success': True,
                 'response': result.get('response', 'Je suis désolé, je n\'ai pas pu traiter votre message.'),
                 'type': 'error',
                 'error': result.get('error')
-            })
+            }, status=status.HTTP_200_OK)
             
     except Exception as e:
         logger.error(f"Error in simple_chat_api: {e}")
-        return JsonResponse({
+        return Response({
             'success': True,
             'response': 'Une erreur s\'est produite lors du traitement de votre message.',
             'type': 'error',
             'error': str(e)
-        })
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@method_decorator(csrf_exempt, name='dispatch')
-class EmailRetrievalTestView(View):
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def email_retrieval_test_api(request):
     """
-    Test view for email retrieval operations.
+    Test endpoint for email retrieval operations.
+    Requires authentication for security.
     """
-    
-    def get(self, request, *args, **kwargs):
-        """Handle GET requests for email retrieval testing."""
-        try:
-            # Get query parameters
-            test_type = request.GET.get('test', 'basic')
-            user_id = request.GET.get('user_id')
-            message_id = request.GET.get('message_id')
-            mailbox_id = request.GET.get('mailbox_id')
+    try:
+        # Get query parameters
+        test_type = request.GET.get('test', 'basic')
+        message_id = request.GET.get('message_id')
+        mailbox_id = request.GET.get('mailbox_id')
+        
+        # Use authenticated user ID for all operations
+        user_id = str(request.user.id)
+        
+        results = {'test_type': test_type, 'success': False}
+        
+        if test_type == 'basic':
+            # Test basic functionality
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
             
-            results = {'test_type': test_type, 'success': False}
+            user = request.user
+            mailboxes = get_user_accessible_mailboxes(user_id)
+            results.update({
+                'success': True,
+                'user_id': user_id,
+                'user_email': str(user),
+                'mailboxes_count': len(mailboxes),
+                'mailboxes': [str(mb) for mb in mailboxes[:5]]
+            })
+                
+        elif test_type == 'unread':
+            # Test unread messages
+            unread = get_unread_messages(user_id, limit=10)
+            results.update({
+                'success': True,
+                'user_id': user_id,
+                'unread_count': len(unread),
+                'unread_messages': unread
+            })
             
-            if test_type == 'basic':
-                # Test basic functionality
-                from django.contrib.auth import get_user_model
-                User = get_user_model()
-                
-                users = User.objects.all()[:1]
-                if users:
-                    user = users[0]
-                    mailboxes = get_user_accessible_mailboxes(str(user.id))
-                    results.update({
-                        'success': True,
-                        'user_id': str(user.id),
-                        'user_email': str(user),
-                        'mailboxes_count': len(mailboxes),
-                        'mailboxes': [str(mb) for mb in mailboxes[:5]]
-                    })
-                else:
-                    results['error'] = 'No users found'
-                    
-            elif test_type == 'unread' and user_id:
-                # Test unread messages
-                unread = get_unread_messages(user_id, limit=10)
+        elif test_type == 'recent':
+            # Test recent messages
+            recent = get_recent_messages(user_id, days=7, limit=10)
+            results.update({
+                'success': True,
+                'user_id': user_id,
+                'recent_count': len(recent),
+                'recent_messages': recent
+            })
+            
+        elif test_type == 'message' and message_id:
+            # Test specific message
+            message = get_message_by_id(message_id, user_id)
+            if message:
+                content = get_parsed_message_content(message)
+                full_content = get_message_full_content(message_id, user_id)
                 results.update({
                     'success': True,
-                    'unread_count': len(unread),
-                    'unread_messages': unread
+                    'message_found': True,
+                    'subject': message.subject,
+                    'sender': str(message.sender),
+                    'content_preview': content,
+                    'full_content_length': len(full_content)
                 })
-                
-            elif test_type == 'recent' and user_id:
-                # Test recent messages
-                recent = get_recent_messages(user_id, days=7, limit=10)
-                results.update({
-                    'success': True,
-                    'recent_count': len(recent),
-                    'recent_messages': recent
-                })
-                
-            elif test_type == 'message' and message_id:
-                # Test specific message
-                message = get_message_by_id(message_id)
-                if message:
-                    content = get_parsed_message_content(message)
-                    full_content = get_message_full_content(message_id)
-                    results.update({
-                        'success': True,
-                        'message_found': True,
-                        'subject': message.subject,
-                        'sender': str(message.sender),
-                        'content_preview': content,
-                        'full_content_length': len(full_content)
-                    })
-                else:
-                    results['error'] = f'Message {message_id} not found'
-                    
-            elif test_type == 'threads' and mailbox_id:
-                # Test mailbox threads
-                threads = get_mailbox_threads(mailbox_id, limit=5)
-                results.update({
-                    'success': True,
-                    'threads_count': len(threads),
-                    'threads': [{'id': str(t.id), 'subject': t.subject} for t in threads]
-                })
-                
-            elif test_type == 'search' and user_id:
-                # Test search
-                query = request.GET.get('q', '')
-                search_results = search_messages(user_id, query=query, limit=10)
-                results.update({
-                    'success': True,
-                    'search_query': query,
-                    'results_count': len(search_results),
-                    'search_results': search_results
-                })
-                
-            elif test_type == 'chatbot' and message_id:
-                # Test chatbot integration
-                try:
-                    from .test_email_retrieval import test_specific_message
-                    chatbot_result = test_specific_message(message_id)
-                    results.update({
-                        'success': True,
-                        'chatbot_test': chatbot_result
-                    })
-                except Exception as e:
-                    results.update({
-                        'success': False,
-                        'error': f'Chatbot test failed: {str(e)}'
-                    })
             else:
-                results['error'] = 'Invalid test type or missing parameters'
+                results['error'] = f'Message {message_id} not found or access denied'
+                
+        elif test_type == 'threads' and mailbox_id:
+            # Test mailbox threads
+            threads = get_mailbox_threads(mailbox_id, user_id, limit=5)
+            results.update({
+                'success': True,
+                'threads_count': len(threads),
+                'threads': [{'id': str(t.id), 'subject': t.subject} for t in threads]
+            })
             
-            return JsonResponse(results)
+        elif test_type == 'search':
+            # Test search
+            query = request.GET.get('q', '')
+            search_results = search_messages(user_id, query=query, limit=10)
+            results.update({
+                'success': True,
+                'user_id': user_id,
+                'search_query': query,
+                'results_count': len(search_results),
+                'search_results': search_results
+            })
             
-        except Exception as e:
-            logger.exception("Error in email retrieval test")
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=500)
+        else:
+            results['error'] = 'Invalid test type or missing parameters'
+        
+        return Response(results, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.exception("Error in email retrieval test")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

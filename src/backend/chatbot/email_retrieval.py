@@ -2,12 +2,14 @@
 Email retrieval functions for the chatbot integration.
 
 This module provides functions to retrieve emails from the mailbox application
-database for processing by the chatbot.
+database for processing by the chatbot. All functions use core Django models
+and relationships directly for security, performance, and maintainability,
+avoiding API viewset patterns.
 """
 
 import logging
 from typing import Dict, List, Optional, Any, Tuple
-from django.db.models import Q, Prefetch, Exists, OuterRef
+from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
@@ -23,7 +25,7 @@ User = get_user_model()
 def get_user_accessible_mailboxes(user_id: str) -> List[models.Mailbox]:
     """
     Get all mailboxes that a user has access to.
-    Enhanced to use existing viewset patterns for better permission checking.
+    Uses model relationships for better performance.
     
     Args:
         user_id: UUID of the user
@@ -34,10 +36,9 @@ def get_user_accessible_mailboxes(user_id: str) -> List[models.Mailbox]:
     try:
         user = User.objects.get(id=user_id)
         
-        # Use the same pattern as MailboxViewSet.get_queryset()
-        accesses = user.mailbox_accesses.all()
+        # Use the user's mailbox_accesses relationship to get accessible mailboxes
         mailboxes = models.Mailbox.objects.filter(
-            id__in=accesses.values_list("mailbox_id", flat=True)
+            accesses__user=user
         ).select_related('domain', 'contact').order_by("-created_at")
         
         logger.info(f"Found {mailboxes.count()} accessible mailboxes for user {user}")
@@ -57,8 +58,8 @@ def get_mailbox_threads(
     filters: Optional[Dict[str, Any]] = None
 ) -> List[models.Thread]:
     """
-    Get threads accessible by a specific mailbox with enhanced permission checking.
-    Enhanced to use existing viewset patterns and permission checks.
+    Get threads accessible by a specific mailbox using model methods.
+    Uses the mailbox.threads_viewer property for better performance.
     
     Args:
         mailbox_id: UUID of the mailbox
@@ -72,35 +73,24 @@ def get_mailbox_threads(
     try:
         user = User.objects.get(id=user_id)
         
-        # Check if user has access to this mailbox (same pattern as ThreadViewSet)
+        # Check if user has access to this mailbox using model relationships
         try:
-            mailbox = models.Mailbox.objects.get(id=mailbox_id, accesses__user=user)
+            mailbox = models.Mailbox.objects.get(
+                id=mailbox_id, 
+                accesses__user=user
+            )
         except models.Mailbox.DoesNotExist:
             logger.error(f"User {user_id} does not have access to mailbox {mailbox_id}")
             return []
         
-        # Use the mailbox.threads_viewer property like ThreadViewSet does
+        # Use the mailbox's threads_viewer property from the model
         queryset = mailbox.threads_viewer
         
-        # Apply filters if provided (same pattern as ThreadViewSet)
+        # Apply filters if provided using the Thread model's boolean fields
         if filters:
-            filter_mapping = {
-                "has_trashed": "has_trashed",
-                "has_draft": "has_draft", 
-                "has_starred": "has_starred",
-                "has_sender": "has_sender",
-                "has_active": "has_active",
-                "has_messages": "has_messages",
-                "is_spam": "is_spam",
-            }
-            
-            for param, filter_field in filter_mapping.items():
-                if param in filters:
-                    value = filters[param]
-                    if value is True:
-                        queryset = queryset.filter(**{filter_field: True})
-                    elif value is False:
-                        queryset = queryset.filter(**{filter_field: False})
+            for field_name, value in filters.items():
+                if hasattr(models.Thread, field_name) and isinstance(value, bool):
+                    queryset = queryset.filter(**{field_name: value})
         
         # Prefetch related data for better performance 
         threads = queryset.select_related().prefetch_related(
@@ -128,8 +118,8 @@ def get_thread_messages(
     include_drafts: bool = False
 ) -> List[models.Message]:
     """
-    Get all messages in a thread with enhanced permission checking.
-    Enhanced to use existing viewset patterns and permission checks.
+    Get all messages in a thread using model relationships.
+    Uses Thread.messages relationship for better performance.
     
     Args:
         thread_id: UUID of the thread
@@ -143,17 +133,18 @@ def get_thread_messages(
         user = User.objects.get(id=user_id)
         thread = models.Thread.objects.get(id=thread_id)
         
-        # Check if user has access to this thread (same pattern as MessageViewSet)
+        # Check if user has access to this thread using ThreadAccess model
         has_access = models.ThreadAccess.objects.filter(
-            thread=thread, mailbox__accesses__user=user
+            thread=thread, 
+            mailbox__accesses__user=user
         ).exists()
         
         if not has_access:
             logger.error(f"User {user_id} does not have access to thread {thread_id}")
             return []
         
-        # Use the same queryset pattern as MessageViewSet
-        messages_query = models.Message.objects.filter(thread=thread).select_related(
+        # Use the thread's messages relationship
+        messages_query = thread.messages.select_related(
             'sender', 'thread'
         ).prefetch_related(
             'recipients__contact',
@@ -179,8 +170,8 @@ def get_thread_messages(
 
 def get_message_by_id(message_id: str, user_id: str) -> Optional[models.Message]:
     """
-    Get a specific message by its ID with enhanced permission checking.
-    Enhanced to use existing viewset patterns and permission checks.
+    Get a specific message by its ID using model relationships.
+    Uses ThreadAccess model for permission checking.
     
     Args:
         message_id: UUID of the message
@@ -192,31 +183,32 @@ def get_message_by_id(message_id: str, user_id: str) -> Optional[models.Message]
     try:
         user = User.objects.get(id=user_id)
         
-        # Use the same pattern as MessageViewSet.get_queryset()
-        message = models.Message.objects.filter(
-            id=message_id,
-            # Ensure user has access to the thread containing this message
-            **{
-                "id__in": models.Message.objects.filter(
-                    Exists(
-                        models.ThreadAccess.objects.filter(
-                            mailbox__accesses__user=user, 
-                            thread=OuterRef("thread_id")
-                        )
-                    )
-                ).values_list('id', flat=True)
-            }
-        ).select_related('sender', 'thread').prefetch_related(
-            'recipients__contact',
-            'attachments__blob'
-        ).first()
-        
-        if message:
+        # Get message and check access through ThreadAccess model
+        try:
+            message = models.Message.objects.select_related(
+                'sender', 'thread'
+            ).prefetch_related(
+                'recipients__contact',
+                'attachments__blob'
+            ).get(id=message_id)
+            
+            # Check if user has access to the thread containing this message
+            has_access = models.ThreadAccess.objects.filter(
+                thread=message.thread,
+                mailbox__accesses__user=user
+            ).exists()
+            
+            if not has_access:
+                logger.error(f"User {user_id} does not have access to message {message_id}")
+                return None
+                
             logger.info(f"Retrieved message: {message}")
             return message
-        else:
-            logger.error(f"Message {message_id} not found or user {user_id} has no access")
+            
+        except models.Message.DoesNotExist:
+            logger.error(f"Message {message_id} not found")
             return None
+            
     except User.DoesNotExist:
         logger.error(f"User with ID {user_id} not found")
         return None
@@ -227,7 +219,8 @@ def get_message_by_id(message_id: str, user_id: str) -> Optional[models.Message]
 
 def get_parsed_message_content(message: models.Message) -> Dict[str, Any]:
     """
-    Get parsed content from a message including text, HTML, and attachments.
+    Get parsed content from a message using the model's built-in parsing methods.
+    Uses Message.get_parsed_data() and get_all_recipient_contacts() methods.
     
     Args:
         message: Message object
@@ -236,19 +229,14 @@ def get_parsed_message_content(message: models.Message) -> Dict[str, Any]:
         Dictionary with parsed message content
     """
     try:
-        # Get parsed data from the message's raw MIME
+        # Use the message's built-in get_parsed_data method
         parsed_data = message.get_parsed_data()
         
         # Extract text and HTML content
-        text_body = []
-        html_body = []
+        text_body = parsed_data.get('textBody', [])
+        html_body = parsed_data.get('htmlBody', [])
         
-        if 'textBody' in parsed_data:
-            text_body = parsed_data['textBody']
-        if 'htmlBody' in parsed_data:
-            html_body = parsed_data['htmlBody']
-        
-        # Get attachments
+        # Get attachments using the message's attachments relationship
         attachments = []
         for attachment in message.attachments.all():
             attachments.append({
@@ -258,19 +246,16 @@ def get_parsed_message_content(message: models.Message) -> Dict[str, Any]:
                 'sha256': attachment.sha256,
             })
         
-        # Get recipients
+        # Get recipients using the message's built-in method
+        recipients_by_type = message.get_all_recipient_contacts()
         recipients = {
-            'to': [],
-            'cc': [],
-            'bcc': []
+            'to': [{'name': contact.name, 'email': contact.email} 
+                   for contact in recipients_by_type.get('to', [])],
+            'cc': [{'name': contact.name, 'email': contact.email} 
+                   for contact in recipients_by_type.get('cc', [])],
+            'bcc': [{'name': contact.name, 'email': contact.email} 
+                    for contact in recipients_by_type.get('bcc', [])]
         }
-        
-        for recipient in message.recipients.all():
-            recipient_data = {
-                'name': recipient.contact.name,
-                'email': recipient.contact.email
-            }
-            recipients[recipient.type].append(recipient_data)
         
         return {
             'subject': message.subject,
@@ -306,8 +291,8 @@ def search_messages(
     use_elasticsearch: bool = True
 ) -> List[Dict[str, Any]]:
     """
-    Search for messages based on various criteria.
-    Enhanced to use existing search patterns and Elasticsearch integration.
+    Search for messages based on various criteria using model relationships.
+    Uses user mailbox_accesses and ThreadAccess models for permission checking.
     
     Args:
         user_id: UUID of the user performing the search
@@ -323,11 +308,8 @@ def search_messages(
     try:
         user = User.objects.get(id=user_id)
         
-        # Get user's accessible mailboxes using the same pattern as MailboxViewSet
-        accesses = user.mailbox_accesses.all()
-        user_mailboxes = models.Mailbox.objects.filter(
-            id__in=accesses.values_list("mailbox_id", flat=True)
-        )
+        # Get user's accessible mailboxes using the user's mailbox_accesses relationship
+        user_mailboxes = models.Mailbox.objects.filter(accesses__user=user)
         
         # If specific mailbox requested, validate access
         if mailbox_id:
@@ -351,15 +333,19 @@ def search_messages(
                     results = []
                     thread_ids = [thread['id'] for thread in search_results['threads']]
                     
-                    # Get messages from these threads
-                    messages = models.Message.objects.filter(
+                    # Build the messages query first with all filters
+                    messages_query = models.Message.objects.filter(
                         thread_id__in=thread_ids,
                         is_draft=False,
                         is_trashed=False
-                    ).select_related('sender', 'thread').order_by('-created_at')[:limit]
+                    ).select_related('sender', 'thread')
                     
+                    # Apply archived filter before slicing
                     if not include_archived:
-                        messages = messages.filter(is_archived=False)
+                        messages_query = messages_query.filter(is_archived=False)
+                    
+                    # Apply ordering and slicing last
+                    messages = messages_query.order_by('-created_at')[:limit]
                     
                     for message in messages:
                         results.append({
@@ -379,14 +365,11 @@ def search_messages(
             except Exception as es_error:
                 logger.warning(f"Elasticsearch search failed, falling back to database: {es_error}")
         
-        # Fallback to database search using the same pattern as MessageViewSet
+        # Fallback to database search using ThreadAccess model for permission checking
         messages_query = models.Message.objects.filter(
-            Exists(
-                models.ThreadAccess.objects.filter(
-                    mailbox__in=user_mailboxes, 
-                    thread=OuterRef("thread_id")
-                )
-            )
+            thread__accesses__mailbox__accesses__user=user,
+            is_draft=False,
+            is_trashed=False
         ).select_related('sender', 'thread').prefetch_related('recipients__contact')
         
         # Apply search query if provided (database fallback)
@@ -397,15 +380,11 @@ def search_messages(
                 Q(sender__email__icontains=query)
             )
         
-        # Apply filters
+        # Apply archived filter before slicing
         if not include_archived:
             messages_query = messages_query.filter(is_archived=False)
         
-        messages_query = messages_query.filter(
-            is_draft=False,
-            is_trashed=False
-        )
-        
+        # Apply ordering and slicing last
         messages = messages_query.distinct().order_by('-created_at')[:limit]
         
         # Convert to simplified format
@@ -436,8 +415,8 @@ def search_messages(
 
 def get_unread_messages(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
     """
-    Get unread messages for a user.
-    Enhanced to use existing viewset patterns and permission checks.
+    Get unread messages for a user using model relationships.
+    Uses user mailbox_accesses and ThreadAccess models for permission checking.
     
     Args:
         user_id: UUID of the user
@@ -449,20 +428,9 @@ def get_unread_messages(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
     try:
         user = User.objects.get(id=user_id)
         
-        # Get user's accessible mailboxes using the same pattern as MailboxViewSet
-        accesses = user.mailbox_accesses.all()
-        user_mailboxes = models.Mailbox.objects.filter(
-            id__in=accesses.values_list("mailbox_id", flat=True)
-        )
-        
-        # Use the same pattern as MessageViewSet for permission checking
+        # Use model relationships for permission checking
         messages = models.Message.objects.filter(
-            Exists(
-                models.ThreadAccess.objects.filter(
-                    mailbox__in=user_mailboxes, 
-                    thread=OuterRef("thread_id")
-                )
-            ),
+            thread__accesses__mailbox__accesses__user=user,
             is_unread=True,
             is_draft=False,
             is_trashed=False
@@ -494,7 +462,7 @@ def get_unread_messages(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
 def get_recent_messages(user_id: str, days: int = 7, limit: int = 100) -> List[Dict[str, Any]]:
     """
     Get recent messages for a user within the specified number of days.
-    Enhanced to use existing viewset patterns and permission checks.
+    Uses model relationships for permission checking.
     
     Args:
         user_id: UUID of the user
@@ -505,30 +473,31 @@ def get_recent_messages(user_id: str, days: int = 7, limit: int = 100) -> List[D
         List of dictionaries with recent message information
     """
     try:
+        logger.info(f"get_recent_messages called: user_id={user_id}, days={days}, limit={limit}")
+        
         user = User.objects.get(id=user_id)
+        logger.debug(f"Found user: {user}")
+        
         cutoff_date = timezone.now() - timedelta(days=days)
+        logger.info(f"Looking for messages after: {cutoff_date}")
         
-        # Get user's accessible mailboxes using the same pattern as MailboxViewSet
-        accesses = user.mailbox_accesses.all()
-        user_mailboxes = models.Mailbox.objects.filter(
-            id__in=accesses.values_list("mailbox_id", flat=True)
-        )
-        
-        # Use the same pattern as MessageViewSet for permission checking
-        messages = models.Message.objects.filter(
-            Exists(
-                models.ThreadAccess.objects.filter(
-                    mailbox__in=user_mailboxes, 
-                    thread=OuterRef("thread_id")
-                )
-            ),
+        # Use model relationships for permission checking
+        logger.debug("Building query with thread__accesses__mailbox__accesses__user filter")
+        messages_query = models.Message.objects.filter(
+            thread__accesses__mailbox__accesses__user=user,
             created_at__gte=cutoff_date,
             is_draft=False,
             is_trashed=False
-        ).select_related('sender', 'thread').order_by('-created_at')[:limit]
+        ).select_related('sender', 'thread').order_by('-created_at')
+        
+        logger.info(f"Query built, applying limit of {limit}")
+        messages = messages_query[:limit]
+        
+        logger.info(f"Query executed, found {len(messages)} messages")
         
         results = []
-        for message in messages:
+        for i, message in enumerate(messages):
+            logger.debug(f"Processing message {i+1}: {message.id} - {message.subject}")
             results.append({
                 'message_id': str(message.id),
                 'thread_id': str(message.thread.id),
@@ -541,21 +510,21 @@ def get_recent_messages(user_id: str, days: int = 7, limit: int = 100) -> List[D
                 'thread_subject': message.thread.subject,
             })
         
-        logger.info(f"Found {len(results)} recent messages ({days} days) for user {user}")
+        logger.info(f"Successfully processed {len(results)} recent messages ({days} days) for user {user}")
         return results
         
     except User.DoesNotExist:
-        logger.error(f"User with ID {user_id} not found")
+        logger.error(f"get_recent_messages: User with ID {user_id} not found")
         return []
     except Exception as e:
-        logger.error(f"Error retrieving recent messages: {e}")
+        logger.error(f"get_recent_messages: Error retrieving recent messages for user {user_id}: {e}", exc_info=True)
         return []
 
 
 def get_message_full_content(message_id: str, user_id: str) -> str:
     """
     Get the full text content of a message for chatbot processing.
-    Enhanced to use existing viewset patterns and permission checks.
+    Uses model relationships for permission checking.
     
     Args:
         message_id: UUID of the message
@@ -633,7 +602,7 @@ def retrieve_email_content_by_query(
 ) -> Dict[str, Any]:
     """
     Retrieve the full content of the email that best matches a user query.
-    Enhanced to use existing search patterns and Elasticsearch integration.
+    Uses model-based search and permission checking.
     
     Args:
         user_id: UUID of the user
@@ -720,7 +689,8 @@ def retrieve_email_content_by_query(
 
 def get_thread_statistics(user_id: str, mailbox_id: Optional[str] = None) -> Dict[str, Any]:
     """
-    Get thread statistics for a user, similar to the ThreadViewSet stats endpoint.
+    Get thread statistics for a user using model relationships.
+    Uses user mailbox_accesses and ThreadAccess models for permission checking.
     
     Args:
         user_id: UUID of the user
@@ -732,11 +702,8 @@ def get_thread_statistics(user_id: str, mailbox_id: Optional[str] = None) -> Dic
     try:
         user = User.objects.get(id=user_id)
         
-        # Get user's accessible mailboxes
-        accesses = user.mailbox_accesses.all()
-        user_mailboxes = models.Mailbox.objects.filter(
-            id__in=accesses.values_list("mailbox_id", flat=True)
-        )
+        # Get user's accessible mailboxes using model relationships
+        user_mailboxes = models.Mailbox.objects.filter(accesses__user=user)
         
         if mailbox_id:
             if not user_mailboxes.filter(id=mailbox_id).exists():
@@ -744,17 +711,12 @@ def get_thread_statistics(user_id: str, mailbox_id: Optional[str] = None) -> Dic
                 return {}
             user_mailboxes = user_mailboxes.filter(id=mailbox_id)
         
-        # Base queryset: Threads the user has access to
+        # Base queryset: Threads the user has access to using model relationships
         threads_queryset = models.Thread.objects.filter(
-            Exists(
-                models.ThreadAccess.objects.filter(
-                    mailbox__in=user_mailboxes, 
-                    thread=OuterRef("pk")
-                )
-            )
+            accesses__mailbox__accesses__user=user
         ).distinct()
         
-        # Calculate statistics similar to ThreadViewSet
+        # Calculate statistics using Thread model fields
         stats = {
             'total_threads': threads_queryset.count(),
             'unread_threads': threads_queryset.filter(has_unread=True).count(),
@@ -783,8 +745,8 @@ def search_threads_for_chatbot(
     filters: Optional[Dict[str, Any]] = None
 ) -> List[Dict[str, Any]]:
     """
-    Search for threads using the existing search functionality.
-    Enhanced wrapper around the core search functionality for chatbot use.
+    Search for threads using model relationships and core search functionality.
+    Uses user mailbox_accesses and ThreadAccess models for permission checking.
     
     Args:
         user_id: UUID of the user performing the search
@@ -799,11 +761,8 @@ def search_threads_for_chatbot(
     try:
         user = User.objects.get(id=user_id)
         
-        # Get user's accessible mailboxes
-        accesses = user.mailbox_accesses.all()
-        user_mailboxes = models.Mailbox.objects.filter(
-            id__in=accesses.values_list("mailbox_id", flat=True)
-        )
+        # Get user's accessible mailboxes using model relationships
+        user_mailboxes = models.Mailbox.objects.filter(accesses__user=user)
         
         if mailbox_id:
             if not user_mailboxes.filter(id=mailbox_id).exists():
@@ -847,14 +806,9 @@ def search_threads_for_chatbot(
             except Exception as es_error:
                 logger.warning(f"Elasticsearch search failed, falling back to database: {es_error}")
         
-        # Fallback to database search
+        # Fallback to database search using model relationships
         threads_queryset = models.Thread.objects.filter(
-            Exists(
-                models.ThreadAccess.objects.filter(
-                    mailbox__in=user_mailboxes, 
-                    thread=OuterRef("pk")
-                )
-            )
+            accesses__mailbox__accesses__user=user
         ).distinct()
         
         # Apply query filter if provided

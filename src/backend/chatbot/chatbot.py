@@ -835,7 +835,8 @@ class AlbertChatbot:
             Dictionary containing the function execution result
         """
         try:
-            logger.info(f"Executing function: {function_name}")
+            logger.info(f"_execute_email_function called: function={function_name}, user_id={user_id}")
+            logger.debug(f"Function arguments: {arguments}")
             
             if function_name == "summarize_email":
                 email_content = arguments.get("email_content", "")
@@ -930,15 +931,27 @@ class AlbertChatbot:
                 days = arguments.get("days", 7)
                 limit = arguments.get("limit", 10)
                 
+                logger.info(f"get_recent_emails called with: user_id={user_id}, days={days}, limit={limit}")
+                logger.debug(f"Arguments received: {arguments}")
+                
                 if not user_id:
+                    logger.error("get_recent_emails: User ID is missing")
                     return {"success": False, "error": "User ID required for email retrieval"}
                 
-                results = get_recent_messages(user_id=user_id, days=days, limit=limit)
-                return {
-                    "success": True,
-                    "function": "get_recent_emails",
-                    "result": {"emails": results, "count": len(results)}
-                }
+                try:
+                    logger.info(f"Calling get_recent_messages with user_id={user_id}, days={days}, limit={limit}")
+                    results = get_recent_messages(user_id=user_id, days=days, limit=limit)
+                    logger.info(f"get_recent_messages returned {len(results)} results")
+                    logger.debug(f"Results sample: {results[:2] if results else 'No results'}")
+                    
+                    return {
+                        "success": True,
+                        "function": "get_recent_emails",
+                        "result": {"emails": results, "count": len(results)}
+                    }
+                except Exception as e:
+                    logger.error(f"Error in get_recent_emails: {e}", exc_info=True)
+                    return {"success": False, "error": f"Error retrieving recent emails: {str(e)}"}
                 
             elif function_name == "get_unread_emails":
                 # Import email retrieval functions
@@ -1029,11 +1042,12 @@ class AlbertChatbot:
                 }
                 
         except Exception as e:
-            logger.error(f"Error executing function {function_name}: {e}")
+            logger.error(f"Error executing function {function_name} with args {arguments}: {e}", exc_info=True)
             return {
                 "success": False,
                 "error": str(e),
-                "function": function_name
+                "function": function_name,
+                "arguments": arguments
             }
 
     def chat_conversation(self, user_message: str, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
@@ -1118,7 +1132,9 @@ class AlbertChatbot:
             Dictionary containing the appropriate response based on function calls
         """
         try:
-            logger.info(f"Processing user message with function calling: {user_message[:100]}...")
+            logger.info(f"process_user_message called with: user_id={user_id}, message='{user_message[:100]}{'...' if len(user_message) > 100 else ''}'")
+            logger.debug(f"Full user message: {user_message}")
+            logger.debug(f"Conversation history length: {len(conversation_history) if conversation_history else 0}")
             
             if conversation_history is None:
                 conversation_history = []
@@ -1172,41 +1188,56 @@ class AlbertChatbot:
             
             # Get available tools
             tools = self._get_email_tools()
+            logger.info(f"Available tools: {len(tools)} tools loaded")
+            logger.debug(f"Tool names: {[tool['name'] for tool in tools]}")
             
             # Make request to Albert API with function calling
+            logger.info("Making request to Albert API with function calling enabled")
             response = self._make_request(messages, tools)
+            logger.debug(f"Albert API response keys: {list(response.keys()) if response else 'No response'}")
             
             # Process the response
             choice = response.get('choices', [{}])[0]
             message = choice.get('message', {})
+            logger.debug(f"Response message keys: {list(message.keys()) if message else 'No message'}")
             
             # Check if AI wants to call a function
             if 'tool_calls' in message and message['tool_calls']:
+                logger.info(f"AI wants to call {len(message['tool_calls'])} tool(s)")
                 # Handle multiple tool calls if needed
                 tool_call = message['tool_calls'][0]  # Take the first tool call
+                logger.debug(f"Tool call: {tool_call}")
+                
                 if tool_call['type'] == 'function':
                     function_call = tool_call['function']
                     function_name = function_call['name']
                     
+                    logger.info(f"AI wants to call function: {function_name}")
+                    logger.debug(f"Raw function arguments: {function_call.get('arguments', 'No arguments')}")
+                    
                     try:
                         function_args = json.loads(function_call['arguments'])
+                        logger.debug(f"Parsed function arguments: {function_args}")
                     except json.JSONDecodeError as e:
                         logger.error(f"Failed to parse function arguments: {e}")
+                        logger.error(f"Raw arguments were: {function_call.get('arguments', 'None')}")
                         return {
                             'success': False,
                             'response': "Erreur lors de l'analyse des paramètres de la fonction.",
                             'type': 'error'
                         }
                     
-                    logger.info(f"AI wants to call function: {function_name}")
-                    
                     # Execute the function
+                    logger.info(f"Executing function {function_name} with user_id={user_id}")
                     function_result = self._execute_email_function(function_name, function_args, user_id)
+                    logger.info(f"Function {function_name} execution result: success={function_result.get('success')}")
                     
                     if function_result.get('success'):
+                        logger.info(f"Function {function_name} succeeded, formatting response")
                         # Format the response based on the function used
                         return self._format_function_response(function_name, function_result, user_message)
                     else:
+                        logger.error(f"Function {function_name} failed: {function_result.get('error')}")
                         return {
                             'success': False,
                             'response': f"Erreur lors de l'exécution de {function_name}: {function_result.get('error', 'Erreur inconnue')}",
