@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation"
 import { Banner } from "@/features/ui/components/banner"
 import { Button } from "@openfun/cunningham-react"
 import { useTranslation } from "react-i18next"
+import { ThreadViewLabelsList } from "./components/thread-view-labels-list"
 import { ThreadSummary } from "./components/thread-summary"
 
 type MessageWithDraftChild = Message & {
@@ -37,8 +38,8 @@ export const ThreadView = () => {
     // Nest draft messages under their parent messages
     const messagesWithDraftChildren = useMemo(() => {
         if (!messages?.results) return [];
-        const rootMessages: MessageWithDraftChild[] = messages.results.filter((m) =>  !m.is_draft || !m.parent_id);
-        const draftChildren  = messages.results.filter((m) => m.is_draft && m.parent_id);
+        const rootMessages: MessageWithDraftChild[] = messages.results.filter((m) => !m.is_draft || !m.parent_id);
+        const draftChildren = messages.results.filter((m) => m.is_draft && m.parent_id);
         draftChildren.forEach((m) => {
             const parentMessage = rootMessages.find((um) => um.id === m.parent_id);
             if (parentMessage) {
@@ -56,7 +57,7 @@ export const ThreadView = () => {
      * we want to show all messages.
      */
     const filteredMessages = useMemo(() => {
-        if(!isTrashView && showTrashedMessages) return messagesWithDraftChildren;
+        if (!isTrashView && showTrashedMessages) return messagesWithDraftChildren;
         return messagesWithDraftChildren.filter((m) => m.is_trashed === isTrashView);
     }, [messagesWithDraftChildren, isTrashView, showTrashedMessages]);
 
@@ -86,7 +87,7 @@ export const ThreadView = () => {
                 const messageId = entry.target.getAttribute('data-message-id');
                 const message = messages?.results.find(({ id }) => id === messageId);
                 if (!message) return;
-                if (entry.isIntersecting &&!message.read_at) {
+                if (entry.isIntersecting && !message.read_at) {
                     toMarkAsReadQueue.current.push(messageId!);
                 }
             });
@@ -122,6 +123,11 @@ export const ThreadView = () => {
             <ActionBar canUndelete={isThreadTrashed} />
             {selectedThread && <ThreadSummary threadId={selectedThread.id} />}
             <div className="thread-view__messages-list">
+                {
+                    selectedThread!.labels.length > 0 && (
+                        <ThreadViewLabelsList labels={selectedThread!.labels} />
+                    )
+                }
                 {filteredMessages!.map((message) => {
                     const isLatest = latestMessage?.id === message.id;
                     const isUnread = message.is_unread;
