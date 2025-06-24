@@ -692,10 +692,51 @@ class AlbertChatbot:
                             "type": "string",
                             "description": "Termes de recherche pour trouver des emails"
                         },
+                        "mailbox_id": {
+                            "type": "string",
+                            "description": "ID de la boîte mail spécifique (optionnel)"
+                        },
                         "limit": {
                             "type": "integer",
                             "description": "Nombre maximum d'emails à retourner",
                             "default": 10
+                        },
+                        "use_elasticsearch": {
+                            "type": "boolean",
+                            "description": "Utiliser Elasticsearch pour la recherche",
+                            "default": True
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            {
+                "name": "search_threads",
+                "description": "Recherche des conversations (threads) dans la boîte mail de l'utilisateur",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Termes de recherche pour trouver des conversations"
+                        },
+                        "mailbox_id": {
+                            "type": "string",
+                            "description": "ID de la boîte mail spécifique (optionnel)"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Nombre maximum de conversations à retourner",
+                            "default": 10
+                        },
+                        "filters": {
+                            "type": "object",
+                            "description": "Filtres additionnels (has_unread, has_starred, etc.)",
+                            "properties": {
+                                "has_unread": {"type": "boolean"},
+                                "has_starred": {"type": "boolean"},
+                                "has_draft": {"type": "boolean"}
+                            }
                         }
                     },
                     "required": ["query"]
@@ -721,6 +762,41 @@ class AlbertChatbot:
                 }
             },
             {
+                "name": "get_unread_emails",
+                "description": "Récupère les emails non lus de l'utilisateur",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "description": "Nombre maximum d'emails à retourner",
+                            "default": 20
+                        }
+                    }
+                }
+            },
+            {
+                "name": "get_user_mailboxes",
+                "description": "Récupère les boîtes mail accessibles à l'utilisateur",
+                "parameters": {
+                    "type": "object",
+                    "properties": {}
+                }
+            },
+            {
+                "name": "get_thread_statistics",
+                "description": "Récupère les statistiques des conversations de l'utilisateur",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "mailbox_id": {
+                            "type": "string",
+                            "description": "ID de la boîte mail spécifique (optionnel)"
+                        }
+                    }
+                }
+            },
+            {
                 "name": "retrieve_email_content",
                 "description": "Récupère le contenu complet de l'email qui correspond le mieux à la requête de l'utilisateur",
                 "parameters": {
@@ -734,6 +810,11 @@ class AlbertChatbot:
                             "type": "integer",
                             "description": "Nombre maximum d'emails à rechercher",
                             "default": 5
+                        },
+                        "use_elasticsearch": {
+                            "type": "boolean",
+                            "description": "Utiliser Elasticsearch pour la recherche",
+                            "default": True
                         }
                     },
                     "required": ["query"]
@@ -797,16 +878,49 @@ class AlbertChatbot:
                 from .email_retrieval import search_messages
                 
                 query = arguments.get("query", "")
+                mailbox_id = arguments.get("mailbox_id")
                 limit = arguments.get("limit", 10)
+                use_elasticsearch = arguments.get("use_elasticsearch", True)
                 
                 if not user_id:
                     return {"success": False, "error": "User ID required for email search"}
                 
-                results = search_messages(user_id, query, limit)
+                results = search_messages(
+                    user_id=user_id, 
+                    query=query, 
+                    mailbox_id=mailbox_id,
+                    limit=limit,
+                    use_elasticsearch=use_elasticsearch
+                )
                 return {
                     "success": True,
                     "function": "search_emails",
                     "result": {"emails": results, "count": len(results)}
+                }
+                
+            elif function_name == "search_threads":
+                # Import thread search function
+                from .email_retrieval import search_threads_for_chatbot
+                
+                query = arguments.get("query", "")
+                mailbox_id = arguments.get("mailbox_id")
+                limit = arguments.get("limit", 10)
+                filters = arguments.get("filters", {})
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for thread search"}
+                
+                results = search_threads_for_chatbot(
+                    user_id=user_id,
+                    query=query,
+                    mailbox_id=mailbox_id,
+                    limit=limit,
+                    filters=filters
+                )
+                return {
+                    "success": True,
+                    "function": "search_threads",
+                    "result": {"threads": results, "count": len(results)}
                 }
                 
             elif function_name == "get_recent_emails":
@@ -819,11 +933,67 @@ class AlbertChatbot:
                 if not user_id:
                     return {"success": False, "error": "User ID required for email retrieval"}
                 
-                results = get_recent_messages(user_id, days, limit)
+                results = get_recent_messages(user_id=user_id, days=days, limit=limit)
                 return {
                     "success": True,
                     "function": "get_recent_emails",
                     "result": {"emails": results, "count": len(results)}
+                }
+                
+            elif function_name == "get_unread_emails":
+                # Import email retrieval functions
+                from .email_retrieval import get_unread_messages
+                
+                limit = arguments.get("limit", 20)
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for email retrieval"}
+                
+                results = get_unread_messages(user_id=user_id, limit=limit)
+                return {
+                    "success": True,
+                    "function": "get_unread_emails",
+                    "result": {"emails": results, "count": len(results)}
+                }
+                
+            elif function_name == "get_user_mailboxes":
+                # Import mailbox retrieval function
+                from .email_retrieval import get_user_accessible_mailboxes
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for mailbox retrieval"}
+                
+                results = get_user_accessible_mailboxes(user_id=user_id)
+                mailbox_list = []
+                for mailbox in results:
+                    mailbox_list.append({
+                        'id': str(mailbox.id),
+                        'email': f"{mailbox.local_part}@{mailbox.domain.name}",
+                        'domain': mailbox.domain.name,
+                        'local_part': mailbox.local_part,
+                        'contact_name': mailbox.contact.name if mailbox.contact else None
+                    })
+                
+                return {
+                    "success": True,
+                    "function": "get_user_mailboxes",
+                    "result": {"mailboxes": mailbox_list, "count": len(mailbox_list)}
+                }
+                
+            elif function_name == "get_thread_statistics":
+                # Import statistics function
+                from .email_retrieval import get_thread_statistics
+                
+                mailbox_id = arguments.get("mailbox_id")
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for statistics"}
+                
+                results = get_thread_statistics(user_id=user_id, mailbox_id=mailbox_id)
+                return {
+                    "success": True,
+                    "function": "get_thread_statistics",
+                    "result": results
                 }
                 
             elif function_name == "retrieve_email_content":
@@ -832,6 +1002,7 @@ class AlbertChatbot:
                 
                 query = arguments.get("query", "")
                 limit = arguments.get("limit", 5)
+                use_elasticsearch = arguments.get("use_elasticsearch", True)
                 
                 if not user_id:
                     return {"success": False, "error": "User ID required for email content retrieval"}
@@ -839,7 +1010,12 @@ class AlbertChatbot:
                 if not query:
                     return {"success": False, "error": "Query is required for email content retrieval"}
                 
-                result = retrieve_email_content_by_query(user_id, query, limit)
+                result = retrieve_email_content_by_query(
+                    user_id=user_id, 
+                    query=query, 
+                    limit=limit,
+                    use_elasticsearch=use_elasticsearch
+                )
                 return {
                     "success": True,
                     "function": "retrieve_email_content",
@@ -956,23 +1132,35 @@ class AlbertChatbot:
             system_prompt = """
             Tu es un assistant intelligent spécialisé dans la gestion d'emails. Tu as accès à plusieurs outils et tu DOIS les utiliser quand ils sont appropriés:
             
+            OUTILS DE RÉCUPÉRATION D'EMAILS:
             - retrieve_email_content: UTILISE cet outil AVANT tout autre outil quand l'utilisateur fait référence à un email spécifique (ex: "résume l'email de Jean", "réponds à l'email sur le projet X")
+            - search_emails: UTILISE cet outil pour rechercher des emails spécifiques avec Elasticsearch ou base de données
+            - search_threads: UTILISE cet outil pour rechercher des conversations/fils de discussion
+            - get_recent_emails: UTILISE cet outil quand l'utilisateur demande ses emails récents
+            - get_unread_emails: UTILISE cet outil quand l'utilisateur demande ses emails non lus
+            
+            OUTILS D'ANALYSE D'EMAILS:
             - summarize_email: UTILISE cet outil quand l'utilisateur demande de résumer un email (après avoir récupéré le contenu avec retrieve_email_content si nécessaire)
             - generate_email_reply: UTILISE cet outil quand l'utilisateur demande de générer une réponse à un email (après avoir récupéré le contenu avec retrieve_email_content si nécessaire)
             - classify_email: UTILISE cet outil quand l'utilisateur demande de classifier un email (après avoir récupéré le contenu avec retrieve_email_content si nécessaire)
-            - search_emails: UTILISE cet outil quand l'utilisateur demande de rechercher des emails
-            - get_recent_emails: UTILISE cet outil quand l'utilisateur demande ses emails récents
+            
+            OUTILS DE GESTION:
+            - get_user_mailboxes: UTILISE cet outil quand l'utilisateur demande ses boîtes mail disponibles
+            - get_thread_statistics: UTILISE cet outil quand l'utilisateur demande des statistiques sur ses emails/conversations
             
             WORKFLOW INTELLIGENT:
             1. Si l'utilisateur fait référence à un email spécifique sans fournir le contenu complet, utilise retrieve_email_content d'abord
             2. Ensuite, utilise les autres outils avec le contenu récupéré
             3. Pour les requêtes générales (recherche, emails récents), utilise directement les outils correspondants
+            4. Pour les statistiques et la gestion, utilise get_user_mailboxes ou get_thread_statistics
             
             RÈGLES IMPORTANTES:
             - Si l'utilisateur demande une action spécifique sur un email, tu DOIS utiliser l'outil approprié
             - Ne réponds JAMAIS directement pour les actions d'email sans utiliser les outils
             - Pour des conversations générales sans action email spécifique, réponds normalement
             - Quand tu utilises retrieve_email_content, utilise ensuite les autres outils automatiquement si l'utilisateur le demande
+            - Utilise search_threads pour rechercher des conversations complètes
+            - Utilise search_emails pour rechercher des messages individuels
             
             Réponds toujours en français de manière claire et utile.
             """
@@ -1254,6 +1442,101 @@ class AlbertChatbot:
                         'type': 'email_content_retrieval_error',
                         'function_used': 'retrieve_email_content'
                     }
+            
+            elif function_name == 'search_threads':
+                threads = result_data.get('threads', [])
+                count = result_data.get('count', 0)
+                
+                if count > 0:
+                    response_text = f"🧵 **Conversations trouvées:** {count} conversation(s)\n\n"
+                    for i, thread in enumerate(threads[:5], 1):
+                        subject = thread.get('subject', 'Sans sujet')
+                        participants = thread.get('participants', [])
+                        message_count = thread.get('message_count', 0)
+                        has_unread = thread.get('has_unread', False)
+                        
+                        unread_indicator = "🔴 " if has_unread else ""
+                        response_text += f"{i}. {unread_indicator}**{subject}** ({message_count} messages)\n"
+                        if participants:
+                            response_text += f"   Participants: {', '.join(participants[:3])}\n"
+                else:
+                    response_text = "🧵 Aucune conversation trouvée pour cette recherche."
+                
+                return {
+                    'success': True,
+                    'response': response_text,
+                    'type': 'thread_search',
+                    'function_used': 'search_threads'
+                }
+            
+            elif function_name == 'get_unread_emails':
+                emails = result_data.get('emails', [])
+                count = result_data.get('count', 0)
+                
+                if count > 0:
+                    response_text = f"🔴 **Emails non lus:** {count} email(s)\n\n"
+                    for i, email in enumerate(emails[:5], 1):
+                        subject = email.get('subject', 'Sans sujet')
+                        sender = email.get('sender_name', 'Expéditeur inconnu')
+                        response_text += f"{i}. **{subject}** (de {sender})\n"
+                else:
+                    response_text = "✅ Aucun email non lu ! Vous êtes à jour."
+                
+                return {
+                    'success': True,
+                    'response': response_text,
+                    'type': 'unread_emails',
+                    'function_used': 'get_unread_emails'
+                }
+            
+            elif function_name == 'get_user_mailboxes':
+                mailboxes = result_data.get('mailboxes', [])
+                count = result_data.get('count', 0)
+                
+                if count > 0:
+                    response_text = f"📮 **Vos boîtes mail:** {count} boîte(s) accessible(s)\n\n"
+                    for i, mailbox in enumerate(mailboxes, 1):
+                        email = mailbox.get('email', 'Email inconnu')
+                        contact_name = mailbox.get('contact_name')
+                        name_part = f" ({contact_name})" if contact_name else ""
+                        response_text += f"{i}. **{email}**{name_part}\n"
+                else:
+                    response_text = "❌ Aucune boîte mail accessible trouvée."
+                
+                return {
+                    'success': True,
+                    'response': response_text,
+                    'type': 'user_mailboxes',
+                    'function_used': 'get_user_mailboxes'
+                }
+            
+            elif function_name == 'get_thread_statistics':
+                stats = result_data
+                
+                if stats:
+                    total = stats.get('total_threads', 0)
+                    unread = stats.get('unread_threads', 0)
+                    starred = stats.get('starred_threads', 0)
+                    drafts = stats.get('draft_threads', 0)
+                    trashed = stats.get('trashed_threads', 0)
+                    spam = stats.get('spam_threads', 0)
+                    
+                    response_text = f"📊 **Statistiques de vos conversations:**\n\n"
+                    response_text += f"• **Total:** {total} conversations\n"
+                    response_text += f"• **Non lues:** {unread} conversations\n"
+                    response_text += f"• **Favorites:** {starred} conversations\n"
+                    response_text += f"• **Brouillons:** {drafts} conversations\n"
+                    response_text += f"• **Corbeille:** {trashed} conversations\n"
+                    response_text += f"• **Spam:** {spam} conversations\n"
+                else:
+                    response_text = "📊 Aucune statistique disponible."
+                
+                return {
+                    'success': True,
+                    'response': response_text,
+                    'type': 'thread_statistics',
+                    'function_used': 'get_thread_statistics'
+                }
             
             else:
                 return {
