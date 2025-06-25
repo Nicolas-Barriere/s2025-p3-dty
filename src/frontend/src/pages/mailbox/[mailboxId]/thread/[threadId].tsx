@@ -1,8 +1,6 @@
 import { MainLayout } from "@/features/layouts/components/main";
 import { ThreadPanel } from "@/features/layouts/components/thread-panel";
 import { ThreadView } from "@/features/layouts/components/thread-view";
-import { ChatbotView } from "@/features/layouts/components/thread-bot";
-
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 const Mailbox = () => {
@@ -12,12 +10,8 @@ const Mailbox = () => {
                 <ThreadPanel />
             </Panel>
             <PanelResizeHandle className="thread__resize-handle" />
-            <Panel className="thread-view-panel" defaultSize={75} minSize={20}>
+            <Panel className="thread-view-panel" defaultSize={75} minSize={50}>
                 <ThreadView />
-            </Panel>
-            <PanelResizeHandle className="thread__resize-handle" />
-            <Panel className="thread-bot-panel" defaultSize={75} minSize={20}>
-                <ChatbotView />
             </Panel>
         </PanelGroup>
     )
