@@ -12,6 +12,7 @@ Date: 2025-06-19
 
 import json
 import logging
+import time
 from typing import Dict, List, Optional, Any
 from enum import Enum
 from dataclasses import dataclass
@@ -797,6 +798,215 @@ class AlbertChatbot:
                 }
             },
             {
+                "name": "create_draft_email",
+                "description": "Crée un brouillon d'email",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "subject": {
+                            "type": "string",
+                            "description": "Sujet de l'email"
+                        },
+                        "body": {
+                            "type": "string",
+                            "description": "Contenu du corps de l'email"
+                        },
+                        "recipients_to": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {"type": "string"},
+                                    "name": {"type": "string"}
+                                },
+                                "required": ["email"]
+                            },
+                            "description": "Liste des destinataires principaux"
+                        },
+                        "recipients_cc": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {"type": "string"},
+                                    "name": {"type": "string"}
+                                },
+                                "required": ["email"]
+                            },
+                            "description": "Liste des destinataires en copie (optionnel)"
+                        },
+                        "recipients_bcc": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {"type": "string"},
+                                    "name": {"type": "string"}
+                                },
+                                "required": ["email"]
+                            },
+                            "description": "Liste des destinataires en copie cachée (optionnel)"
+                        },
+                        "mailbox_id": {
+                            "type": "string",
+                            "description": "ID de la boîte mail expéditrice (optionnel, utilise la première disponible si non spécifiée)"
+                        }
+                    },
+                    "required": ["subject", "body", "recipients_to"]
+                }
+            },
+            {
+                "name": "send_email",
+                "description": "Envoie un email immédiatement",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "subject": {
+                            "type": "string",
+                            "description": "Sujet de l'email"
+                        },
+                        "body": {
+                            "type": "string",
+                            "description": "Contenu du corps de l'email"
+                        },
+                        "recipients_to": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {"type": "string"},
+                                    "name": {"type": "string"}
+                                },
+                                "required": ["email"]
+                            },
+                            "description": "Liste des destinataires principaux"
+                        },
+                        "recipients_cc": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {"type": "string"},
+                                    "name": {"type": "string"}
+                                },
+                                "required": ["email"]
+                            },
+                            "description": "Liste des destinataires en copie (optionnel)"
+                        },
+                        "recipients_bcc": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {"type": "string"},
+                                    "name": {"type": "string"}
+                                },
+                                "required": ["email"]
+                            },
+                            "description": "Liste des destinataires en copie cachée (optionnel)"
+                        },
+                        "mailbox_id": {
+                            "type": "string",
+                            "description": "ID de la boîte mail expéditrice (optionnel, utilise la première disponible si non spécifiée)"
+                        },
+                        "draft_message_id": {
+                            "type": "string",
+                            "description": "ID d'un brouillon existant à envoyer (optionnel)"
+                        }
+                    },
+                    "required": ["subject", "body", "recipients_to"]
+                }
+            },
+            {
+                "name": "reply_to_email",
+                "description": "Répond à un email existant",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "original_message_id": {
+                            "type": "string",
+                            "description": "ID du message original auquel répondre"
+                        },
+                        "body": {
+                            "type": "string",
+                            "description": "Contenu de la réponse"
+                        },
+                        "reply_all": {
+                            "type": "boolean",
+                            "description": "Répondre à tous les destinataires",
+                            "default": False
+                        },
+                        "as_draft": {
+                            "type": "boolean",
+                            "description": "Sauvegarder comme brouillon au lieu d'envoyer",
+                            "default": False
+                        }
+                    },
+                    "required": ["original_message_id", "body"]
+                }
+            },
+            {
+                "name": "forward_email",
+                "description": "Transfère un email existant",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "original_message_id": {
+                            "type": "string",
+                            "description": "ID du message original à transférer"
+                        },
+                        "recipients_to": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {"type": "string"},
+                                    "name": {"type": "string"}
+                                },
+                                "required": ["email"]
+                            },
+                            "description": "Liste des destinataires pour le transfert"
+                        },
+                        "body": {
+                            "type": "string",
+                            "description": "Message additionnel à ajouter avant le transfert (optionnel)"
+                        },
+                        "recipients_cc": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {"type": "string"},
+                                    "name": {"type": "string"}
+                                },
+                                "required": ["email"]
+                            },
+                            "description": "Liste des destinataires en copie (optionnel)"
+                        },
+                        "as_draft": {
+                            "type": "boolean",
+                            "description": "Sauvegarder comme brouillon au lieu d'envoyer",
+                            "default": False
+                        }
+                    },
+                    "required": ["original_message_id", "recipients_to"]
+                }
+            },
+            {
+                "name": "delete_draft",
+                "description": "Supprime un brouillon d'email",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "draft_message_id": {
+                            "type": "string",
+                            "description": "ID du brouillon à supprimer"
+                        }
+                    },
+                    "required": ["draft_message_id"]
+                }
+            },
+            {
                 "name": "retrieve_email_content",
                 "description": "Récupère le contenu complet de l'email qui correspond le mieux à la requête de l'utilisateur",
                 "parameters": {
@@ -835,32 +1045,88 @@ class AlbertChatbot:
             Dictionary containing the function execution result
         """
         try:
-            logger.info(f"_execute_email_function called: function={function_name}, user_id={user_id}")
-            logger.debug(f"Function arguments: {arguments}")
+            # Log the function call details
+            logger.info(f"🔧 Executing function: {function_name}")
+            logger.info(f"📝 Function arguments: {json.dumps(arguments, indent=2, ensure_ascii=False)}")
+            logger.info(f"👤 User ID: {user_id}")
+            
+            # Log argument types and values for debugging
+            for key, value in arguments.items():
+                value_type = type(value).__name__
+                if isinstance(value, str):
+                    value_preview = value[:100] + "..." if len(value) > 100 else value
+                    logger.debug(f"  - {key} ({value_type}): {value_preview}")
+                elif isinstance(value, (list, dict)):
+                    logger.debug(f"  - {key} ({value_type}): {len(value)} items")
+                else:
+                    logger.debug(f"  - {key} ({value_type}): {value}")
+            
+            execution_start_time = time.time()
+            logger.info(f"🔧 _execute_email_function called: function={function_name}, user_id={user_id}")
+            logger.info(f"📝 Function arguments received: {arguments}")
+            logger.debug(f"📊 Argument details: {[(k, type(v).__name__, len(str(v)) if isinstance(v, (str, list, dict)) else v) for k, v in arguments.items()]}")
             
             if function_name == "summarize_email":
                 email_content = arguments.get("email_content", "")
                 sender = arguments.get("sender", "")
                 subject = arguments.get("subject", "")
                 
+                logger.info(f"📧 summarize_email - email_content length: {len(email_content)}, sender: '{sender}', subject: '{subject}'")
+                logger.debug(f"📧 summarize_email - email_content preview: {email_content[:200]}...")
+                
                 result = self.summarize_mail(email_content, sender, subject)
-                return {
-                    "success": True,
-                    "function": "summarize_email",
-                    "result": result
-                }
+                
+                # Check if the underlying function was successful
+                execution_time = time.time() - execution_start_time
+                if result.get('success'):
+                    logger.info(f"✅ summarize_email completed successfully (took {execution_time:.2f}s)")
+                    logger.info(f"📊 Result summary: {len(result.get('response', ''))} characters in response")
+                    return {
+                        "success": True,
+                        "function": "summarize_email",
+                        "result": result,
+                        "execution_time": execution_time
+                    }
+                else:
+                    logger.warning(f"⚠️ summarize_email failed (took {execution_time:.2f}s): {result.get('error', 'Unknown error')}")
+                    return {
+                        "success": False,
+                        "function": "summarize_email",
+                        "error": result.get('error', 'Error in summarize_mail'),
+                        "result": result,
+                        "execution_time": execution_time
+                    }
                 
             elif function_name == "generate_email_reply":
                 original_email = arguments.get("original_email", "")
                 context = arguments.get("context", "")
                 tone = arguments.get("tone", "professional")
                 
+                logger.info(f"✉️ generate_email_reply - original_email length: {len(original_email)}, context: '{context}', tone: '{tone}'")
+                logger.debug(f"✉️ generate_email_reply - original_email preview: {original_email[:200]}...")
+                
                 result = self.generate_mail_answer(original_email, context, tone)
-                return {
-                    "success": True,
-                    "function": "generate_email_reply", 
-                    "result": result
-                }
+                
+                # Check if the underlying function was successful
+                execution_time = time.time() - execution_start_time
+                if result.get('success'):
+                    logger.info(f"✅ generate_email_reply completed successfully (took {execution_time:.2f}s)")
+                    logger.info(f"📊 Reply generated: {len(result.get('response', {}).get('response', ''))} characters")
+                    return {
+                        "success": True,
+                        "function": "generate_email_reply", 
+                        "result": result,
+                        "execution_time": execution_time
+                    }
+                else:
+                    logger.warning(f"⚠️ generate_email_reply failed (took {execution_time:.2f}s): {result.get('error', 'Unknown error')}")
+                    return {
+                        "success": False,
+                        "function": "generate_email_reply",
+                        "error": result.get('error', 'Error in generate_mail_answer'),
+                        "result": result,
+                        "execution_time": execution_time
+                    }
                 
             elif function_name == "classify_email":
                 email_content = arguments.get("email_content", "")
@@ -868,11 +1134,21 @@ class AlbertChatbot:
                 subject = arguments.get("subject", "")
                 
                 result = self.classify_mail(email_content, sender, subject)
-                return {
-                    "success": True,
-                    "function": "classify_email",
-                    "result": result
-                }
+                
+                # Check if the underlying function was successful
+                if result.get('success'):
+                    return {
+                        "success": True,
+                        "function": "classify_email",
+                        "result": result
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "function": "classify_email",
+                        "error": result.get('error', 'Error in classify_mail'),
+                        "result": result
+                    }
                 
             elif function_name == "search_emails":
                 # Import email retrieval functions
@@ -1017,37 +1293,255 @@ class AlbertChatbot:
                 limit = arguments.get("limit", 5)
                 use_elasticsearch = arguments.get("use_elasticsearch", True)
                 
+                logger.info(f"🔍 retrieve_email_content - query: '{query}', limit: {limit}, use_elasticsearch: {use_elasticsearch}")
+                
                 if not user_id:
+                    logger.error("❌ retrieve_email_content - User ID is required but missing")
                     return {"success": False, "error": "User ID required for email content retrieval"}
                 
                 if not query:
+                    logger.error("❌ retrieve_email_content - Query is required but empty")
                     return {"success": False, "error": "Query is required for email content retrieval"}
                 
+                logger.info(f"🔍 retrieve_email_content - Executing query for user {user_id}")
                 result = retrieve_email_content_by_query(
                     user_id=user_id, 
                     query=query, 
                     limit=limit,
                     use_elasticsearch=use_elasticsearch
                 )
+                
+                logger.info(f"🔍 retrieve_email_content - Result success: {result.get('success')}")
+                if result.get('success'):
+                    metadata = result.get('metadata', {})
+                    logger.info(f"🔍 retrieve_email_content - Email found: '{metadata.get('subject', 'No subject')}' from {metadata.get('sender_name', 'Unknown')}")
+                else:
+                    logger.warning(f"🔍 retrieve_email_content - Failed: {result.get('error', 'Unknown error')}")
+                
+                # Check if the underlying function was successful
+                if result.get('success'):
+                    return {
+                        "success": True,
+                        "function": "retrieve_email_content",
+                        "result": result
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "function": "retrieve_email_content",
+                        "error": result.get('error', 'Error in retrieve_email_content_by_query'),
+                        "result": result
+                    }
+                
+            elif function_name == "create_draft_email":
+                # Import email writing functions
+                from .email_writer import create_draft_email
+                
+                subject = arguments.get("subject", "")
+                body = arguments.get("body", "")
+                recipients_to = arguments.get("recipients_to", [])
+                recipients_cc = arguments.get("recipients_cc", [])
+                recipients_bcc = arguments.get("recipients_bcc", [])
+                mailbox_id = arguments.get("mailbox_id")
+                
+                logger.info(f"📝 create_draft_email - subject: '{subject}', body length: {len(body)}")
+                logger.info(f"📝 create_draft_email - recipients_to: {len(recipients_to)} recipient(s): {[r.get('email', r) for r in recipients_to]}")
+                logger.info(f"📝 create_draft_email - recipients_cc: {len(recipients_cc)}, recipients_bcc: {len(recipients_bcc)}")
+                logger.info(f"📝 create_draft_email - mailbox_id: {mailbox_id}")
+                logger.debug(f"📝 create_draft_email - body preview: {body[:200]}...")
+                
+                if not user_id:
+                    logger.error("❌ create_draft_email - User ID is required but missing")
+                    return {"success": False, "error": "User ID required for creating draft email"}
+                
+                # If no mailbox specified, get user's first available mailbox
+                if not mailbox_id:
+                    logger.info("📝 create_draft_email - No mailbox specified, finding user's available mailboxes")
+                    from .email_writer import get_user_mailboxes
+                    user_mailboxes = get_user_mailboxes(user_id)
+                    logger.info(f"📝 create_draft_email - Found {len(user_mailboxes)} mailbox(es) for user")
+                    
+                    if not user_mailboxes:
+                        logger.error("❌ create_draft_email - No accessible mailboxes found for user")
+                        return {"success": False, "error": "No accessible mailboxes found"}
+                    
+                    # Find first mailbox with send permissions
+                    sender_mailbox = None
+                    for mb in user_mailboxes:
+                        if mb.get('can_send', False):
+                            sender_mailbox = mb
+                            break
+                    
+                    if not sender_mailbox:
+                        logger.error("❌ create_draft_email - No mailboxes with send permissions found")
+                        return {"success": False, "error": "No mailboxes with send permissions found"}
+                    
+                    mailbox_id = sender_mailbox['id']
+                    logger.info(f"📝 create_draft_email - Using mailbox: {mailbox_id}")
+                
+                logger.info(f"📝 create_draft_email - Creating draft with mailbox {mailbox_id}")
+                result = create_draft_email(
+                    user_id=user_id,
+                    mailbox_id=mailbox_id,
+                    subject=subject,
+                    body=body,
+                    recipients_to=recipients_to,
+                    recipients_cc=recipients_cc,
+                    recipients_bcc=recipients_bcc
+                )
+                
+                logger.info(f"📝 create_draft_email - Result success: {result.get('success')}")
+                if result.get('success'):
+                    logger.info(f"📝 create_draft_email - Draft created with ID: {result.get('message_id')}")
+                else:
+                    logger.warning(f"📝 create_draft_email - Failed: {result.get('error', 'Unknown error')}")
                 return {
                     "success": True,
-                    "function": "retrieve_email_content",
+                    "function": "create_draft_email",
+                    "result": result
+                }
+                
+            elif function_name == "send_email":
+                # Import email writing functions
+                from .email_writer import send_email
+                
+                subject = arguments.get("subject", "")
+                body = arguments.get("body", "")
+                recipients_to = arguments.get("recipients_to", [])
+                recipients_cc = arguments.get("recipients_cc", [])
+                recipients_bcc = arguments.get("recipients_bcc", [])
+                mailbox_id = arguments.get("mailbox_id")
+                draft_message_id = arguments.get("draft_message_id")
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for sending email"}
+                
+                # If no mailbox specified, get user's first available mailbox
+                if not mailbox_id and not draft_message_id:
+                    from .email_writer import get_user_mailboxes
+                    user_mailboxes = get_user_mailboxes(user_id)
+                    if not user_mailboxes:
+                        return {"success": False, "error": "No accessible mailboxes found"}
+                    
+                    # Find first mailbox with send permissions
+                    sender_mailbox = None
+                    for mb in user_mailboxes:
+                        if mb.get('can_send', False):
+                            sender_mailbox = mb
+                            break
+                    
+                    if not sender_mailbox:
+                        return {"success": False, "error": "No mailboxes with send permissions found"}
+                    
+                    mailbox_id = sender_mailbox['id']
+                
+                result = send_email(
+                    user_id=user_id,
+                    mailbox_id=mailbox_id,
+                    subject=subject,
+                    body=body,
+                    recipients_to=recipients_to,
+                    recipients_cc=recipients_cc,
+                    recipients_bcc=recipients_bcc,
+                    draft_message_id=draft_message_id
+                )
+                return {
+                    "success": True,
+                    "function": "send_email",
+                    "result": result
+                }
+                
+            elif function_name == "reply_to_email":
+                # Import email writing functions
+                from .email_writer import reply_to_email
+                
+                original_message_id = arguments.get("original_message_id", "")
+                body = arguments.get("body", "")
+                reply_all = arguments.get("reply_all", False)
+                as_draft = arguments.get("as_draft", False)
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for replying to email"}
+                
+                result = reply_to_email(
+                    user_id=user_id,
+                    original_message_id=original_message_id,
+                    body=body,
+                    reply_all=reply_all,
+                    as_draft=as_draft
+                )
+                return {
+                    "success": True,
+                    "function": "reply_to_email",
+                    "result": result
+                }
+                
+            elif function_name == "forward_email":
+                # Import email writing functions
+                from .email_writer import forward_email
+                
+                original_message_id = arguments.get("original_message_id", "")
+                recipients_to = arguments.get("recipients_to", [])
+                body = arguments.get("body", "")
+                recipients_cc = arguments.get("recipients_cc", [])
+                as_draft = arguments.get("as_draft", False)
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for forwarding email"}
+                
+                result = forward_email(
+                    user_id=user_id,
+                    original_message_id=original_message_id,
+                    recipients_to=recipients_to,
+                    body=body,
+                    recipients_cc=recipients_cc,
+                    as_draft=as_draft
+                )
+                return {
+                    "success": True,
+                    "function": "forward_email",
+                    "result": result
+                }
+                
+            elif function_name == "delete_draft":
+                # Import email writing functions
+                from .email_writer import delete_draft
+                
+                draft_message_id = arguments.get("draft_message_id", "")
+                
+                if not user_id:
+                    return {"success": False, "error": "User ID required for deleting draft"}
+                
+                result = delete_draft(
+                    user_id=user_id,
+                    draft_message_id=draft_message_id
+                )
+                return {
+                    "success": True,
+                    "function": "delete_draft",
                     "result": result
                 }
                 
             else:
+                logger.warning(f"❌ Unknown function requested: {function_name}")
+                logger.warning(f"📝 Available functions: summarize_email, generate_email_reply, classify_email, search_emails, search_threads, get_recent_emails, get_unread_emails, get_user_mailboxes, get_thread_statistics, retrieve_email_content, create_draft_email, send_email, reply_to_email, forward_email")
                 return {
                     "success": False,
                     "error": f"Unknown function: {function_name}"
                 }
                 
         except Exception as e:
-            logger.error(f"Error executing function {function_name} with args {arguments}: {e}", exc_info=True)
+            execution_time = time.time() - execution_start_time
+            logger.error(f"❌ Function execution failed: {function_name} (took {execution_time:.2f}s)")
+            logger.error(f"📝 Arguments: {json.dumps(arguments, indent=2, ensure_ascii=False)}")
+            logger.error(f"💥 Error: {str(e)}")
+            logger.error(f"🔍 Full traceback:", exc_info=True)
             return {
                 "success": False,
                 "error": str(e),
                 "function": function_name,
-                "arguments": arguments
+                "arguments": arguments,
+                "execution_time": execution_time
             }
 
     def chat_conversation(self, user_message: str, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
@@ -1139,46 +1633,54 @@ class AlbertChatbot:
             if conversation_history is None:
                 conversation_history = []
             
-            # First, try to handle chained function calls (e.g., "résume l'email de Jean")
-            chained_result = self._handle_chained_function_calls(user_message, user_id, conversation_history)
-            if chained_result is not None:
-                return chained_result
+            # Use intelligent multi-step function calling approach
+            multi_step_result = self._handle_multi_step_functions(user_message, user_id, conversation_history)
+            if multi_step_result is not None:
+                return multi_step_result
             
-            # System prompt for the AI assistant with function calling capabilities
+            # System prompt for the AI assistant with enhanced multi-step function calling
             system_prompt = """
-            Tu es un assistant intelligent spécialisé dans la gestion d'emails. Tu as accès à plusieurs outils et tu DOIS les utiliser quand ils sont appropriés:
+            Tu es un assistant intelligent spécialisé dans la gestion d'emails avec des capacités de fonction calling avancées.
             
-            OUTILS DE RÉCUPÉRATION D'EMAILS:
-            - retrieve_email_content: UTILISE cet outil AVANT tout autre outil quand l'utilisateur fait référence à un email spécifique (ex: "résume l'email de Jean", "réponds à l'email sur le projet X")
-            - search_emails: UTILISE cet outil pour rechercher des emails spécifiques avec Elasticsearch ou base de données
-            - search_threads: UTILISE cet outil pour rechercher des conversations/fils de discussion
-            - get_recent_emails: UTILISE cet outil quand l'utilisateur demande ses emails récents
-            - get_unread_emails: UTILISE cet outil quand l'utilisateur demande ses emails non lus
+            APPROCHE INTELLIGENTE - FONCTION CHAINING:
+            Pour les demandes complexes, tu peux appeler plusieurs fonctions en séquence. Voici les workflows typiques:
             
-            OUTILS D'ANALYSE D'EMAILS:
-            - summarize_email: UTILISE cet outil quand l'utilisateur demande de résumer un email (après avoir récupéré le contenu avec retrieve_email_content si nécessaire)
-            - generate_email_reply: UTILISE cet outil quand l'utilisateur demande de générer une réponse à un email (après avoir récupéré le contenu avec retrieve_email_content si nécessaire)
-            - classify_email: UTILISE cet outil quand l'utilisateur demande de classifier un email (après avoir récupéré le contenu avec retrieve_email_content si nécessaire)
+            🔄 WORKFLOWS AUTOMATIQUES:
             
-            OUTILS DE GESTION:
-            - get_user_mailboxes: UTILISE cet outil quand l'utilisateur demande ses boîtes mail disponibles
-            - get_thread_statistics: UTILISE cet outil quand l'utilisateur demande des statistiques sur ses emails/conversations
+            1. "Résume l'email de [personne] sur [sujet]":
+               → retrieve_email_content(query="personne sujet")
+               → summarize_email(email_content=contenu_récupéré)
             
-            WORKFLOW INTELLIGENT:
-            1. Si l'utilisateur fait référence à un email spécifique sans fournir le contenu complet, utilise retrieve_email_content d'abord
-            2. Ensuite, utilise les autres outils avec le contenu récupéré
-            3. Pour les requêtes générales (recherche, emails récents), utilise directement les outils correspondants
-            4. Pour les statistiques et la gestion, utilise get_user_mailboxes ou get_thread_statistics
+            2. "Réponds à l'email de [personne]":
+               → retrieve_email_content(query="personne")  
+               → generate_email_reply(original_email=contenu_récupéré)
+               → create_draft_email(body=réponse_générée)
             
-            RÈGLES IMPORTANTES:
-            - Si l'utilisateur demande une action spécifique sur un email, tu DOIS utiliser l'outil approprié
-            - Ne réponds JAMAIS directement pour les actions d'email sans utiliser les outils
-            - Pour des conversations générales sans action email spécifique, réponds normalement
-            - Quand tu utilises retrieve_email_content, utilise ensuite les autres outils automatiquement si l'utilisateur le demande
-            - Utilise search_threads pour rechercher des conversations complètes
-            - Utilise search_emails pour rechercher des messages individuels
+            3. "Classifie l'email sur [sujet]":
+               → retrieve_email_content(query="sujet")
+               → classify_email(email_content=contenu_récupéré)
             
-            Réponds toujours en français de manière claire et utile.
+            OUTILS DISPONIBLES:
+            📥 RÉCUPÉRATION: retrieve_email_content, search_emails, search_threads, get_recent_emails, get_unread_emails
+            🔍 ANALYSE: summarize_email, classify_email, get_thread_statistics  
+            ✍️ GÉNÉRATION: generate_email_reply
+            📧 ACTIONS: create_draft_email, send_email, reply_to_email, forward_email, delete_draft
+            ⚙️ GESTION: get_user_mailboxes
+            
+            RÈGLES INTELLIGENTES:
+            ✅ TOUJOURS commencer par retrieve_email_content si l'utilisateur mentionne un email spécifique
+            ✅ ENCHAÎNER automatiquement les fonctions selon le besoin
+            ✅ Utiliser les résultats d'une fonction comme entrée pour la suivante
+            ✅ Pour les réponses, TOUJOURS créer un brouillon avec create_draft_email
+            ✅ Être proactif - si l'utilisateur dit "réponds à l'email de Jean", faire retrieve→generate→create_draft automatiquement
+            
+            STRATÉGIE:
+            - Analyse la demande de l'utilisateur
+            - Identifie la séquence de fonctions nécessaire
+            - Exécute les fonctions dans l'ordre logique
+            - Utilise le contexte des résultats précédents
+            
+            Pour les conversations générales sans action email, réponds normalement sans utiliser de fonctions.
             """
             
             # Build messages for the conversation
@@ -1217,9 +1719,16 @@ class AlbertChatbot:
                     
                     try:
                         function_args = json.loads(function_call['arguments'])
-                        logger.debug(f"Parsed function arguments: {function_args}")
+                        logger.info(f"✅ Successfully parsed function arguments:")
+                        for key, value in function_args.items():
+                            if isinstance(value, str) and len(value) > 100:
+                                logger.info(f"  - {key}: '{value[:100]}...' ({len(value)} chars)")
+                            elif isinstance(value, (list, dict)):
+                                logger.info(f"  - {key}: {type(value).__name__} with {len(value)} items")
+                            else:
+                                logger.info(f"  - {key}: {value}")
                     except json.JSONDecodeError as e:
-                        logger.error(f"Failed to parse function arguments: {e}")
+                        logger.error(f"❌ Failed to parse function arguments: {e}")
                         logger.error(f"Raw arguments were: {function_call.get('arguments', 'None')}")
                         return {
                             'success': False,
@@ -1249,7 +1758,6 @@ class AlbertChatbot:
             elif 'function_call' in message:
                 function_call = message['function_call']
                 function_name = function_call['name']
-                
                 try:
                     function_args = json.loads(function_call['arguments'])
                 except json.JSONDecodeError as e:
@@ -1368,12 +1876,10 @@ class AlbertChatbot:
             
             elif function_name == 'classify_email':
                 if result_data.get('success'):
-                    classification_data = result_data.get('classification', {})
-                    if isinstance(classification_data, dict):
-                        category = classification_data.get('primary_category', 'Non classé')
-                        confidence = classification_data.get('confidence_score', 0.5)
-                        reasoning = classification_data.get('reasoning', 'Aucune explication disponible')
-                        
+                    classification = result_data.get('classification', {})
+                    if isinstance(classification, dict):
+                        category = classification.get('primary_category', 'Non classé')
+                        confidence = classification.get('confidence_score', 0.5)
                         response_text = f"🏷️ **Classification de l'email:**\n\n**Catégorie:** {category}\n**Confiance:** {confidence:.0%}\n**Explication:** {reasoning}"
                     else:
                         response_text = f"🏷️ **Classification de l'email:**\n\n{str(classification_data)}"
@@ -1569,6 +2075,160 @@ class AlbertChatbot:
                     'function_used': 'get_thread_statistics'
                 }
             
+            elif function_name == 'create_draft_email':
+                if result_data.get('success'):
+                    subject = result_data.get('subject', 'Sans sujet')
+                    recipients_count = result_data.get('recipients_count', 0)
+                    message_id = result_data.get('message_id', '')
+                    
+                    response_text = f"📝 **Brouillon créé avec succès !**\n\n"
+                    response_text += f"**Sujet:** {subject}\n"
+                    response_text += f"**Destinataires:** {recipients_count} personne(s)\n"
+                    response_text += f"**ID du brouillon:** {message_id}\n\n"
+                    response_text += "Le brouillon a été sauvegardé. Vous pouvez maintenant :\n"
+                    response_text += "• L'envoyer avec `send_email` en utilisant l'ID du brouillon\n"
+                    response_text += "• Le modifier ou le supprimer"
+                else:
+                    error_msg = result_data.get('error', 'Erreur inconnue')
+                    response_text = f"❌ **Erreur lors de la création du brouillon:**\n\n{error_msg}"
+                
+                return {
+                    'success': result_data.get('success', False),
+                    'response': response_text,
+                    'type': 'draft_created',
+                    'function_used': 'create_draft_email'
+                }
+            
+            elif function_name == 'send_email':
+                if result_data.get('success'):
+                    subject = result_data.get('subject', 'Sans sujet')
+                    sent_at = result_data.get('sent_at', '')
+                    message_id = result_data.get('message_id', '')
+                    
+                    response_text = f"✅ **Email envoyé avec succès !**\n\n"
+                    response_text += f"**Sujet:** {subject}\n"
+                    response_text += f"**Envoyé le:** {sent_at}\n"
+                    response_text += f"**ID du message:** {message_id}"
+                else:
+                    error_msg = result_data.get('error', 'Erreur inconnue')
+                    response_text = f"❌ **Erreur lors de l'envoi de l'email:**\n\n{error_msg}"
+                
+                return {
+                    'success': result_data.get('success', False),
+                    'response': response_text,
+                    'type': 'email_sent',
+                    'function_used': 'send_email'
+                }
+            
+            elif function_name == 'reply_to_email':
+                if result_data.get('success'):
+                    subject = result_data.get('subject', 'Sans sujet')
+                    is_draft = result_data.get('is_draft', False)
+                    message_id = result_data.get('message_id', '')
+                    
+                    if is_draft:
+                        response_text = f"📝 **Brouillon de réponse créé !**\n\n"
+                        response_text += f"**Sujet:** {subject}\n"
+                        response_text += f"**ID du brouillon:** {message_id}\n\n"
+                        response_text += "Le brouillon de réponse a été sauvegardé."
+                    else:
+                        sent_at = result_data.get('sent_at', '')
+                        response_text = f"↩️ **Réponse envoyée avec succès !**\n\n"
+                        response_text += f"**Sujet:** {subject}\n"
+                        response_text += f"**Envoyé le:** {sent_at}\n"
+                        response_text += f"**ID du message:** {message_id}"
+                else:
+                    error_msg = result_data.get('error', 'Erreur inconnue')
+                    response_text = f"❌ **Erreur lors de la réponse à l'email:**\n\n{error_msg}"
+                
+                return {
+                    'success': result_data.get('success', False),
+                    'response': response_text,
+                    'type': 'email_reply_sent',
+                    'function_used': 'reply_to_email'
+                }
+            
+            elif function_name == 'forward_email':
+                if result_data.get('success'):
+                    subject = result_data.get('subject', 'Sans sujet')
+                    is_draft = result_data.get('is_draft', False)
+                    message_id = result_data.get('message_id', '')
+                    recipients_count = result_data.get('recipients_count', 0)
+                    
+                    if is_draft:
+                        response_text = f"📝 **Brouillon de transfert créé !**\n\n"
+                        response_text += f"**Sujet:** {subject}\n"
+                        response_text += f"**Destinataires:** {recipients_count} personne(s)\n"
+                        response_text += f"**ID du brouillon:** {message_id}\n\n"
+                        response_text += "Le brouillon de transfert a été sauvegardé."
+                    else:
+                        sent_at = result_data.get('sent_at', '')
+                        response_text = f"↗️ **Email transféré avec succès !**\n\n"
+                        response_text += f"**Sujet:** {subject}\n"
+                        response_text += f"**Destinataires:** {recipients_count} personne(s)\n"
+                        response_text += f"**Envoyé le:** {sent_at}\n"
+                        response_text += f"**ID du message:** {message_id}"
+                else:
+                    error_msg = result_data.get('error', 'Erreur inconnue')
+                    response_text = f"❌ **Erreur lors du transfert de l'email:**\n\n{error_msg}"
+                
+                return {
+                    'success': result_data.get('success', False),
+                    'response': response_text,
+                    'type': 'email_forwarded',
+                    'function_used': 'forward_email'
+                }
+            
+                       
+            
+            elif function_name == 'delete_draft':
+                if result_data.get('success'):
+                    response_text = f"🗑️ **Brouillon supprimé avec succès !**\n\n"
+                    response_text += result_data.get('message', 'Le brouillon a été supprimé.')
+                else:
+                    error_msg = result_data.get('error', 'Erreur inconnue')
+                    response_text = f"❌ **Erreur lors de la suppression du brouillon:**\n\n{error_msg}"
+                
+                return {
+                    'success': result_data.get('success', False),
+                    'response': response_text,
+                    'type': 'draft_deleted',
+                    'function_used': 'delete_draft'
+                }
+            
+            elif function_name == 'reply_chain':
+                # Handle the chained reply operation (retrieve → generate_reply → create_draft)
+                # Check success at the function_result level, not result_data level
+                is_successful = function_result.get('success', False)
+                
+                if is_successful:
+                    reply_content = result_data.get('reply_content', '')
+                    draft_subject = result_data.get('draft_subject', 'Sans sujet')
+                    recipients = result_data.get('recipients', [])
+                    draft_created = result_data.get('draft_created', {})
+                    message_id = draft_created.get('message_id', '')
+                    
+                    recipient_names = [r.get('name', r.get('email', 'Destinataire')) for r in recipients]
+                    
+                    response_text = f"✅ **Réponse générée et brouillon créé avec succès !**\n\n"
+                    response_text += f"**Sujet:** {draft_subject}\n"
+                    response_text += f"**Destinataire(s):** {', '.join(recipient_names)}\n"
+                    response_text += f"**ID du brouillon:** {message_id}\n\n"
+                    response_text += f"**Contenu de la réponse générée:**\n"
+                    response_text += f"```\n{reply_content[:500]}{'...' if len(reply_content) > 500 else ''}\n```\n\n"
+                    response_text += "Le brouillon de réponse a été créé et est prêt à être envoyé.\n"
+                    response_text += "Vous pouvez maintenant l'envoyer ou le modifier selon vos besoins."
+                else:
+                    error_msg = function_result.get('error', result_data.get('error', 'Erreur inconnue'))
+                    response_text = f"❌ **Erreur lors de la génération de la réponse:**\n\n{error_msg}"
+                
+                return {
+                    'success': is_successful,
+                    'response': response_text,
+                    'type': 'reply_chain_completed',
+                    'function_used': 'reply_chain'
+                }
+            
             else:
                 return {
                     'success': True,
@@ -1739,9 +2399,15 @@ class AlbertChatbot:
         
         return response_data
 
-    def _handle_chained_function_calls(self, user_message: str, user_id: str = None, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
+    def _handle_multi_step_functions(self, user_message: str, user_id: str = None, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
         """
-        Handle chained function calls, especially for retrieve_email_content followed by other actions.
+        Mini Function-Calling Controller (mini-MCP)
+        
+        Implements a flexible function calling loop that:
+        - Lets the model choose which function(s) to call dynamically
+        - Handles multi-turn, multi-tool conversations
+        - Does not rely on predefined workflows
+        - Supports multiple sequential or parallel tool calls
         
         Args:
             user_message: The user's input message
@@ -1749,163 +2415,483 @@ class AlbertChatbot:
             conversation_history: Previous conversation messages
             
         Returns:
-            Dictionary containing the final response after all chained function calls
+            Dictionary containing the final response after function calls, or None if not applicable
         """
         try:
-            # Detect if the user wants to perform an action on a specific email
-            # Examples: "résume l'email de Jean", "réponds à l'email sur le projet X"
-            action_keywords = {
-                'résume': 'summarize_email',
-                'résumer': 'summarize_email',
-                'summary': 'summarize_email',
-                'répond': 'generate_email_reply',
-                'répondre': 'generate_email_reply',
-                'réponds': 'generate_email_reply',
-                'réponse': 'generate_email_reply',
-                'classifie': 'classify_email',
-                'classifier': 'classify_email',
-                'catégorise': 'classify_email',
-                'catégoriser': 'classify_email'
-            }
+            logger.info("Starting mini-MCP function calling controller")
             
-            # Check if user wants an action on a specific email
-            user_message_lower = user_message.lower()
-            detected_action = None
-            for keyword, action in action_keywords.items():
-                if keyword in user_message_lower:
-                    detected_action = action
-                    break
+            # Dynamic system prompt that lets the model decide everything
+            dynamic_prompt = """
+            Tu es un assistant intelligent avec accès à des outils de gestion d'emails. Tu peux analyser la demande de l'utilisateur et décider quels outils utiliser, dans quel ordre, et combien d'étapes sont nécessaires.
+
+            🎯 APPROCHE DYNAMIQUE:
+            - Analyse la demande de l'utilisateur
+            - Décide quels outils utiliser et dans quel ordre
+            - Tu peux faire plusieurs appels d'outils en séquence ou en parallèle
+            - Utilise les résultats d'un outil comme entrée pour le suivant si nécessaire
+            - Sois créatif et flexible dans ton approche
+
+            🔧 OUTILS DISPONIBLES:
+            - retrieve_email_content: Récupère le contenu d'un email spécifique
+            - search_emails: Recherche des emails par mots-clés
+            - get_recent_emails: Récupère les emails récents
+            - get_unread_emails: Récupère les emails non lus
+            - summarize_email: Résume un email
+            - classify_email: Classifie un email
+            - generate_email_reply: Génère une réponse à un email
+            - create_draft_email: Crée un brouillon d'email
+            - send_email: Envoie un email
+            - reply_to_email: Répond directement à un email
+            - forward_email: Transfère un email
+            - get_user_mailboxes: Liste les boîtes mails accessibles
+            - get_thread_statistics: Statistiques des conversations
+            - search_threads: Recherche des conversations
+            - delete_draft: Supprime un brouillon
+
+            🚀 STRATÉGIES POSSIBLES:
+            - Pour "résume l'email de X": retrieve_email_content → summarize_email
+            - Pour "réponds à l'email de Y": retrieve_email_content → generate_email_reply → create_draft_email
+            - Pour "trouve et résume les emails urgents": search_emails → summarize_email (pour chaque)
+            - Pour "classifie mes emails récents": get_recent_emails → classify_email (pour chaque)
+            - Pour des demandes complexes: combine plusieurs outils créativement
+
+            ✨ RÈGLES:
+            - Tu décides complètement de la stratégie à adopter
+            - Tu peux utiliser autant d'outils que nécessaire
+            - Sois intelligent sur l'ordre des opérations
+            - Utilise le contexte des résultats précédents
+            - Si une demande semble nécessiter des outils, utilise-les
+            - Si c'est une conversation générale, réponds normalement
+
+            Analyse la demande et agis en conséquence.
+            """
             
-            # Check if the message refers to a specific email (contains "email" + descriptive terms)
-            references_specific_email = (
-                'email' in user_message_lower and 
-                any(word in user_message_lower for word in ['de ', 'du ', 'sur ', 'concernant', 'à propos', 'envoyé par'])
-            )
+            # Initialize conversation history
+            if conversation_history is None:
+                conversation_history = []
             
-            if detected_action and references_specific_email:
-                logger.info(f"Detected chained action: {detected_action} on specific email")
+            # Build the conversation with dynamic guidance
+            messages = [{"role": "system", "content": dynamic_prompt}]
+            messages.extend(conversation_history)
+            messages.append({"role": "user", "content": user_message})
+            
+            # Get available tools
+            tools = self._get_email_tools()
+            logger.info(f"Available tools for mini-MCP: {len(tools)} tools")
+            
+            # Start the function calling loop
+            max_iterations = 5  # Prevent infinite loops
+            iteration = 0
+            all_results = []
+            conversation_context = ""
+            
+            while iteration < max_iterations:
+                iteration += 1
+                logger.info(f"🔄 Mini-MCP iteration {iteration}/{max_iterations}")
                 
-                # Step 1: Retrieve email content
-                # Extract query from user message (remove action keywords)
-                query = user_message
-                for keyword in action_keywords.keys():
-                    query = query.replace(keyword, '').strip()
-                
-                # Clean up the query
-                query = query.replace('l\'email', '').replace('le mail', '').strip()
-                if query.startswith('à '):
-                    query = query[2:]
-                elif query.startswith('de '):
-                    query = query[3:]
-                
-                logger.info(f"Retrieving email with query: {query}")
-                
-                retrieve_result = self._execute_email_function(
-                    'retrieve_email_content',
-                    {'query': query, 'limit': 5},
-                    user_id
-                )
-                
-                if not retrieve_result.get('success') or not retrieve_result['result'].get('success'):
-                    return {
-                        'success': False,
-                        'response': f"❌ Je n'ai pas pu trouver l'email demandé. {retrieve_result['result'].get('error', '')}",
-                        'type': 'chained_error'
-                    }
-                
-                # Step 2: Execute the requested action with the retrieved content
-                email_data = retrieve_result['result']
-                email_content = email_data.get('email_content', '')
-                metadata = email_data.get('metadata', {})
-                
-                if detected_action == 'summarize_email':
-                    action_result = self._execute_email_function(
-                        'summarize_email',
-                        {
-                            'email_content': email_content,
-                            'sender': metadata.get('sender_name', ''),
-                            'subject': metadata.get('subject', '')
-                        },
-                        user_id
-                    )
-                elif detected_action == 'classify_email':
-                    action_result = self._execute_email_function(
-                        'classify_email',
-                        {
-                            'email_content': email_content,
-                            'sender': metadata.get('sender_name', ''),
-                            'subject': metadata.get('subject', '')
-                        },
-                        user_id
-                    )
-                elif detected_action == 'generate_email_reply':
-                    action_result = self._execute_email_function(
-                        'generate_email_reply',
-                        {
-                            'original_email': email_content,
-                            'context': f"Réponse à l'email de {metadata.get('sender_name', 'expéditeur inconnu')}",
-                            'tone': 'professional'
-                        },
-                        user_id
-                    )
+                # Add accumulated context to the conversation if we have previous results
+                current_messages = messages.copy()
+                if conversation_context:
+                    logger.info(f"📝 Adding accumulated context to iteration {iteration} ({len(conversation_context)} chars)")
+                    logger.debug(f"📝 Context being added: {conversation_context[:300]}...")
+                    
+                    current_messages.append({
+                        "role": "assistant", 
+                        "content": f"Contexte des outils précédents:\n{conversation_context}"
+                    })
+                    current_messages.append({
+                        "role": "user", 
+                        "content": "Continue avec les outils suivants si nécessaire, ou fournis la réponse finale."
+                    })
                 else:
-                    return {
-                        'success': False,
-                        'response': f"❌ Action non reconnue: {detected_action}",
-                        'type': 'chained_error'
-                    }
+                    logger.info(f"📝 No accumulated context for iteration {iteration} (first iteration)")
                 
-                if action_result.get('success'):
-                    # Format the final response
-                    formatted_response = self._format_function_response(detected_action, action_result, user_message)
+                logger.info(f"🤖 Making request to Albert API for iteration {iteration} with {len(current_messages)} messages")
+                
+                # Make request to get the model's decision
+                response = self._make_request(current_messages, tools)
+                choice = response.get('choices', [{}])[0]
+                message = choice.get('message', {})
+                
+                # Check if the model wants to use tools
+                tool_calls_made = False
+                
+                if 'tool_calls' in message and message['tool_calls']:
+                    tool_calls_made = True
+                    logger.info(f"Model wants to call {len(message['tool_calls'])} tool(s) in iteration {iteration}")
                     
-                    # Add context about the email that was processed
-                    subject = metadata.get('subject', 'Sans sujet')
-                    sender = metadata.get('sender_name', 'Expéditeur inconnu')
+                    # Execute all tool calls in this iteration
+                    iteration_results = []
+                    for j, tool_call in enumerate(message['tool_calls']):
+                        if tool_call['type'] == 'function':
+                            function_name = tool_call['function']['name']
+                            raw_arguments = tool_call['function']['arguments']
+                            
+                            logger.info(f"Iteration {iteration}, Tool {j+1}: Parsing tool call for {function_name}")
+                            logger.debug(f"Raw function arguments received: {raw_arguments}")
+                            
+                            try:
+                                function_args = json.loads(raw_arguments)
+                                logger.info(f"Successfully parsed arguments for {function_name}: {function_args}")
+                                logger.debug(f"Argument types: {[(k, type(v).__name__) for k, v in function_args.items()]}")
+                            except json.JSONDecodeError as e:
+                                logger.error(f"Invalid JSON in function arguments for {function_name}: {e}")
+                                logger.error(f"Failed to parse raw arguments: {raw_arguments}")
+                                continue
+                            
+                            logger.info(f"Iteration {iteration}, Tool {j+1}: Executing {function_name} with {len(function_args)} argument(s)")
+                            logger.info(f"🔧 Function: {function_name}")
+                            logger.info(f"📋 Arguments Summary:")
+                            for key, value in function_args.items():
+                                if isinstance(value, str) and len(value) > 100:
+                                    logger.info(f"  - {key}: '{value[:100]}...' ({len(value)} chars)")
+                                elif isinstance(value, (list, dict)):
+                                    logger.info(f"  - {key}: {type(value).__name__} with {len(value)} items")
+                                else:
+                                    logger.info(f"  - {key}: {value}")
+                            
+                            # Execute the function
+                            function_result = self._execute_email_function(function_name, function_args, user_id)
+                            
+                            logger.info(f"🎯 Function execution completed - {function_name}: success={function_result.get('success')}")
+                            if function_result.get('success'):
+                                logger.info(f"✅ {function_name} executed successfully")
+                                if 'execution_time' in function_result:
+                                    logger.info(f"⏱️ Execution time: {function_result['execution_time']:.2f}s")
+                            else:
+                                logger.warning(f"❌ {function_name} failed: {function_result.get('error', 'Unknown error')}")
+                                if 'execution_time' in function_result:
+                                    logger.warning(f"⏱️ Failed after: {function_result['execution_time']:.2f}s")
+                            if not function_result.get('success'):
+                                logger.warning(f"⚠️ Function {function_name} failed: {function_result.get('error', 'No error message')}")
+                            
+                            step_result = {
+                                'iteration': iteration,
+                                'step': len(all_results) + 1,
+                                'function': function_name,
+                                'args': function_args,
+                                'result': function_result,
+                                'success': function_result.get('success', False)
+                            }
+                            
+                            logger.debug(f"📊 Step result created: step {step_result['step']}, function: {function_name}, success: {step_result['success']}")
+                            
+                            iteration_results.append(step_result)
+                            all_results.append(step_result)
+                            
+                            # Build context for next iteration
+                            if function_result.get('success'):
+                                result_summary = self._summarize_function_result(function_name, function_result)
+                                conversation_context += f"\n\n✅ {function_name}: {result_summary}"
+                                logger.info(f"✅ Added success context: {result_summary}")
+                            else:
+                                error_msg = function_result.get('error', 'Erreur inconnue')
+                                conversation_context += f"\n\n❌ {function_name}: Échec - {error_msg}"
+                                logger.warning(f"❌ Added error context: {error_msg}")
+                                logger.warning(f"Function {function_name} failed: {error_msg}")
                     
-                    original_response = formatted_response.get('response', '')
-                    enhanced_response = f"📧 **Email traité:** {subject} (de {sender})\n\n{original_response}"
+                    logger.info(f"🔄 Completed iteration {iteration} with {len(iteration_results)} tool calls")
+                    logger.debug(f"📝 Current conversation context length: {len(conversation_context)} characters")
+                    logger.debug(f"📊 Total results so far: {len(all_results)} steps")
                     
-                    formatted_response['response'] = enhanced_response
-                    formatted_response['type'] = 'chained_success'
-                    formatted_response['processed_email'] = {
-                        'subject': subject,
-                        'sender': sender,
-                        'metadata': metadata
+                    # Log summary of this iteration
+                    successful_in_iteration = sum(1 for r in iteration_results if r.get('success', False))
+                    logger.info(f"📈 Iteration {iteration} summary: {successful_in_iteration}/{len(iteration_results)} successful tool calls")
+                
+                # Check for legacy function_call format
+                elif 'function_call' in message:
+                    tool_calls_made = True
+                    function_call = message['function_call']
+                    function_name = function_call['name']
+                    
+                    logger.info(f"📞 Legacy function call in iteration {iteration}: {function_name}")
+                    logger.debug(f"Raw legacy function arguments: {function_call['arguments']}")
+                    
+                    try:
+                        function_args = json.loads(function_call['arguments'])
+                        logger.info(f"✅ Successfully parsed legacy function arguments: {function_args}")
+                    except json.JSONDecodeError as e:
+                        logger.error(f"❌ Invalid JSON in legacy function arguments: {e}")
+                        logger.error(f"Failed to parse: {function_call['arguments']}")
+                        break
+                    
+                    # Log argument details
+                    logger.info(f"🔧 Legacy Function: {function_name}")
+                    logger.info(f"📋 Legacy Arguments Summary:")
+                    for key, value in function_args.items():
+                        if isinstance(value, str) and len(value) > 100:
+                            logger.info(f"  - {key}: '{value[:100]}...' ({len(value)} chars)")
+                        elif isinstance(value, (list, dict)):
+                            logger.info(f"  - {key}: {type(value).__name__} with {len(value)} items")
+                        else:
+                            logger.info(f"  - {key}: {value}")
+                    
+                    function_result = self._execute_email_function(function_name, function_args, user_id)
+                    
+                    step_result = {
+                        'iteration': iteration,
+                        'step': len(all_results) + 1,
+                        'function': function_name,
+                        'args': function_args,
+                        'result': function_result,
+                        'success': function_result.get('success', False)
                     }
                     
-                    return formatted_response
-                else:
-                    return {
-                        'success': False,
-                        'response': f"❌ Erreur lors de l'exécution de l'action: {action_result.get('error', 'Erreur inconnue')}",
-                        'type': 'chained_error',
-                        'function_used': detected_action
-                    }
+                    all_results.append(step_result)
+                    
+                    if function_result.get('success'):
+                        result_summary = self._summarize_function_result(function_name, function_result)
+                        conversation_context += f"\n\n✅ {function_name}: {result_summary}"
+                    else:
+                        error_msg = function_result.get('error', 'Erreur inconnue')
+                        conversation_context += f"\n\n❌ {function_name}: Échec - {error_msg}"
+                
+                # If no tools were called, the model is done
+                if not tool_calls_made:
+                    logger.info(f"🏁 No more tools called in iteration {iteration}. Mini-MCP complete.")
+                    logger.info(f"📊 Final summary: {len(all_results)} total steps executed")
+                    
+                    # Check if we have any results to format
+                    if all_results:
+                        # Get the final response content from the model
+                        final_content = message.get('content', '').strip()
+                        logger.info(f"💬 Final model content length: {len(final_content)} characters")
+                        logger.debug(f"💬 Final model content preview: {final_content[:200]}...")
+                        
+                        logger.info("🎨 Formatting final mini-MCP response")
+                        return self._format_mini_mcp_response(all_results, user_message, final_content)
+                    else:
+                        # No tools were used, this wasn't a function calling request
+                        logger.info("🚫 No tools were used, not a function calling request")
+                        return None
             
-            # If no chained action detected, use normal processing
+            # If we reached max iterations, format response with what we have
+            if all_results:
+                logger.warning(f"Mini-MCP reached max iterations ({max_iterations})")
+                return self._format_mini_mcp_response(all_results, user_message, "Traitement terminé après plusieurs étapes.")
+            
+            # No function calls were made
             return None
             
         except Exception as e:
-            logger.error(f"Error in chained function calls: {e}")
+            logger.error(f"Error in mini-MCP function calling controller: {e}", exc_info=True)
+            return None
+            
+    def _summarize_function_result(self, function_name: str, function_result: Dict[str, Any]) -> str:
+        """
+        Create a concise summary of a function result for context building.
+        
+        Args:
+            function_name: Name of the function that was executed
+            function_result: Result from the function execution
+            
+        Returns:
+            Concise summary string
+        """
+        try:
+            result_data = function_result.get('result', {})
+            
+            if function_name == 'retrieve_email_content':
+                if result_data.get('success'):
+                    metadata = result_data.get('metadata', {})
+                    subject = metadata.get('subject', 'Sans sujet')
+                    sender = metadata.get('sender_name', 'Expéditeur inconnu')
+                    return f"Email récupéré: '{subject}' de {sender}"
+                else:
+                    return "Échec de récupération d'email"
+            
+            elif function_name == 'search_emails':
+                count = result_data.get('count', 0)
+                return f"{count} email(s) trouvé(s)"
+            
+            elif function_name == 'get_recent_emails':
+                count = result_data.get('count', 0)
+                return f"{count} email(s) récent(s) récupéré(s)"
+            
+            elif function_name == 'get_unread_emails':
+                count = result_data.get('count', 0)
+                return f"{count} email(s) non lu(s)"
+            
+            elif function_name == 'summarize_email':
+                if result_data.get('success'):
+                    return "Email résumé avec succès"
+                else:
+                    return "Échec du résumé"
+            
+            elif function_name == 'classify_email':
+                if result_data.get('success'):
+                    classification = result_data.get('classification', {})
+                    category = classification.get('primary_category', 'inconnu')
+                    return f"Email classifié comme: {category}"
+                else:
+                    return "Échec de classification"
+            
+            elif function_name == 'generate_email_reply':
+                if result_data.get('success'):
+                    return "Réponse générée avec succès"
+                else:
+                    return "Échec de génération de réponse"
+            
+            elif function_name == 'create_draft_email':
+                if result_data.get('success'):
+                    return "Brouillon créé avec succès"
+                else:
+                    return "Échec de création de brouillon"
+            
+            elif function_name == 'send_email':
+                if result_data.get('success'):
+                    return "Email envoyé avec succès"
+                else:
+                    return "Échec d'envoi d'email"
+            
+            else:
+                # Generic summary for other functions
+                if function_result.get('success'):
+                    return f"{function_name} exécuté avec succès"
+                else:
+                    return f"Échec de {function_name}"
+                    
+        except Exception as e:
+            logger.error(f"Error summarizing function result: {e}")
+            return f"{function_name} - résumé indisponible"
+
+    def _format_mini_mcp_response(self, all_results: List[Dict], original_message: str, final_content: str = "") -> Dict[str, Any]:
+        """
+        Format the final response from the mini-MCP controller.
+        
+        Args:
+            all_results: List of all function execution results
+            original_message: Original user message
+            final_content: Final content from the model
+            
+        Returns:
+            Formatted response dictionary
+        """
+        try:
+            if not all_results:
+                return {
+                    'success': False,
+                    'response': 'Aucune action n\'a pu être effectuée.',
+                    'type': 'mini_mcp_error'
+                }
+            
+            # Count successful and failed steps
+            successful_steps = [r for r in all_results if r.get('success', False)]
+            failed_steps = [r for r in all_results if not r.get('success', False)]
+            
+            total_steps = len(all_results)
+            success_count = len(successful_steps)
+            
+            # Determine overall success
+            overall_success = success_count > 0
+            
+            # Build comprehensive response
+            response_parts = []
+            
+            # Add header with step summary
+            if total_steps == 1:
+                response_parts.append(f"🔧 **Action effectuée:** {all_results[0]['function']}")
+            else:
+                response_parts.append(f"🔧 **Actions effectuées:** {total_steps} étape(s) - {success_count} réussie(s)")
+            
+            # Add step details
+            response_parts.append("\n**Détail des étapes:**")
+            for result in all_results:
+                step_num = result['step']
+                function_name = result['function']
+                success = result.get('success', False)
+                
+                if success:
+                    summary = self._summarize_function_result(function_name, result['result'])
+                    response_parts.append(f"✅ **Étape {step_num}:** {summary}")
+                else:
+                    error_msg = result['result'].get('error', 'Erreur inconnue')
+                    response_parts.append(f"❌ **Étape {step_num}:** {function_name} - {error_msg}")
+            
+            # Add detailed results for successful final steps
+            if successful_steps:
+                last_successful = successful_steps[-1]
+                function_name = last_successful['function']
+                function_result = last_successful['result']
+                
+                # Get detailed content for key functions
+                if function_name == 'summarize_email':
+                    result_data = function_result.get('result', {})
+                    if result_data.get('success'):
+                        summary_data = result_data.get('summary', {})
+                        if isinstance(summary_data, dict):
+                            summary_text = summary_data.get('summary', '')
+                            if summary_text:
+                                response_parts.append(f"\n📋 **Résumé:**\n{summary_text}")
+                        else:
+                            response_parts.append(f"\n📋 **Résumé:**\n{str(summary_data)}")
+                
+                elif function_name == 'generate_email_reply':
+                    result_data = function_result.get('result', {})
+                    if result_data.get('success'):
+                        response_data = result_data.get('response', {})
+                        if isinstance(response_data, dict):
+                            reply_text = response_data.get('response', '')
+                            if reply_text:
+                                response_parts.append(f"\n✉️ **Réponse générée:**\n{reply_text}")
+                        else:
+                            response_parts.append(f"\n✉️ **Réponse générée:**\n{str(response_data)}")
+                
+                elif function_name == 'classify_email':
+                    result_data = function_result.get('result', {})
+                    if result_data.get('success'):
+                        classification = result_data.get('classification', {})
+                        category = classification.get('primary_category', 'Non classé')
+                        confidence = classification.get('confidence_score', 0)
+                        reasoning = classification.get('reasoning', '')
+                        response_parts.append(f"\n🏷️ **Classification:**\n**Catégorie:** {category}\n**Confiance:** {confidence:.2f}\n**Justification:** {reasoning}")
+                
+                elif function_name == 'create_draft_email':
+                    result_data = function_result.get('result', {})
+                    if result_data.get('success'):
+                        subject = result_data.get('subject', 'Sans sujet')
+                        message_id = result_data.get('message_id', '')
+                        response_parts.append(f"\n📝 **Brouillon créé:**\n**Sujet:** {subject}\n**ID:** {message_id}")
+            
+            # Add final content from the model if provided
+            if final_content:
+                response_parts.append(f"\n💬 **Analyse:**\n{final_content}")
+            
+            # Add error summary if there were failures
+            if failed_steps:
+                response_parts.append(f"\n⚠️ **Erreurs:** {len(failed_steps)} étape(s) ont échoué")
+            
+            response_text = "\n".join(response_parts)
+            
+            return {
+                'success': overall_success,
+                'response': response_text,
+                'type': 'mini_mcp_completed',
+                'steps_total': total_steps,
+                'steps_successful': success_count,
+                'steps_failed': len(failed_steps),
+                'all_results': all_results,
+                'final_function': successful_steps[-1]['function'] if successful_steps else None
+            }
+            
+        except Exception as e:
+            logger.error(f"Error formatting mini-MCP response: {e}", exc_info=True)
             return {
                 'success': False,
-                'error': str(e),
-                'response': 'Une erreur s\'est produite lors du traitement de votre demande.',
-                'type': 'chained_error'
+                'response': f"Erreur lors du formatage de la réponse: {str(e)}",
+                'type': 'mini_mcp_error'
             }
 
-# Global instance for easy access
-chatbot = AlbertChatbot()
-
-
-def get_chatbot() -> AlbertChatbot:
+def get_chatbot(config: Optional[AlbertConfig] = None) -> AlbertChatbot:
     """
-    Get the global chatbot instance.
+    Factory function to get a configured AlbertChatbot instance.
     
+    Args:
+        config: Optional configuration for Albert API. If None, uses default config.
+        
     Returns:
-        AlbertChatbot instance
+        Configured AlbertChatbot instance
     """
-    return chatbot
+    return AlbertChatbot(config=config)
 
 
