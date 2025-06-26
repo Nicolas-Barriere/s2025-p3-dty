@@ -1,7 +1,7 @@
 .chatWindow {
     display: flex;
     flex-direction: column;
-    height: 400px;
+    height: 87vh;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     background: white;
