@@ -13,6 +13,7 @@ Date: 2025-06-24
 """
 import json
 import logging
+import traceback
 import uuid
 from typing import Dict, List, Optional, Any
 from datetime import datetime

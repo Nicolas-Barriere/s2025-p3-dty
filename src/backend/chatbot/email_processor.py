@@ -112,7 +112,10 @@ class EmailProcessor:
         original_mail: str, 
         context: str = "",
         tone: str = "professional",
-        language: str = "french"
+        language: str = "french",
+        create_draft: bool = False,
+        user_id: str = None,
+        original_message_metadata: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
         Generate an answer to an email using Albert API.
@@ -122,12 +125,15 @@ class EmailProcessor:
             context: Additional context for the response
             tone: Tone of the response (professional, friendly, formal)
             language: Language for the response
+            create_draft: Whether to automatically create a draft email
+            user_id: User ID for draft creation (required if create_draft=True)
+            original_message_metadata: Metadata from the original message for draft creation
             
         Returns:
             Dictionary containing the generated response and metadata
         """
         try:
-            logger.info(f"Generating mail answer with tone: {tone}")
+            logger.info(f"Generating mail answer with tone: {tone}, create_draft: {create_draft}")
             
             functions = [{
                 "name": "generate_email_response",
@@ -189,7 +195,80 @@ class EmailProcessor:
             
             response = self.api_client.make_request(messages, functions)
             
-            return self._process_response(response, 'answer', context, tone)
+            result = self._process_response(response, 'answer', context, tone)
+            
+            # If successful and create_draft is True, create a draft email
+            if result.get('success') and create_draft and user_id:
+                logger.info(f"Creating draft email for generated response")
+                
+                try:
+                    from .email_writer import create_draft_email
+                    
+                    # Extract the generated response content
+                    generated_response = result.get('response', {})
+                    response_body = generated_response.get('response', '')
+                    response_subject = generated_response.get('subject', 'Re: Email')
+                    
+                    # Extract recipient information from original message metadata
+                    recipients_to = []
+                    if original_message_metadata:
+                        sender_email = original_message_metadata.get('sender_email', '')
+                        sender_name = original_message_metadata.get('sender_name', '')
+                        if sender_email:
+                            recipients_to = [{'email': sender_email, 'name': sender_name}]
+                    
+                    # Get user's first available mailbox
+                    from .email_writer import get_user_mailboxes
+                    user_mailboxes = get_user_mailboxes(user_id)
+                    
+                    if not user_mailboxes:
+                        logger.warning("User has no accessible mailboxes for draft creation")
+                        result['draft_warning'] = "Impossible de créer le brouillon : aucune boîte mail accessible"
+                        return result
+                    
+                    # Use the first mailbox that can send emails
+                    sender_mailbox = None
+                    for mailbox in user_mailboxes:
+                        if mailbox.get('can_send', False):
+                            sender_mailbox = mailbox
+                            break
+                    
+                    if not sender_mailbox:
+                        logger.warning("User has no mailboxes with send permissions")
+                        result['draft_warning'] = "Impossible de créer le brouillon : aucune boîte mail avec permissions d'envoi"
+                        return result
+                    
+                    # Create the draft
+                    draft_result = create_draft_email(
+                        user_id=user_id,
+                        mailbox_id=sender_mailbox['id'],
+                        subject=response_subject,
+                        body=response_body,
+                        recipients_to=recipients_to,
+                        parent_message_id=original_message_metadata.get('message_id') if original_message_metadata else None,
+                        thread_id=original_message_metadata.get('thread_id') if original_message_metadata else None
+                    )
+                    
+                    if draft_result.get('success'):
+                        logger.info(f"Successfully created draft: {draft_result.get('message_id')}")
+                        result['draft_created'] = True
+                        result['draft_id'] = draft_result.get('message_id')
+                        result['draft_thread_id'] = draft_result.get('thread_id')
+                        result['draft_info'] = {
+                            'message_id': draft_result.get('message_id'),
+                            'thread_id': draft_result.get('thread_id'),
+                            'subject': response_subject,
+                            'recipients_count': draft_result.get('recipients_count', 0)
+                        }
+                    else:
+                        logger.error(f"Failed to create draft: {draft_result.get('error')}")
+                        result['draft_warning'] = f"Erreur lors de la création du brouillon : {draft_result.get('error')}"
+                        
+                except Exception as draft_error:
+                    logger.error(f"Error creating draft email: {draft_error}")
+                    result['draft_warning'] = f"Erreur lors de la création du brouillon : {str(draft_error)}"
+            
+            return result
             
         except Exception as e:
             logger.error(f"Error generating mail answer: {e}")

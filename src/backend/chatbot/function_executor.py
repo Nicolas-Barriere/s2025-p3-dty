@@ -94,18 +94,20 @@ class FunctionExecutor:
         email_content = arguments.get("email_content", "")
         sender = arguments.get("sender", "")
         subject = arguments.get("subject", "")
-        retrieve_email = arguments.get("retrieve_email", False)
-        search_query = arguments.get("search_query", "")
+        query = arguments.get("query", "")
         
-        logger.info(f"📧 summarize_email - retrieve_email: {retrieve_email}, email_content length: {len(email_content)}")
+        # Automatically retrieve email if query is provided
+        retrieve_email = bool(query)
         
-        # If retrieve_email is True, fetch the email content first
+        logger.info(f"📧 summarize_email - query: '{query}', retrieve_email: {retrieve_email}, email_content length: {len(email_content)}")
+        
+        # If query is provided, fetch the email content first
         if retrieve_email:
             if not user_id:
                 return {"success": False, "error": "User ID required for email retrieval", "function": "summarize_email"}
             
             email_content, sender, subject = self._retrieve_email_content(
-                user_id, search_query, sender, subject, start_time
+                user_id, query, sender, subject, start_time
             )
             if email_content is None:
                 return {"success": False, "error": "Failed to retrieve email", "function": "summarize_email"}
@@ -136,26 +138,47 @@ class FunctionExecutor:
         original_email = arguments.get("original_email", "")
         context = arguments.get("context", "")
         tone = arguments.get("tone", "professional")
-        retrieve_email = arguments.get("retrieve_email", False)
-        search_query = arguments.get("search_query", "")
+        query = arguments.get("query", "")
         sender = arguments.get("sender", "")
         subject = arguments.get("subject", "")
         
-        logger.info(f"✉️ generate_email_reply - retrieve_email: {retrieve_email}, tone: '{tone}'")
+        # Automatically retrieve email if query is provided
+        retrieve_email = bool(query)
         
-        # If retrieve_email is True, fetch the email content first
+        logger.info(f"✉️ generate_email_reply - query: '{query}', retrieve_email: {retrieve_email}, tone: '{tone}'")
+        
+        # If query is provided, fetch the email content first
+        retrieved_metadata = None
         if retrieve_email:
             if not user_id:
                 return {"success": False, "error": "User ID required for email retrieval", "function": "generate_email_reply"}
             
-            retrieved_content, _, _ = self._retrieve_email_content(
-                user_id, search_query, sender, subject, start_time
+            # Get email content and metadata for draft creation
+            from .email_retrieval import retrieve_email_content_by_query
+            retrieval_result = retrieve_email_content_by_query(
+                user_id=user_id, 
+                query=query, 
+                limit=1,
+                use_elasticsearch=True
             )
-            if retrieved_content is None:
+            
+            if not retrieval_result.get('success'):
                 return {"success": False, "error": "Failed to retrieve email", "function": "generate_email_reply"}
-            original_email = retrieved_content
+            
+            original_email = retrieval_result.get('email_content', '')
+            retrieved_metadata = retrieval_result.get('metadata', {})
         
-        result = self.email_processor.generate_mail_answer(original_email, context, tone)
+        # Determine if we should create a draft based on the arguments
+        create_draft = arguments.get("create_draft", False)
+        
+        result = self.email_processor.generate_mail_answer(
+            original_email, 
+            context, 
+            tone,
+            create_draft=create_draft,
+            user_id=user_id if create_draft else None,
+            original_message_metadata=retrieved_metadata
+        )
         execution_time = time.time() - start_time
         
         if result.get('success'):
@@ -181,36 +204,43 @@ class FunctionExecutor:
         email_content = arguments.get("email_content", "")
         sender = arguments.get("sender", "")
         subject = arguments.get("subject", "")
-        retrieve_email = arguments.get("retrieve_email", False)
-        search_query = arguments.get("search_query", "")
+        query = arguments.get("query", "")
         
-        logger.info(f"🏷️ classify_email - retrieve_email: {retrieve_email}, sender: '{sender}'")
+        # Automatically retrieve email if query is provided
+        retrieve_email = bool(query)
         
-        # If retrieve_email is True, fetch the email content first
+        logger.info(f"🏷️ classify_email - query: '{query}', retrieve_email: {retrieve_email}, sender: '{sender}'")
+        
+        # If query is provided, fetch the email content first
         if retrieve_email:
             if not user_id:
                 return {"success": False, "error": "User ID required for email retrieval", "function": "classify_email"}
             
             email_content, sender, subject = self._retrieve_email_content(
-                user_id, search_query, sender, subject, start_time
+                user_id, query, sender, subject, start_time
             )
             if email_content is None:
                 return {"success": False, "error": "Failed to retrieve email", "function": "classify_email"}
         
         result = self.email_processor.classify_mail(email_content, sender, subject)
+        execution_time = time.time() - start_time
         
         if result.get('success'):
+            logger.info(f"✅ classify_email completed successfully (took {execution_time:.2f}s)")
             return {
                 "success": True,
                 "function": "classify_email",
-                "result": result
+                "result": result,
+                "execution_time": execution_time
             }
         else:
+            logger.warning(f"⚠️ classify_email failed (took {execution_time:.2f}s): {result.get('error', 'Unknown error')}")
             return {
                 "success": False,
                 "function": "classify_email",
                 "error": result.get('error', 'Error in classify_mail'),
-                "result": result
+                "result": result,
+                "execution_time": execution_time
             }
     
     def _handle_retrieval_function(self, function_name: str, arguments: Dict[str, Any], user_id: str, start_time: float) -> Dict[str, Any]:
@@ -320,7 +350,7 @@ class FunctionExecutor:
             "error": f"Unknown function: {function_name}"
         }
     
-    def _retrieve_email_content(self, user_id: str, search_query: str, sender: str, subject: str, start_time: float) -> tuple:
+    def _retrieve_email_content(self, user_id: str, query: str, sender: str, subject: str, start_time: float) -> tuple:
         """
         Retrieve email content using search query or sender/subject.
         
@@ -328,19 +358,19 @@ class FunctionExecutor:
             Tuple of (email_content, sender, subject) or (None, None, None) if failed
         """
         try:
-            logger.info(f"🔍 Retrieving email with query: '{search_query}'")
+            logger.info(f"🔍 Retrieving email with query: '{query}'")
             
-            if not search_query:
+            if not query:
                 # Build search query from sender and subject if not provided
                 search_parts = []
                 if sender:
                     search_parts.append(sender)
                 if subject:
                     search_parts.append(subject)
-                search_query = " ".join(search_parts)
-                logger.info(f"🔍 Built search query from sender/subject: '{search_query}'")
+                query = " ".join(search_parts)
+                logger.info(f"🔍 Built search query from sender/subject: '{query}'")
             
-            if not search_query:
+            if not query:
                 logger.error("No search query provided and cannot build one from sender/subject")
                 return None, None, None
             
@@ -349,7 +379,7 @@ class FunctionExecutor:
             
             retrieval_result = retrieve_email_content_by_query(
                 user_id=user_id, 
-                query=search_query, 
+                query=query, 
                 limit=1,
                 use_elasticsearch=True
             )

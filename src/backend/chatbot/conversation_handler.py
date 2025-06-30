@@ -161,8 +161,11 @@ class ConversationHandler:
                ❌ PAS retrieve_email_content d'abord !
             
             3. "Réponds à l'email de [personne]":
-               → generate_email_reply(query="personne")
-               → create_draft_email(body=réponse_générée)
+               → generate_email_reply(query="personne", create_draft=true)
+               ✅ Crée automatiquement un brouillon si create_draft=true
+            
+            3b. "Génère une réponse à l'email de [personne]" (sans créer de brouillon):
+               → generate_email_reply(query="personne", create_draft=false)
             
             4. "Analyse le sentiment de l'email sur [sujet]":
                → analyze_email_sentiment(query="sujet")
@@ -178,20 +181,24 @@ class ConversationHandler:
                → get_unread_emails()
             
             ✍️ ACTIONS EMAIL:
-            8. Après génération de réponse:
+            8. "Crée un brouillon pour répondre à [personne]":
+               → generate_email_reply(query="personne", create_draft=true)
+            
+            9. Création manuelle de brouillon:
                → create_draft_email(recipient=..., subject=..., body=...)
             
             OUTILS DISPONIBLES:
             📊 ANALYSE: summarize_email, classify_email, analyze_email_sentiment (récupèrent l'email automatiquement)
-            ✍️ GÉNÉRATION: generate_email_reply (récupère l'email automatiquement)
+            ✍️ GÉNÉRATION: generate_email_reply (récupère l'email automatiquement, peut créer un brouillon avec create_draft=true)
             📥 RÉCUPÉRATION: retrieve_email_content, search_emails, get_recent_emails, get_unread_emails
             📧 ACTIONS: create_draft_email, send_email, reply_to_email, forward_email, delete_draft
             ⚙️ GESTION: get_user_mailboxes, get_thread_statistics
             
             RÈGLES IMPORTANTES:
             ✅ Les fonctions summarize_email, classify_email, generate_email_reply, analyze_email_sentiment récupèrent automatiquement l'email
+            ✅ generate_email_reply avec create_draft=true crée automatiquement un brouillon (pas besoin de create_draft_email séparé)
             ✅ Utilise retrieve_email_content SEULEMENT si l'utilisateur veut voir/lire le contenu d'un email
-            ✅ Enchaîne les fonctions quand nécessaire (ex: generate_email_reply → create_draft_email)
+            ✅ Pour créer un brouillon de réponse, utilise generate_email_reply(create_draft=true) au lieu de deux fonctions séparées
             ✅ Pour les conversations générales sans action email, réponds normalement sans fonctions
             
             🚫 RÈGLES ANTI-RÉPÉTITION:

@@ -22,30 +22,25 @@ class EmailToolsDefinition:
         return [
             {
                 "name": "summarize_email",
-                "description": "Résume le contenu d'un email en français avec les points clés et le niveau d'urgence. Peut récupérer automatiquement l'email si besoin.",
+                "description": "Résume le contenu d'un email en français avec les points clés et le niveau d'urgence. Récupère automatiquement l'email si une requête est fournie.",
                 "parameters": {
                     "type": "object",
                     "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Requête pour rechercher et récupérer l'email à résumer (expéditeur, sujet, mots-clés)"
+                        },
                         "email_content": {
                             "type": "string",
-                            "description": "Le contenu de l'email à résumer (optionnel si retrieve_email=true)"
+                            "description": "Le contenu de l'email à résumer (utilisé seulement si query n'est pas fourni)"
                         },
                         "sender": {
                             "type": "string", 
-                            "description": "L'expéditeur de l'email"
+                            "description": "L'expéditeur de l'email (utilisé pour la recherche ou métadonnées)"
                         },
                         "subject": {
                             "type": "string",
-                            "description": "Le sujet de l'email"
-                        },
-                        "retrieve_email": {
-                            "type": "boolean",
-                            "description": "Si true, récupère automatiquement l'email basé sur sender/subject au lieu d'utiliser email_content",
-                            "default": False
-                        },
-                        "search_query": {
-                            "type": "string",
-                            "description": "Requête de recherche pour récupérer l'email (utilisé si retrieve_email=true)"
+                            "description": "Le sujet de l'email (utilisé pour la recherche ou métadonnées)"
                         }
                     },
                     "required": []
@@ -53,13 +48,17 @@ class EmailToolsDefinition:
             },
             {
                 "name": "generate_email_reply",
-                "description": "Génère une réponse professionnelle à un email. Peut récupérer automatiquement l'email si besoin.",
+                "description": "Génère une réponse professionnelle à un email. Récupère automatiquement l'email si une requête est fournie. Peut créer un brouillon automatiquement.",
                 "parameters": {
                     "type": "object",
                     "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Requête pour rechercher et récupérer l'email auquel répondre (expéditeur, sujet, mots-clés)"
+                        },
                         "original_email": {
                             "type": "string",
-                            "description": "Le contenu de l'email original auquel répondre (optionnel si retrieve_email=true)"
+                            "description": "Le contenu de l'email original auquel répondre (utilisé seulement si query n'est pas fourni)"
                         },
                         "context": {
                             "type": "string",
@@ -68,24 +67,21 @@ class EmailToolsDefinition:
                         "tone": {
                             "type": "string",
                             "enum": ["professional", "friendly", "formal"],
-                            "description": "Le ton souhaité pour la réponse"
+                            "description": "Le ton souhaité pour la réponse",
+                            "default": "professional"
                         },
-                        "retrieve_email": {
+                        "create_draft": {
                             "type": "boolean",
-                            "description": "Si true, récupère automatiquement l'email à partir de la requête de recherche",
+                            "description": "Si true, crée automatiquement un brouillon avec la réponse générée",
                             "default": False
-                        },
-                        "search_query": {
-                            "type": "string",
-                            "description": "Requête de recherche pour récupérer l'email (utilisé si retrieve_email=true)"
                         },
                         "sender": {
                             "type": "string",
-                            "description": "Expéditeur de l'email original (aide à la recherche si retrieve_email=true)"
+                            "description": "Expéditeur de l'email original (utilisé pour la recherche ou métadonnées)"
                         },
                         "subject": {
                             "type": "string",
-                            "description": "Sujet de l'email original (aide à la recherche si retrieve_email=true)"
+                            "description": "Sujet de l'email original (utilisé pour la recherche ou métadonnées)"
                         }
                     },
                     "required": []
@@ -93,30 +89,25 @@ class EmailToolsDefinition:
             },
             {
                 "name": "classify_email",
-                "description": "Classifie un email selon différentes catégories (urgent, normal, information, etc.). Peut récupérer automatiquement l'email si besoin.",
+                "description": "Classifie un email selon différentes catégories (urgent, normal, information, etc.). Récupère automatiquement l'email si une requête est fournie.",
                 "parameters": {
                     "type": "object",
                     "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Requête pour rechercher et récupérer l'email à classifier (expéditeur, sujet, mots-clés)"
+                        },
                         "email_content": {
                             "type": "string",
-                            "description": "Le contenu de l'email à classifier (optionnel si retrieve_email=true)"
+                            "description": "Le contenu de l'email à classifier (utilisé seulement si query n'est pas fourni)"
                         },
                         "sender": {
                             "type": "string",
-                            "description": "L'expéditeur de l'email"
+                            "description": "L'expéditeur de l'email (utilisé pour la recherche ou métadonnées)"
                         },
                         "subject": {
                             "type": "string", 
-                            "description": "Le sujet de l'email"
-                        },
-                        "retrieve_email": {
-                            "type": "boolean",
-                            "description": "Si true, récupère automatiquement l'email basé sur sender/subject au lieu d'utiliser email_content",
-                            "default": False
-                        },
-                        "search_query": {
-                            "type": "string",
-                            "description": "Requête de recherche pour récupérer l'email (utilisé si retrieve_email=true)"
+                            "description": "Le sujet de l'email (utilisé pour la recherche ou métadonnées)"
                         }
                     },
                     "required": []
