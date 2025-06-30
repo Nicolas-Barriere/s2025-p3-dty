@@ -21,10 +21,10 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 
 from core.models import (
-    User, Mailbox, MailboxAccess, Thread, Message, Contact, 
+    User, Mailbox, MailboxAccess, Thread, ThreadAccess, Message, Contact, 
     MessageRecipient, Blob, Attachment
 )
-from core.enums import MessageRecipientTypeChoices, MailboxRoleChoices
+from core.enums import MessageRecipientTypeChoices, MailboxRoleChoices, ThreadAccessRoleChoices
 
 logger = logging.getLogger(__name__)
 
@@ -105,21 +105,28 @@ def get_or_create_contact(email: str, name: str, mailbox: Mailbox) -> Contact:
         Contact instance
     """
     try:
+        logger.debug(f"🔍 Getting/creating contact: email={email}, name='{name}', mailbox={mailbox.id}")
         contact, created = Contact.objects.get_or_create(
             email=email,
             mailbox=mailbox,
             defaults={'name': name or ''}
         )
         
+        if created:
+            logger.debug(f"➕ Created new contact: {contact.id} - {contact.email}")
+        else:
+            logger.debug(f"♻️ Using existing contact: {contact.id} - {contact.email}")
+        
         # Update name if provided and different
         if name and contact.name != name:
+            logger.debug(f"🔄 Updating contact name from '{contact.name}' to '{name}'")
             contact.name = name
             contact.save()
-            
+        
         return contact
         
     except Exception as e:
-        logger.error(f"Error getting/creating contact {email}: {e}")
+        logger.error(f"❌ Error getting/creating contact {email}: {e}")
         raise EmailWriterError(f"Error getting/creating contact: {str(e)}")
 
 
@@ -154,45 +161,69 @@ def create_draft_email(
     Raises:
         EmailWriterError: If operation fails
     """
+    logger.info(f"🚀 Starting create_draft_email: user_id={user_id}, mailbox_id={mailbox_id}, subject='{subject}', recipients_to={len(recipients_to or [])}, recipients_cc={len(recipients_cc or [])}, recipients_bcc={len(recipients_bcc or [])}")
+    
     try:
         with transaction.atomic():
+            logger.info("📝 Starting database transaction for draft creation")
+            
             # Validate user and mailbox access
+            logger.info(f"👤 Looking up user: {user_id}")
             user = User.objects.get(id=user_id)
+            logger.info(f"✅ Found user: {user.email or user.admin_email} (ID: {user.id})")
+            
+            logger.info(f"📫 Looking up mailbox: {mailbox_id}")
             mailbox = Mailbox.objects.get(id=mailbox_id)
+            logger.info(f"✅ Found mailbox: {mailbox.local_part}@{mailbox.domain.name} (ID: {mailbox.id})")
             
             # Check permissions
+            logger.info(f"🔐 Checking mailbox access permissions for user {user_id} on mailbox {mailbox_id}")
             try:
                 access = MailboxAccess.objects.get(user=user, mailbox=mailbox)
+                logger.info(f"✅ Found mailbox access: role={access.role}")
                 if access.role not in [MailboxRoleChoices.EDITOR, MailboxRoleChoices.ADMIN]:
+                    logger.error(f"❌ Insufficient permissions: user has role {access.role}, needs EDITOR or ADMIN")
                     raise InsufficientPermissionsError("User cannot send emails from this mailbox")
+                logger.info(f"✅ User has sufficient permissions: {access.role}")
             except MailboxAccess.DoesNotExist:
+                logger.error(f"❌ No mailbox access found for user {user_id} on mailbox {mailbox_id}")
                 raise InsufficientPermissionsError("User does not have access to this mailbox")
             
             # Create sender contact
+            sender_email = f"{mailbox.local_part}@{mailbox.domain.name}"
+            logger.info(f"👤 Creating/getting sender contact: {sender_email}")
             sender_contact = get_or_create_contact(
-                email=f"{mailbox.local_part}@{mailbox.domain.name}",
+                email=sender_email,
                 name=user.full_name or '',
                 mailbox=mailbox
             )
+            logger.info(f"✅ Sender contact ready: {sender_contact.email} (ID: {sender_contact.id})")
             
             # Handle thread
             thread = None
             parent_message = None
             
+            logger.info(f"🧵 Processing thread logic: parent_message_id={parent_message_id}, thread_id={thread_id}")
+            
             if parent_message_id:
+                logger.info(f"🔍 Looking up parent message: {parent_message_id}")
                 try:
                     parent_message = Message.objects.get(id=parent_message_id)
                     thread = parent_message.thread
+                    logger.info(f"✅ Found parent message and thread: message_id={parent_message.id}, thread_id={thread.id}")
                 except Message.DoesNotExist:
-                    logger.warning(f"Parent message {parent_message_id} not found")
+                    logger.warning(f"⚠️ Parent message {parent_message_id} not found")
             
             if thread_id and not thread:
+                logger.info(f"🔍 Looking up thread by ID: {thread_id}")
                 try:
                     thread = Thread.objects.get(id=thread_id)
+                    logger.info(f"✅ Found existing thread: {thread.id} - '{thread.subject}'")
                 except Thread.DoesNotExist:
-                    logger.warning(f"Thread {thread_id} not found")
+                    logger.warning(f"⚠️ Thread {thread_id} not found")
             
             if not thread:
+                logger.info(f"➕ Creating new thread with subject: '{subject}'")
                 # Create new thread
                 thread = Thread.objects.create(
                     subject=subject,
@@ -200,12 +231,47 @@ def create_draft_email(
                     has_draft=True,
                     has_messages=False
                 )
+                logger.info(f"✅ Created new thread: {thread.id} - '{thread.subject}'")
+                
+                # Create ThreadAccess to associate the thread with the mailbox
+                logger.info(f"🔗 Creating ThreadAccess for mailbox {mailbox.id} on thread {thread.id}")
+                thread_access, created = ThreadAccess.objects.get_or_create(
+                    thread=thread,
+                    mailbox=mailbox,
+                    defaults={'role': ThreadAccessRoleChoices.EDITOR}
+                )
+                if created:
+                    logger.info(f"✅ Created ThreadAccess: {thread_access.id} (role: {thread_access.role})")
+                else:
+                    logger.info(f"♻️ Using existing ThreadAccess: {thread_access.id} (role: {thread_access.role})")
+                
             else:
                 # Update thread to indicate it has drafts
+                logger.info(f"🔄 Updating existing thread {thread.id} to mark has_draft=True")
                 thread.has_draft = True
                 thread.save()
+                logger.info(f"✅ Updated thread {thread.id}")
+                
+                # Ensure ThreadAccess exists for this mailbox (in case of cross-mailbox operations)
+                logger.info(f"🔗 Ensuring ThreadAccess exists for mailbox {mailbox.id} on thread {thread.id}")
+                thread_access, created = ThreadAccess.objects.get_or_create(
+                    thread=thread,
+                    mailbox=mailbox,
+                    defaults={'role': ThreadAccessRoleChoices.EDITOR}  
+                )
+                if created:
+                    logger.info(f"✅ Created ThreadAccess: {thread_access.id} (role: {thread_access.role})")
+                else:
+                    logger.info(f"♻️ ThreadAccess already exists: {thread_access.id} (role: {thread_access.role})")
             
             # Create the draft message
+            logger.info(f"✉️ Creating draft message in thread {thread.id}")
+            draft_body_json = json.dumps({
+                'content': body,
+                'format': 'text'  # Could be 'html' in the future
+            })
+            logger.info(f"📄 Draft body prepared (length: {len(draft_body_json)} chars)")
+            
             message = Message.objects.create(
                 thread=thread,
                 subject=subject,
@@ -213,75 +279,98 @@ def create_draft_email(
                 parent=parent_message,
                 is_draft=True,
                 is_sender=True,
-                draft_body=json.dumps({
-                    'content': body,
-                    'format': 'text'  # Could be 'html' in the future
-                })
+                draft_body=draft_body_json
             )
+            logger.info(f"✅ Created draft message: {message.id} in thread {thread.id}")
             
             # Add recipients
             recipients_to = recipients_to or []
             recipients_cc = recipients_cc or []
             recipients_bcc = recipients_bcc or []
             
+            logger.info(f"👥 Processing recipients: TO={len(recipients_to)}, CC={len(recipients_cc)}, BCC={len(recipients_bcc)}")
+            
             # Process TO recipients
-            for recipient_data in recipients_to:
+            logger.info(f"📧 Processing {len(recipients_to)} TO recipients")
+            for i, recipient_data in enumerate(recipients_to):
+                logger.info(f"  TO[{i}]: {recipient_data.get('email', 'NO_EMAIL')} - {recipient_data.get('name', 'NO_NAME')}")
                 contact = get_or_create_contact(
                     email=recipient_data['email'],
                     name=recipient_data.get('name', ''),
                     mailbox=mailbox
                 )
-                MessageRecipient.objects.create(
+                recipient = MessageRecipient.objects.create(
                     message=message,
                     contact=contact,
                     type=MessageRecipientTypeChoices.TO
                 )
+                logger.info(f"  ✅ Created TO recipient: {recipient.id}")
             
             # Process CC recipients
-            for recipient_data in recipients_cc:
+            logger.info(f"📧 Processing {len(recipients_cc)} CC recipients")
+            for i, recipient_data in enumerate(recipients_cc):
+                logger.info(f"  CC[{i}]: {recipient_data.get('email', 'NO_EMAIL')} - {recipient_data.get('name', 'NO_NAME')}")
                 contact = get_or_create_contact(
                     email=recipient_data['email'],
                     name=recipient_data.get('name', ''),
                     mailbox=mailbox
                 )
-                MessageRecipient.objects.create(
+                recipient = MessageRecipient.objects.create(
                     message=message,
                     contact=contact,
                     type=MessageRecipientTypeChoices.CC
                 )
+                logger.info(f"  ✅ Created CC recipient: {recipient.id}")
             
             # Process BCC recipients
-            for recipient_data in recipients_bcc:
+            logger.info(f"📧 Processing {len(recipients_bcc)} BCC recipients")
+            for i, recipient_data in enumerate(recipients_bcc):
+                logger.info(f"  BCC[{i}]: {recipient_data.get('email', 'NO_EMAIL')} - {recipient_data.get('name', 'NO_NAME')}")
                 contact = get_or_create_contact(
                     email=recipient_data['email'],
                     name=recipient_data.get('name', ''),
                     mailbox=mailbox
                 )
-                MessageRecipient.objects.create(
+                recipient = MessageRecipient.objects.create(
                     message=message,
                     contact=contact,
                     type=MessageRecipientTypeChoices.BCC
                 )
+                logger.info(f"  ✅ Created BCC recipient: {recipient.id}")
             
-            logger.info(f"Created draft email {message.id} in thread {thread.id}")
+            total_recipients = len(recipients_to) + len(recipients_cc) + len(recipients_bcc)
+            logger.info(f"✅ All recipients processed successfully. Total: {total_recipients}")
             
-            return {
+            # Prepare result
+            result = {
                 'success': True,
                 'message_id': str(message.id),
                 'thread_id': str(thread.id),
                 'subject': subject,
-                'recipients_count': len(recipients_to) + len(recipients_cc) + len(recipients_bcc),
+                'recipients_count': total_recipients,
                 'is_draft': True
             }
             
+            logger.info(f"🎉 Draft creation completed successfully!")
+            logger.info(f"📊 Final result: {result}")
+            logger.info(f"📝 Draft message {message.id} created in thread {thread.id} with {total_recipients} recipients")
+            
+            return result
+            
     except User.DoesNotExist:
+        logger.error(f"❌ User not found: {user_id}")
         raise EmailWriterError(f"User not found: {user_id}")
     except Mailbox.DoesNotExist:
+        logger.error(f"❌ Mailbox not found: {mailbox_id}")
         raise MailboxNotFoundError(f"Mailbox not found: {mailbox_id}")
-    except InsufficientPermissionsError:
+    except InsufficientPermissionsError as e:
+        logger.error(f"❌ Insufficient permissions: {e}")
         raise
     except Exception as e:
-        logger.error(f"Error creating draft email: {e}")
+        logger.error(f"❌ Unexpected error creating draft email: {e}")
+        logger.error(f"❌ Exception type: {type(e).__name__}")
+        import traceback
+        logger.error(f"❌ Full traceback: {traceback.format_exc()}")
         raise EmailWriterError(f"Error creating draft email: {str(e)}")
 
 

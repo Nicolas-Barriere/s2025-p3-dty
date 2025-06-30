@@ -194,13 +194,20 @@ class ConversationHandler:
             ✅ Enchaîne les fonctions quand nécessaire (ex: generate_email_reply → create_draft_email)
             ✅ Pour les conversations générales sans action email, réponds normalement sans fonctions
             
-            Analyse la demande et exécute les fonctions appropriées en séquence si nécessaire.
+            🚫 RÈGLES ANTI-RÉPÉTITION:
+            ❌ NE JAMAIS répéter la même fonction avec les mêmes paramètres
+            ❌ Une fois qu'une fonction comme summarize_email, classify_email, ou generate_email_reply a réussi, NE PAS la rappeler
+            ❌ Si une fonction a déjà été exécutée avec succès, passer à l'étape suivante ou terminer
+            ✅ Vérifier les résultats précédents avant d'appeler une nouvelle fonction
+            
+            Analyse la demande et exécute les fonctions appropriées en séquence si nécessaire, SANS RÉPÉTITION.
             """
             
             # Initialize context and results tracking for multi-step operations
             conversation_context = f"Demande de l'utilisateur: {user_message}"
             all_results = []
-            max_iterations = 5
+            max_iterations = 3  # Reduced to prevent excessive iterations
+            completed_functions = set()  # Track completed functions to avoid repetition
             
             # Multi-step conversation loop
             for iteration in range(1, max_iterations + 1):
@@ -213,7 +220,12 @@ class ConversationHandler:
                 if conversation_history:
                     current_messages.extend(conversation_history)
                 
-                current_messages.append({"role": "user", "content": conversation_context})
+                # Add context about completed functions to prevent repetition
+                if completed_functions:
+                    context_with_completed = conversation_context + f"\n\nFONCTIONS DÉJÀ EXÉCUTÉES: {', '.join(completed_functions)}. Ne pas répéter ces fonctions sauf si nécessaire pour une étape différente."
+                    current_messages.append({"role": "user", "content": context_with_completed})
+                else:
+                    current_messages.append({"role": "user", "content": conversation_context})
                 
                 # Get available tools
                 tools = self.tools_definition.get_email_tools()
@@ -241,6 +253,11 @@ class ConversationHandler:
                             
                             logger.info(f"🔧 Iteration {iteration}, Tool {j+1}: {function_name}")
                             
+                            # Check if this function was already completed successfully
+                            if function_name in completed_functions:
+                                logger.warning(f"⚠️ Function {function_name} already completed, skipping to prevent repetition")
+                                continue
+                            
                             try:
                                 function_args = json.loads(raw_arguments)
                                 logger.info(f"✅ Successfully parsed arguments for {function_name}")
@@ -265,13 +282,26 @@ class ConversationHandler:
                             
                             # Build context for next iteration
                             if function_result.get('success'):
+                                # Mark function as completed to prevent repetition
+                                completed_functions.add(function_name)
+                                
                                 result_summary = self._summarize_function_result(function_name, function_result)
                                 conversation_context += f"\n\n✅ {function_name}: {result_summary}"
+                                
+                                # For certain functions, mark the task as complete
+                                if function_name in ['summarize_email', 'classify_email', 'generate_email_reply', 'analyze_email_sentiment']:
+                                    conversation_context += f"\n\nTÂCHE TERMINÉE: {function_name} a été exécuté avec succès. Ne pas répéter cette fonction."
+                                
                             else:
                                 error_msg = function_result.get('error', 'Erreur inconnue')
                                 conversation_context += f"\n\n❌ {function_name}: Échec - {error_msg}"
                     
                     logger.info(f"📊 Completed iteration {iteration} with {len(iteration_results)} tool calls")
+                    
+                    # If no new functions were executed (all were already completed), stop the loop
+                    if not iteration_results:
+                        logger.info("🛑 All requested functions already completed, stopping iteration")
+                        break
                 
                 # Handle legacy function_call format
                 elif 'function_call' in message:
@@ -280,6 +310,11 @@ class ConversationHandler:
                     function_name = function_call['name']
                     
                     logger.info(f"📞 Legacy function call in iteration {iteration}: {function_name}")
+                    
+                    # Check if this function was already completed successfully
+                    if function_name in completed_functions:
+                        logger.warning(f"⚠️ Function {function_name} already completed, stopping to prevent repetition")
+                        break
                     
                     try:
                         function_args = json.loads(function_call['arguments'])
@@ -301,8 +336,16 @@ class ConversationHandler:
                     all_results.append(step_result)
                     
                     if function_result.get('success'):
+                        # Mark function as completed to prevent repetition
+                        completed_functions.add(function_name)
+                        
                         result_summary = self._summarize_function_result(function_name, function_result)
                         conversation_context += f"\n\n✅ {function_name}: {result_summary}"
+                        
+                        # For certain functions, mark the task as complete
+                        if function_name in ['summarize_email', 'classify_email', 'generate_email_reply', 'analyze_email_sentiment']:
+                            conversation_context += f"\n\nTÂCHE TERMINÉE: {function_name} a été exécuté avec succès. Ne pas répéter cette fonction."
+                            
                     else:
                         error_msg = function_result.get('error', 'Erreur inconnue')
                         conversation_context += f"\n\n❌ {function_name}: Échec - {error_msg}"
@@ -396,7 +439,7 @@ class ConversationHandler:
             return f"{function_name} - résumé indisponible"
     
     def _format_multi_step_response(self, all_results: List[Dict], original_message: str, final_content: str = "") -> Dict[str, Any]:
-        """Format the final response from the unified function calling handler."""
+        """Format the final response from the unified function calling handler with standardized style."""
         try:
             if not all_results:
                 return {
@@ -415,7 +458,7 @@ class ConversationHandler:
             # Determine overall success
             overall_success = success_count > 0
             
-            # For single successful step, use the response formatter
+            # For single successful step, use the response formatter directly
             if total_steps == 1 and successful_steps:
                 single_result = successful_steps[0]
                 function_name = single_result['function']
@@ -427,32 +470,47 @@ class ConversationHandler:
                 )
                 
                 if formatted_response.get('success'):
-                    return formatted_response
+                    # Enhance the single function response with better formatting
+                    enhanced_response = self._enhance_response_formatting(formatted_response['response'])
+                    return {
+                        **formatted_response,
+                        'response': enhanced_response
+                    }
             
-            # Build comprehensive response for multi-step operations
+            # Build comprehensive response for multi-step operations with standardized formatting
             response_parts = []
             
-            # Add header with step summary
+            # Add clean header
             if total_steps == 1:
-                response_parts.append(f"🔧 **Action effectuée:** {all_results[0]['function']}")
+                response_parts.append(f"## ✅ Action Terminée\n")
+                response_parts.append(f"**Fonction exécutée :** `{all_results[0]['function']}`\n")
             else:
-                response_parts.append(f"🔧 **Actions effectuées:** {total_steps} étape(s) - {success_count} réussie(s)")
+                response_parts.append(f"## 🔄 Traitement Multi-Étapes\n")
+                response_parts.append(f"**Résumé :** {success_count}/{total_steps} étapes réussies\n")
             
-            # Add step details
-            response_parts.append("\n**Détail des étapes:**")
-            for result in all_results:
-                step_num = result['step']
-                function_name = result['function']
-                success = result.get('success', False)
-                
-                if success:
-                    summary = self._summarize_function_result(function_name, result['result'])
-                    response_parts.append(f"✅ **Étape {step_num}:** {summary}")
-                else:
-                    error_msg = result['result'].get('error', 'Erreur inconnue')
-                    response_parts.append(f"❌ **Étape {step_num}:** {function_name} - {error_msg}")
+            # Add step details with better formatting
+            if total_steps > 1:
+                response_parts.append("### 📋 Détail des Étapes\n")
+                for i, result in enumerate(all_results, 1):
+                    function_name = result['function']
+                    success = result.get('success', False)
+                    
+                    if success:
+                        status_icon = "✅"
+                        status_text = "Réussie"
+                    else:
+                        status_icon = "❌"
+                        status_text = "Échec"
+                        error_msg = result['result'].get('error', 'Erreur inconnue')
+                    
+                    response_parts.append(f"{status_icon} **Étape {i}** : `{function_name}` - {status_text}")
+                    
+                    if not success and 'error_msg' in locals():
+                        response_parts.append(f"   *Erreur : {error_msg}*")
+                    
+                    response_parts.append("")  # Add spacing
             
-            # Add detailed results for successful final steps
+            # Add main result content from the most relevant successful function
             if successful_steps:
                 last_successful = successful_steps[-1]
                 function_name = last_successful['function']
@@ -464,17 +522,27 @@ class ConversationHandler:
                 )
                 
                 if formatted_response.get('success'):
-                    response_parts.append(f"\n{formatted_response['response']}")
+                    # Extract and enhance the main content
+                    main_content = formatted_response['response']
+                    enhanced_content = self._enhance_response_formatting(main_content)
+                    
+                    response_parts.append("---\n")  # Separator
+                    response_parts.append(enhanced_content)
             
-            # Add final content from the model if provided
-            if final_content:
-                response_parts.append(f"\n💬 **Analyse:**\n{final_content}")
+            # Add final analysis if provided
+            if final_content and final_content.strip():
+                response_parts.append("\n---\n")
+                response_parts.append("### 📝 Analyse\n")
+                response_parts.append(f"{final_content.strip()}\n")
             
             # Add error summary if there were failures
             if failed_steps:
-                response_parts.append(f"\n⚠️ **Erreurs:** {len(failed_steps)} étape(s) ont échoué")
+                response_parts.append("\n---\n")
+                response_parts.append(f"### ⚠️ Avertissements\n")
+                response_parts.append(f"**{len(failed_steps)} étape(s) ont échoué** - Consultez les détails ci-dessus.\n")
             
-            response_text = "\n".join(response_parts)
+            # Join all parts with proper spacing
+            response_text = "\n".join(response_parts).strip()
             
             return {
                 'success': overall_success,
@@ -491,6 +559,102 @@ class ConversationHandler:
             logger.error(f"Error formatting multi-step response: {e}", exc_info=True)
             return {
                 'success': False,
-                'response': f"Erreur lors du formatage de la réponse: {str(e)}",
+                'response': f"## ❌ Erreur de Traitement\n\n**Détail :** {str(e)}\n\nVeuillez réessayer ou reformuler votre demande.",
                 'type': 'function_call_error'
             }
+    
+    def _enhance_response_formatting(self, response_text: str) -> str:
+        """
+        Enhance and standardize the formatting of response text for better markdown parsing.
+        
+        Args:
+            response_text: The raw response text to enhance
+            
+        Returns:
+            Enhanced and properly formatted response text
+        """
+        try:
+            if not response_text or not response_text.strip():
+                return response_text
+            
+            # Clean up the input text
+            lines = response_text.strip().split('\n')
+            enhanced_lines = []
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    enhanced_lines.append('')
+                    continue
+                
+                # Standardize headers
+                if line.startswith('**') and line.endswith(':**'):
+                    # Convert **Header:** to proper markdown header
+                    header_text = line.replace('**', '').replace(':', '').strip()
+                    enhanced_lines.append(f"### {header_text}\n")
+                elif line.startswith('**') and line.endswith('**') and ':' not in line:
+                    # Convert **Bold Text** to proper bold
+                    enhanced_lines.append(line)
+                
+                # Standardize email content formatting
+                elif line.startswith('📧') or line.startswith('✉️'):
+                    enhanced_lines.append(f"### {line}\n")
+                
+                # Standardize list items and status indicators
+                elif line.startswith('✅') or line.startswith('❌') or line.startswith('⚠️'):
+                    # Ensure proper spacing for status items
+                    enhanced_lines.append(f"{line}")
+                
+                # Enhance code blocks and inline code
+                elif 'Sujet:' in line or 'Ton:' in line or 'Destinataire:' in line:
+                    # Format email metadata properly with design system approach
+                    if ':' in line:
+                        key, value = line.split(':', 1)
+                        enhanced_lines.append(f"**{key.strip()}:** `{value.strip()}`")
+                    else:
+                        enhanced_lines.append(line)
+                
+                # Handle email body content with design system styling
+                elif line.startswith('Bonjour') or line.startswith('Monsieur') or line.startswith('Madame'):
+                    # Start of email content - add proper formatting
+                    enhanced_lines.append("\n```email")
+                    enhanced_lines.append(line)
+                elif line.startswith('Cordialement') or line.startswith('Bien à vous') or line.startswith('Salutations'):
+                    # End of email content
+                    enhanced_lines.append(line)
+                    enhanced_lines.append("```\n")
+                
+                # Handle function names and technical terms with consistent styling
+                elif any(func in line for func in ['summarize_email', 'classify_email', 'generate_email_reply', 'retrieve_email_content']):
+                    # Wrap function names in code formatting for technical clarity
+                    for func in ['summarize_email', 'classify_email', 'generate_email_reply', 'retrieve_email_content', 'create_draft_email']:
+                        if func in line:
+                            line = line.replace(func, f"`{func}`")
+                    enhanced_lines.append(line)
+                
+                else:
+                    enhanced_lines.append(line)
+            
+            # Join lines and clean up excessive spacing
+            enhanced_text = '\n'.join(enhanced_lines)
+            
+            # Clean up multiple consecutive newlines
+            while '\n\n\n' in enhanced_text:
+                enhanced_text = enhanced_text.replace('\n\n\n', '\n\n')
+            
+            # Ensure proper spacing around headers
+            enhanced_text = enhanced_text.replace('\n###', '\n\n###')
+            enhanced_text = enhanced_text.replace('###\n', '###\n\n')
+            
+            # Ensure proper spacing around code blocks
+            enhanced_text = enhanced_text.replace('\n```', '\n\n```')
+            enhanced_text = enhanced_text.replace('```\n', '```\n\n')
+            
+            # Final cleanup
+            enhanced_text = enhanced_text.strip()
+            
+            return enhanced_text
+            
+        except Exception as e:
+            logger.error(f"Error enhancing response formatting: {e}")
+            return response_text  # Return original if enhancement fails

@@ -3,6 +3,66 @@
     padding: 1rem;
     border-radius: 8px;
     max-width: 600px;
+    
+    // Enhanced markdown support
+    .msg.bot {
+        // Markdown elements should preserve their styling
+        h1, h2, h3, h4, h5, h6 {
+            margin: 0.5em 0;
+            color: inherit;
+        }
+        
+        code {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        pre {
+            background-color: #f8f9fa;
+            padding: 1em;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid #e9ecef;
+            
+            code {
+                background: none;
+                padding: 0;
+            }
+        }
+        
+        ul, ol {
+            padding-left: 1.5em;
+            margin: 0.5em 0;
+        }
+        
+        li {
+            margin: 0.3em 0;
+        }
+        
+        blockquote {
+            border-left: 4px solid #007bff;
+            margin: 0.5em 0;
+            padding-left: 1em;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        hr {
+            border: none;
+            border-top: 1px solid #dee2e6;
+            margin: 1em 0;
+        }
+        
+        strong {
+            font-weight: bold;
+        }
+        
+        em {
+            font-style: italic;
+        }
+    }
 }
 
 .chat-messages {

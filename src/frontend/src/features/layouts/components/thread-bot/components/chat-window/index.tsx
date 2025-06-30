@@ -1,7 +1,7 @@
 import { useState } from "react"
 import styles from "./ChatWindow.module.css"
 import { fetchAPI } from "@/features/api/fetch-api";
-import { boolean } from "zod";
+import ReactMarkdown from 'react-markdown';
 
 export const ChatWindow = () => {
     type ChatMessage = {
@@ -73,7 +73,8 @@ export const ChatWindow = () => {
                 }
                 setMessages(prev => [...prev, botMsg])
             }
-        } catch (err) {
+        } catch (error) {
+            console.error('Chat error:', error);
             const errorMsg: ChatMessage = {
                 role: "bot",
                 text: "Erreur lors de l'envoi. Veuillez réessayer.",
@@ -92,14 +93,40 @@ export const ChatWindow = () => {
         if (msg.type === 'email_summary') className += ` ${styles.emailSummary}`
         if (msg.type === 'email_reply') className += ` ${styles.emailReply}`
         if (msg.type === 'email_classification') className += ` ${styles.emailClassification}`
+        if (msg.type === 'function_call') className += ` ${styles.functionCall}`
+        if (msg.type === 'multi_step_completed') className += ` ${styles.multiStep}`
         if (msg.type === 'error') className += ` ${styles.error}`
 
         return (
             <div key={msg.timestamp?.getTime()} className={className}>
                 <div className={styles.msgContent}>
-                    {msg.text.split('\n').map((line, i) => (
-                        <div key={i}>{line}</div>
-                    ))}
+                    {msg.role === 'bot' ? (
+                        // Render bot messages with markdown support
+                        <ReactMarkdown
+                            components={{
+                                // Custom styling for markdown elements
+                                h1: ({children}) => <h1 className={styles.markdownH1}>{children}</h1>,
+                                h2: ({children}) => <h2 className={styles.markdownH2}>{children}</h2>,
+                                h3: ({children}) => <h3 className={styles.markdownH3}>{children}</h3>,
+                                p: ({children}) => <p className={styles.markdownP}>{children}</p>,
+                                strong: ({children}) => <strong className={styles.markdownStrong}>{children}</strong>,
+                                code: ({children}) => <code className={styles.markdownCode}>{children}</code>,
+                                pre: ({children}) => <pre className={styles.markdownPre}>{children}</pre>,
+                                ul: ({children}) => <ul className={styles.markdownUl}>{children}</ul>,
+                                ol: ({children}) => <ol className={styles.markdownOl}>{children}</ol>,
+                                li: ({children}) => <li className={styles.markdownLi}>{children}</li>,
+                                blockquote: ({children}) => <blockquote className={styles.markdownBlockquote}>{children}</blockquote>,
+                                hr: () => <hr className={styles.markdownHr} />,
+                            }}
+                        >
+                            {msg.text}
+                        </ReactMarkdown>
+                    ) : (
+                        // Keep user messages as simple text
+                        msg.text.split('\n').map((line, index) => (
+                            <div key={index}>{line}</div>
+                        ))
+                    )}
                 </div>
                 {msg.function_used && (
                     <div className={styles.msgMeta}>
@@ -116,7 +143,7 @@ export const ChatWindow = () => {
     return (
         <div className={styles.chatWindow}>
             <div className={styles.chatMessages}>
-                {messages.map((msg, i) => formatMessage(msg))}
+                {messages.map((msg) => formatMessage(msg))}
                 {isLoading && (
                     <div className={`${styles.msg} ${styles.bot} ${styles.loading}`}>
                         <div className={styles.msgContent}>
