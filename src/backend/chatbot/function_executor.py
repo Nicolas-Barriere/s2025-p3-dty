@@ -174,11 +174,76 @@ class FunctionExecutor:
         result = self.email_processor.generate_mail_answer(
             original_email, 
             context, 
-            tone,
-            create_draft=create_draft,
-            user_id=user_id if create_draft else None,
-            original_message_metadata=retrieved_metadata
+            tone
         )
+        
+        # If successful and create_draft is True, create a draft email
+        if result.get('success') and create_draft and user_id:
+            logger.info(f"Creating draft email for generated response")
+            
+            try:
+                from .email_writer import create_draft_email, get_user_mailboxes
+                
+                # Extract the generated response content
+                generated_response = result.get('response', {})
+                response_body = generated_response.get('response', '')
+                response_subject = generated_response.get('subject', 'Re: Email')
+                
+                # Extract recipient information from original message metadata
+                recipients_to = []
+                if retrieved_metadata:
+                    sender_email = retrieved_metadata.get('sender_email', '')
+                    sender_name = retrieved_metadata.get('sender_name', '')
+                    if sender_email:
+                        recipients_to = [{'email': sender_email, 'name': sender_name}]
+                
+                # Get user's first available mailbox
+                user_mailboxes = get_user_mailboxes(user_id)
+                
+                if not user_mailboxes:
+                    logger.warning("User has no accessible mailboxes for draft creation")
+                    result['draft_warning'] = "Impossible de créer le brouillon : aucune boîte mail accessible"
+                else:
+                    # Use the first mailbox that can send emails
+                    sender_mailbox = None
+                    for mailbox in user_mailboxes:
+                        if mailbox.get('can_send', False):
+                            sender_mailbox = mailbox
+                            break
+                    
+                    if not sender_mailbox:
+                        logger.warning("User has no mailboxes with send permissions")
+                        result['draft_warning'] = "Impossible de créer le brouillon : aucune boîte mail avec permissions d'envoi"
+                    else:
+                        # Create the draft
+                        draft_result = create_draft_email(
+                            user_id=user_id,
+                            mailbox_id=sender_mailbox['id'],
+                            subject=response_subject,
+                            body=response_body,
+                            recipients_to=recipients_to,
+                            parent_message_id=retrieved_metadata.get('message_id') if retrieved_metadata else None,
+                            thread_id=retrieved_metadata.get('thread_id') if retrieved_metadata else None
+                        )
+                        
+                        if draft_result.get('success'):
+                            logger.info(f"Successfully created draft: {draft_result.get('message_id')}")
+                            result['draft_created'] = True
+                            result['draft_id'] = draft_result.get('message_id')
+                            result['draft_thread_id'] = draft_result.get('thread_id')
+                            result['draft_info'] = {
+                                'message_id': draft_result.get('message_id'),
+                                'thread_id': draft_result.get('thread_id'),
+                                'subject': response_subject,
+                                'recipients_count': draft_result.get('recipients_count', 0)
+                            }
+                        else:
+                            logger.error(f"Failed to create draft: {draft_result.get('error')}")
+                            result['draft_warning'] = f"Erreur lors de la création du brouillon : {draft_result.get('error')}"
+                            
+            except Exception as draft_error:
+                logger.error(f"Error creating draft email: {draft_error}")
+                result['draft_warning'] = f"Erreur lors de la création du brouillon : {str(draft_error)}"
         execution_time = time.time() - start_time
         
         if result.get('success'):
