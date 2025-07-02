@@ -7,6 +7,7 @@ import {
 import { Spinner } from "@gouvfr-lasuite/ui-kit";
 import { Button } from "@openfun/cunningham-react";
 import { addToast, ToasterItem } from "@/features/ui/components/toaster";
+import ReactMarkdown from "react-markdown";
 
 export const ThreadSummary = ({ threadId }: { threadId: string }) => {
   const { data, isLoading, error, refetch } =
@@ -18,7 +19,9 @@ export const ThreadSummary = ({ threadId }: { threadId: string }) => {
     mutation: {
       onMutate: () => {
         addToast(
-          <ToasterItem type="info">Génération du résumé en cours ...</ToasterItem>
+          <ToasterItem type="info">
+            Génération du résumé en cours ...
+          </ToasterItem>
         );
         refetch();
       },
@@ -51,7 +54,11 @@ export const ThreadSummary = ({ threadId }: { threadId: string }) => {
       ) : (
         <>
           <div className="thread-summary__content">
-            <p>{summary || "Aucun résumé disponible."}</p>
+            {summary ? (
+              <ReactMarkdown>{summary}</ReactMarkdown>
+            ) : (
+              <p>Aucun résumé disponible.</p>
+            )}
           </div>
           <div className="thread-summary__actions">
             <Button
