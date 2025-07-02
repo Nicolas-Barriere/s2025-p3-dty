@@ -3,6 +3,7 @@
 from django.conf import settings
 from django.db.models import Count, Exists, OuterRef, Q
 
+
 import rest_framework as drf
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
@@ -10,10 +11,13 @@ from drf_spectacular.utils import (
     OpenApiResponse,
     extend_schema,
 )
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, viewsets, status
+
+from rest_framework.response import Response
 
 from core import enums, models
 from core.search import search_threads
+from core.ai.thread_summarizer import summarize_thread
 
 from .. import permissions, serializers
 
@@ -395,6 +399,91 @@ class ThreadViewSet(
 
         # Fall back to regular DB query if no search query or Elasticsearch not available
         return super().list(request, *args, **kwargs)
+
+
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                response={
+                    "type": "object",
+                    "properties": {
+                        "summary": {"type": "string"},
+                    },
+                },
+                description="Thread summary retrieved successfully.",
+            ),
+            403: OpenApiResponse(
+                response={"detail": "Permission denied"},
+                description="User does not have permission to access this thread.",
+            ),
+        },
+        tags=["threads"]
+    )
+    @drf.decorators.action(detail=True, methods=["get"], url_path="summary")
+    def get_summary(self, request, pk=None, id=None):
+        pk = id or pk
+        self.kwargs["pk"] = pk
+
+        thread = self.get_object()
+
+        # Check access rights
+        if not models.ThreadAccess.objects.filter(
+            thread=thread, mailbox__accesses__user=request.user
+        ).exists():
+            return Response({"detail": "Permission denied"}, status=403)
+
+        if not thread.summary:
+            thread.summary = ""
+            thread.save()
+
+        return Response({"summary": thread.summary})
+
+
+
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                response={"type": "object", "properties": {
+                    "summary": {"type": "string"}
+                }},
+                description="Summary successfully refreshed.",
+            ),
+            403: OpenApiResponse(
+                response={"detail": "Permission denied"},
+                description="User does not have permission to refresh the summary of this thread.",
+            ),
+        },
+        tags=["threads"]
+    )
+    @drf.decorators.action(
+        detail=True,
+        methods=["post"],
+        url_path="refresh-summary",
+        url_name="refresh-summary",
+    )
+    def refresh_summary(self, request, pk=None, id=None):
+        pk = id or pk
+        self.kwargs["pk"] = pk
+
+        thread = self.get_object()
+
+        # Check access rights
+        if not models.ThreadAccess.objects.filter(
+            thread=thread, mailbox__accesses__user=request.user
+        ).exists():
+            return Response(
+                {"detail": "Permission denied"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        thread.summary = summarize_thread(thread)
+        thread.save()
+
+        return Response({
+            "summary": thread.summary
+        }, status=status.HTTP_200_OK)
+
+
 
     # @extend_schema(
     #     tags=["threads"],
