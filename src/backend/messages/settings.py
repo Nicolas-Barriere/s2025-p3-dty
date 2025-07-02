@@ -508,6 +508,11 @@ class Base(Configuration):
         environ_name="KEYCLOAK_CLIENT_SECRET",
         environ_prefix=None,
     )
+    
+    # AI
+    AI_API_KEY = values.Value(None, environ_name="AI_API_KEY", environ_prefix=None)
+    AI_BASE_URL = values.Value(None, environ_name="AI_BASE_URL", environ_prefix=None)
+    AI_MODEL = values.Value(None, environ_name="AI_MODEL", environ_prefix=None)
 
     # Logging
     # We want to make it easy to log to console but by default we log production
