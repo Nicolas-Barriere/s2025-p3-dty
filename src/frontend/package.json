@@ -43,6 +43,7 @@
     "react-email": "4.0.17",
     "react-hook-form": "7.59.0",
     "react-i18next": "15.5.3",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "3.0.3",
     "react-toastify": "11.0.5",
     "sass": "1.89.2",
@@ -65,7 +66,7 @@
     "vitest": "3.2.4"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-musl": "4.44.1",
-    "@rollup/rollup-linux-x64-gnu": "4.44.1"
+    "@rollup/rollup-linux-x64-musl": "4.40.2",
+    "@rollup/rollup-linux-x64-gnu": "4.40.2"
   }
 }
