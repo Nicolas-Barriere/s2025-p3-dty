@@ -510,6 +510,30 @@ class Base(Configuration):
         environ_prefix=None,
     )
 
+    # AI service
+    AI_FEATURE_ENABLED = values.BooleanValue(
+        default=True, environ_name="AI_FEATURE_ENABLED", environ_prefix=None
+    )
+    AI_API_KEY = values.Value(None, environ_name="AI_API_KEY", environ_prefix=None)
+    AI_BASE_URL = values.Value(None, environ_name="AI_BASE_URL", environ_prefix=None)
+    AI_MODEL = values.Value(None, environ_name="AI_MODEL", environ_prefix=None)
+    AI_ALLOW_REACH_FROM = values.Value(
+        choices=("public", "authenticated", "restricted"),
+        default="authenticated",
+        environ_name="AI_ALLOW_REACH_FROM",
+        environ_prefix=None,
+    )
+    AI_DOCUMENT_RATE_THROTTLE_RATES = {
+        "minute": 5,
+        "hour": 100,
+        "day": 500,
+    }
+    AI_USER_RATE_THROTTLE_RATES = {
+        "minute": 3,
+        "hour": 50,
+        "day": 200,
+    }
+
     # Logging
     # We want to make it easy to log to console but by default we log production
     # to Sentry and don't want to log to console.
