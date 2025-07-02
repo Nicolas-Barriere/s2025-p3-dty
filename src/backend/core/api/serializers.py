@@ -9,7 +9,9 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from core import models
+from core import models, enums
+from core.services.ai_services import AI_ACTIONS
+
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -595,3 +597,32 @@ class ImportIMAPSerializer(ImportBaseSerializer):
         default=0,
         min_value=0,
     )
+
+class AITransformSerializer(serializers.Serializer):
+    """Serializer for AI transform requests."""
+
+    action = serializers.ChoiceField(choices=AI_ACTIONS, required=True)
+    text = serializers.CharField(required=True)
+
+    def validate_text(self, value):
+        """Ensure the text field is not empty."""
+
+        if len(value.strip()) == 0:
+            raise serializers.ValidationError("Text field cannot be empty.")
+        return value
+
+
+class AITranslateSerializer(serializers.Serializer):
+    """Serializer for AI translate requests."""
+
+    language = serializers.ChoiceField(
+        choices=tuple(enums.ALL_LANGUAGES.items()), required=True
+    )
+    text = serializers.CharField(required=True)
+
+    def validate_text(self, value):
+        """Ensure the text field is not empty."""
+
+        if len(value.strip()) == 0:
+            raise serializers.ValidationError("Text field cannot be empty.")
+        return value
