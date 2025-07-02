@@ -377,8 +377,10 @@ def search_messages(
             messages_query = messages_query.filter(
                 Q(subject__icontains=query) |
                 Q(sender__name__icontains=query) |
-                Q(sender__email__icontains=query)
-            )
+                Q(sender__email__icontains=query) |
+                Q(thread__messages__text_content__icontains=query, thread__messages__is_trashed=False) |
+                Q(text_content__icontains=query)
+            ).distinct()
         
         # Apply archived filter before slicing
         if not include_archived:
