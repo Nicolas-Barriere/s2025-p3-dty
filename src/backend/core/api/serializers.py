@@ -279,6 +279,7 @@ class ThreadSerializer(serializers.ModelSerializer):
             "user_role",
             "accesses",
             "labels",
+            "summary"
         ]
         read_only_fields = fields  # Mark all as read-only for safety
 

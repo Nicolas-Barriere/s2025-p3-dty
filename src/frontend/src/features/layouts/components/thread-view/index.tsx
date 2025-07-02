@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation"
 import { Banner } from "@/features/ui/components/banner"
 import { Button } from "@openfun/cunningham-react"
 import { useTranslation } from "react-i18next"
+import { ThreadSummary } from "./components/thread-summary"
 
 type MessageWithDraftChild = Message & {
     draft_message?: Message;
@@ -119,6 +120,7 @@ export const ThreadView = () => {
     return (
         <div className="thread-view" ref={rootRef}>
             <ActionBar canUndelete={isThreadTrashed} />
+            {selectedThread && <ThreadSummary threadId={selectedThread.id} />}
             <div className="thread-view__messages-list">
                 {filteredMessages!.map((message) => {
                     const isLatest = latestMessage?.id === message.id;
