@@ -122,5 +122,23 @@ def summarize_thread(thread: Thread) -> str:
     return summary
 
 
+def generate_answer(thread: Thread) -> str:
+    """
+    Generates an answer to a thread using the ALBERT model.
+    Args:
+        thread (Thread): Thread to answer.
+    Returns:
+        str: Answer to the thread.
+    """
+
+    # Prepare the prompt for the AI model
+    messages = get_messages_from_thread(thread)
+    conversation_text = "\n\n".join([str(message) for message in messages])
+    prompt_query = "Tu es un assistant intelligent qui génère une réponse à des mails. Tu dois fournir une réponse aux emails suivants qui forment une conversation cohérente et prendre en compte le contexte avec les destinataires et les copies. Ta réponse doit être la plus concise possible et ne pas repréciser les informations du mails (destinataires, ...). En cas de détection de SPAM ta réponse doit être précédée de la mention 'POTENTIEL SPAM DÉTECTÉ'"
+    prompt = prompt_query + conversation_text + "\n\nRéponse en français aux emails ci-dessus :"
+    
+    # Make the API call to get the summary
+    answer = AIService().call_ai_api(prompt)
+    return answer
 
 
