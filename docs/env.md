@@ -165,6 +165,17 @@ This document provides a comprehensive overview of all environment variables use
 | `CSRF_TRUSTED_ORIGINS` | `[]` | Trusted origins for CSRF | Optional |
 | `SERVER_TO_SERVER_API_TOKENS` | `[]` | API tokens for server-to-server auth | Optional |
 
+## AI Configuration
+
+| Variable | Default | Description | Required |
+|----------|---------|-------------|----------|
+| `AI_FEATURE_ENABLED` | `True` | Enable/disable AI features | Optional |
+| `AI_API_KEY` | None | API key for AI service (OpenAI, etc.) | Required* |
+| `AI_BASE_URL` | None | Base URL for AI service API | Optional |
+| `AI_MODEL` | None | AI model to use (e.g., gpt-4, gpt-3.5-turbo) | Optional |
+| `AI_ALLOW_REACH_FROM` | `authenticated` | Who can access AI features (`public`, `authenticated`, `restricted`) | Optional |
+
+
 ## Monitoring & Observability
 
 ### Sentry
