@@ -32,9 +32,11 @@ import type {
   ThreadsGenerateAnswerCreate200,
   ThreadsListParams,
   ThreadsRefreshSummaryCreate200,
+  ThreadsRefreshSummaryCreate200,
   ThreadsStatsRetrieve200,
   ThreadsStatsRetrieve400,
   ThreadsStatsRetrieveParams,
+  ThreadsSummaryRetrieve200,
   ThreadsSummaryRetrieve200,
 } from ".././models";
 
@@ -116,10 +118,10 @@ export const getThreadsListInfiniteQueryOptions = <
     QueryKey,
     ThreadsListParams["page"]
   > = ({ signal, pageParam }) =>
-    threadsList(
-      { ...params, page: pageParam || params?.["page"] },
-      { signal, ...requestOptions },
-    );
+      threadsList(
+        { ...params, page: pageParam || params?.["page"] },
+        { signal, ...requestOptions },
+      );
 
   return { queryKey, queryFn, ...queryOptions } as UseInfiniteQueryOptions<
     Awaited<ReturnType<typeof threadsList>>,
@@ -153,15 +155,15 @@ export function useThreadsListInfinite<
         ThreadsListParams["page"]
       >
     > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsList>>,
-          TError,
-          Awaited<ReturnType<typeof threadsList>>,
-          QueryKey
-        >,
-        "initialData"
-      >;
+    Pick<
+      DefinedInitialDataOptions<
+        Awaited<ReturnType<typeof threadsList>>,
+        TError,
+        Awaited<ReturnType<typeof threadsList>>,
+        QueryKey
+      >,
+      "initialData"
+    >;
     request?: SecondParameter<typeof fetchAPI>;
   },
   queryClient?: QueryClient,
@@ -186,15 +188,15 @@ export function useThreadsListInfinite<
         ThreadsListParams["page"]
       >
     > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsList>>,
-          TError,
-          Awaited<ReturnType<typeof threadsList>>,
-          QueryKey
-        >,
-        "initialData"
-      >;
+    Pick<
+      UndefinedInitialDataOptions<
+        Awaited<ReturnType<typeof threadsList>>,
+        TError,
+        Awaited<ReturnType<typeof threadsList>>,
+        QueryKey
+      >,
+      "initialData"
+    >;
     request?: SecondParameter<typeof fetchAPI>;
   },
   queryClient?: QueryClient,
@@ -305,14 +307,14 @@ export function useThreadsList<
     query: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof threadsList>>, TError, TData>
     > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsList>>,
-          TError,
-          Awaited<ReturnType<typeof threadsList>>
-        >,
-        "initialData"
-      >;
+    Pick<
+      DefinedInitialDataOptions<
+        Awaited<ReturnType<typeof threadsList>>,
+        TError,
+        Awaited<ReturnType<typeof threadsList>>
+      >,
+      "initialData"
+    >;
     request?: SecondParameter<typeof fetchAPI>;
   },
   queryClient?: QueryClient,
@@ -328,14 +330,14 @@ export function useThreadsList<
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof threadsList>>, TError, TData>
     > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsList>>,
-          TError,
-          Awaited<ReturnType<typeof threadsList>>
-        >,
-        "initialData"
-      >;
+    Pick<
+      UndefinedInitialDataOptions<
+        Awaited<ReturnType<typeof threadsList>>,
+        TError,
+        Awaited<ReturnType<typeof threadsList>>
+      >,
+      "initialData"
+    >;
     request?: SecondParameter<typeof fetchAPI>;
   },
   queryClient?: QueryClient,
@@ -471,14 +473,14 @@ export function useThreadsRetrieve<
         TData
       >
     > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsRetrieve>>,
-          TError,
-          Awaited<ReturnType<typeof threadsRetrieve>>
-        >,
-        "initialData"
-      >;
+    Pick<
+      DefinedInitialDataOptions<
+        Awaited<ReturnType<typeof threadsRetrieve>>,
+        TError,
+        Awaited<ReturnType<typeof threadsRetrieve>>
+      >,
+      "initialData"
+    >;
     request?: SecondParameter<typeof fetchAPI>;
   },
   queryClient?: QueryClient,
@@ -498,14 +500,14 @@ export function useThreadsRetrieve<
         TData
       >
     > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsRetrieve>>,
-          TError,
-          Awaited<ReturnType<typeof threadsRetrieve>>
-        >,
-        "initialData"
-      >;
+    Pick<
+      UndefinedInitialDataOptions<
+        Awaited<ReturnType<typeof threadsRetrieve>>,
+        TError,
+        Awaited<ReturnType<typeof threadsRetrieve>>
+      >,
+      "initialData"
+    >;
     request?: SecondParameter<typeof fetchAPI>;
   },
   queryClient?: QueryClient,
@@ -653,118 +655,6 @@ export const useThreadsDestroy = <TError = unknown, TContext = unknown>(
   TContext
 > => {
   const mutationOptions = getThreadsDestroyMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-/**
- * ViewSet for Thread model.
- */
-export type threadsGenerateAnswerCreateResponse200 = {
-  data: ThreadsGenerateAnswerCreate200;
-  status: 200;
-};
-
-export type threadsGenerateAnswerCreateResponse403 = {
-  data: unknown;
-  status: 403;
-};
-
-export type threadsGenerateAnswerCreateResponseComposite =
-  | threadsGenerateAnswerCreateResponse200
-  | threadsGenerateAnswerCreateResponse403;
-
-export type threadsGenerateAnswerCreateResponse =
-  threadsGenerateAnswerCreateResponseComposite & {
-    headers: Headers;
-  };
-
-export const getThreadsGenerateAnswerCreateUrl = (id: string) => {
-  return `/api/v1.0/threads/${id}/generate-answer/`;
-};
-
-export const threadsGenerateAnswerCreate = async (
-  id: string,
-  generateAnswerRequestRequest: GenerateAnswerRequestRequest,
-  options?: RequestInit,
-): Promise<threadsGenerateAnswerCreateResponse> => {
-  return fetchAPI<threadsGenerateAnswerCreateResponse>(
-    getThreadsGenerateAnswerCreateUrl(id),
-    {
-      ...options,
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...options?.headers },
-      body: JSON.stringify(generateAnswerRequestRequest),
-    },
-  );
-};
-
-export const getThreadsGenerateAnswerCreateMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
-    TError,
-    { id: string; data: GenerateAnswerRequestRequest },
-    TContext
-  >;
-  request?: SecondParameter<typeof fetchAPI>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
-  TError,
-  { id: string; data: GenerateAnswerRequestRequest },
-  TContext
-> => {
-  const mutationKey = ["threadsGenerateAnswerCreate"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
-    { id: string; data: GenerateAnswerRequestRequest }
-  > = (props) => {
-    const { id, data } = props ?? {};
-
-    return threadsGenerateAnswerCreate(id, data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type ThreadsGenerateAnswerCreateMutationResult = NonNullable<
-  Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>
->;
-export type ThreadsGenerateAnswerCreateMutationBody =
-  GenerateAnswerRequestRequest;
-export type ThreadsGenerateAnswerCreateMutationError = unknown;
-
-export const useThreadsGenerateAnswerCreate = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
-      TError,
-      { id: string; data: GenerateAnswerRequestRequest },
-      TContext
-    >;
-    request?: SecondParameter<typeof fetchAPI>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
-  TError,
-  { id: string; data: GenerateAnswerRequestRequest },
-  TContext
-> => {
-  const mutationOptions =
-    getThreadsGenerateAnswerCreateMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
@@ -974,14 +864,14 @@ export function useThreadsSummaryRetrieve<
         TData
       >
     > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsSummaryRetrieve>>,
-          TError,
-          Awaited<ReturnType<typeof threadsSummaryRetrieve>>
-        >,
-        "initialData"
-      >;
+    Pick<
+      DefinedInitialDataOptions<
+        Awaited<ReturnType<typeof threadsSummaryRetrieve>>,
+        TError,
+        Awaited<ReturnType<typeof threadsSummaryRetrieve>>
+      >,
+      "initialData"
+    >;
     request?: SecondParameter<typeof fetchAPI>;
   },
   queryClient?: QueryClient,
@@ -1001,14 +891,14 @@ export function useThreadsSummaryRetrieve<
         TData
       >
     > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsSummaryRetrieve>>,
-          TError,
-          Awaited<ReturnType<typeof threadsSummaryRetrieve>>
-        >,
-        "initialData"
-      >;
+    Pick<
+      UndefinedInitialDataOptions<
+        Awaited<ReturnType<typeof threadsSummaryRetrieve>>,
+        TError,
+        Awaited<ReturnType<typeof threadsSummaryRetrieve>>
+      >,
+      "initialData"
+    >;
     request?: SecondParameter<typeof fetchAPI>;
   },
   queryClient?: QueryClient,
@@ -1149,7 +1039,7 @@ export const getThreadsStatsRetrieveQueryOptions = <
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof threadsStatsRetrieve>>
   > = ({ signal }) =>
-    threadsStatsRetrieve(params, { signal, ...requestOptions });
+      threadsStatsRetrieve(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof threadsStatsRetrieve>>,
@@ -1176,14 +1066,14 @@ export function useThreadsStatsRetrieve<
         TData
       >
     > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsStatsRetrieve>>,
-          TError,
-          Awaited<ReturnType<typeof threadsStatsRetrieve>>
-        >,
-        "initialData"
-      >;
+    Pick<
+      DefinedInitialDataOptions<
+        Awaited<ReturnType<typeof threadsStatsRetrieve>>,
+        TError,
+        Awaited<ReturnType<typeof threadsStatsRetrieve>>
+      >,
+      "initialData"
+    >;
     request?: SecondParameter<typeof fetchAPI>;
   },
   queryClient?: QueryClient,
@@ -1203,14 +1093,14 @@ export function useThreadsStatsRetrieve<
         TData
       >
     > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsStatsRetrieve>>,
-          TError,
-          Awaited<ReturnType<typeof threadsStatsRetrieve>>
-        >,
-        "initialData"
-      >;
+    Pick<
+      UndefinedInitialDataOptions<
+        Awaited<ReturnType<typeof threadsStatsRetrieve>>,
+        TError,
+        Awaited<ReturnType<typeof threadsStatsRetrieve>>
+      >,
+      "initialData"
+    >;
     request?: SecondParameter<typeof fetchAPI>;
   },
   queryClient?: QueryClient,

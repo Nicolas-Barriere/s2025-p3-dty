@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation"
 import { Banner } from "@/features/ui/components/banner"
 import { Button } from "@openfun/cunningham-react"
 import { useTranslation } from "react-i18next"
+import { ThreadSummary } from "./components/thread-summary"
 import { ThreadViewLabelsList } from "./components/thread-view-labels-list"
 import { ThreadSummary } from "./components/thread-summary"
 
