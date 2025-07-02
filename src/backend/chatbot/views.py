@@ -33,39 +33,6 @@ from .email_retrieval import (
 logger = logging.getLogger(__name__)
 
 
-# Health check endpoint
-@api_view(['GET'])
-def chatbot_health_check(request):
-    """
-    Health check endpoint for the chatbot service.
-    """
-    try:
-        chatbot = get_chatbot()
-        
-        # Test with a simple dummy operation
-        test_result = chatbot.summarize_mail(
-            "Test email for health check",
-            "health@check.com",
-            "Health Check"
-        )
-        
-        return Response({
-            'status': 'healthy',
-            'service': 'albert-chatbot',
-            'api_accessible': test_result.get('success', False),
-            'timestamp': '2025-06-19T00:00:00Z'
-        }, status=status.HTTP_200_OK)
-        
-    except Exception as e:
-        logger.error(f"Chatbot health check failed: {e}")
-        return Response({
-            'status': 'unhealthy',
-            'service': 'albert-chatbot',
-            'error': str(e),
-            'timestamp': '2025-06-19T00:00:00Z'
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-
 # Simple chat endpoint for frontend integration
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
