@@ -102,6 +102,22 @@ def get_messages_from_thread(thread: Thread) -> List[Message]:
     return messages
 
 
+def count_tokens_in_messages(messages: List[Message]) -> int:
+    """
+    Counts the number of tokens in a list of messages.
+    Args:
+        messages (List[Message]): List of Message objects.
+    Returns:
+        int: Total number of tokens in the messages.
+    """
+    token_count = 0
+    for message in messages:
+        # Count tokens in the subject and body
+        token_count += len(message.subject.split())
+        token_count += len(message.body.split())
+    return token_count
+
+
 def summarize_thread(thread: Thread) -> str:
     """
     Summarizes a thread using the ALBERT model.
@@ -111,11 +127,13 @@ def summarize_thread(thread: Thread) -> str:
         str: Summary of the thread.
     """
 
-    # Prepare the prompt for the AI model
+    # Extract messages from the thread
     messages = get_messages_from_thread(thread)
+
+    # Prepare the prompt for the AI model
     conversation_text = "\n\n".join([str(message) for message in messages])
-    prompt_query = "Tu es un assistant intelligent qui résume les emails. Tu dois fournir un résumé concis, sous forme de bullet points clairs, des emails suivants qui forment une conversation cohérente et prendre en compte le contexte avec les destinataires et les copies. Ta réponse doit être la plus concise possible et ne pas repréciser les informations du mails (destinataires, ...). En cas de détection de SPAM ta réponse doit être précédée de la mention 'POTENTIEL SPAM DÉTECTÉ'"
-    prompt = prompt_query + conversation_text + "\n\nRésumé en français des emails ci-dessus :"
+    prompt_query = "Tu es un assistant intelligent qui résume des boucles de mails. Tu dois résumer le contenu de la conversation en une ou deux lignes maximum sans préciser 'Résumé:'. Si des liens importants apparaissent dans les emails, tu dois les mentionner dans le résumé de façon cliquable."
+    prompt = prompt_query + conversation_text + "\n\nRésumé Markdown en français des emails ci-dessus :\n"
     
     # Make the API call to get the summary
     summary = AIService().call_ai_api(prompt)
