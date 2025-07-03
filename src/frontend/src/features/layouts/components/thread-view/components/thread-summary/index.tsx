@@ -63,7 +63,7 @@ export const ThreadSummary = ({ threadId }: { threadId: string }) => {
           <div className="thread-summary__actions">
             <Button
               color="primary"
-              icon={<span className="material-icons">auto_awesome</span>}
+              icon={<span className="material-icons">summarize</span>}
               onClick={handleRefresh}
             >
               {refreshMutation.isPending
