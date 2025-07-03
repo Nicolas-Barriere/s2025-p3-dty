@@ -1,4 +1,6 @@
 import { BasicTextStyleButton, BlockTypeSelect, CreateLinkButton, FormattingToolbar } from "@blocknote/react";
+import { AIGroupButton } from './AIButton';
+
 
 const MessageEditorToolbar = () => {
     return (
@@ -24,6 +26,10 @@ const MessageEditorToolbar = () => {
                 key={"codeStyleButton"}
                 basicTextStyle={"code"}
             />
+
+            {/* Extra button to do some AI powered actions */}
+            <AIGroupButton key="AIButton" />
+
             <CreateLinkButton key={"createLinkButton"} />
         </FormattingToolbar>
     )
