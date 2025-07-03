@@ -86,6 +86,7 @@ export * from "./threads_accesses_destroy_params";
 export * from "./threads_accesses_list_params";
 export * from "./threads_accesses_partial_update_params";
 export * from "./threads_accesses_update_params";
+export * from "./threads_generate_answer_create200";
 export * from "./threads_list_params";
 export * from "./threads_refresh_summary_create200";
 export * from "./threads_stats_retrieve200";

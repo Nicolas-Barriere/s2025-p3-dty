@@ -3041,6 +3041,57 @@
                 }
             }
         },
+        "/api/v1.0/threads/{id}/generate-answer/": {
+            "post": {
+                "operationId": "threads_generate_answer_create",
+                "description": "ViewSet for Thread model.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "threads"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "answer": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Answer successfully generated."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "detail": "Permission denied"
+                                }
+                            }
+                        },
+                        "description": "User does not have permission to generate an answer to this thread."
+                    }
+                }
+            }
+        },
         "/api/v1.0/threads/{id}/refresh-summary/": {
             "post": {
                 "operationId": "threads_refresh_summary_create",
