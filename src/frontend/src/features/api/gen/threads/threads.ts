@@ -661,6 +661,114 @@ export const useThreadsDestroy = <TError = unknown, TContext = unknown>(
 /**
  * ViewSet for Thread model.
  */
+export type threadsGenerateAnswerCreateResponse200 = {
+  data: ThreadsGenerateAnswerCreate200;
+  status: 200;
+};
+
+export type threadsGenerateAnswerCreateResponse403 = {
+  data: unknown;
+  status: 403;
+};
+
+export type threadsGenerateAnswerCreateResponseComposite =
+  | threadsGenerateAnswerCreateResponse200
+  | threadsGenerateAnswerCreateResponse403;
+
+export type threadsGenerateAnswerCreateResponse =
+  threadsGenerateAnswerCreateResponseComposite & {
+    headers: Headers;
+  };
+
+export const getThreadsGenerateAnswerCreateUrl = (id: string) => {
+  return `/api/v1.0/threads/${id}/generate-answer/`;
+};
+
+export const threadsGenerateAnswerCreate = async (
+  id: string,
+  options?: RequestInit,
+): Promise<threadsGenerateAnswerCreateResponse> => {
+  return fetchAPI<threadsGenerateAnswerCreateResponse>(
+    getThreadsGenerateAnswerCreateUrl(id),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getThreadsGenerateAnswerCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof fetchAPI>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["threadsGenerateAnswerCreate"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return threadsGenerateAnswerCreate(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ThreadsGenerateAnswerCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>
+>;
+
+export type ThreadsGenerateAnswerCreateMutationError = unknown;
+
+export const useThreadsGenerateAnswerCreate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof fetchAPI>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions =
+    getThreadsGenerateAnswerCreateMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+/**
+ * ViewSet for Thread model.
+ */
 export type threadsRefreshSummaryCreateResponse200 = {
   data: ThreadsRefreshSummaryCreate200;
   status: 200;
