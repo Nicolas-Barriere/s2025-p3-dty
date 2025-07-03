@@ -14,6 +14,7 @@ from core.identity.keycloak import (
 )
 from core.search import MESSAGE_INDEX, get_es_client
 from core.tasks import index_message_task, reindex_thread_task
+from core.ai.thread_summarizer import count_tokens_in_messages, summarize_thread, get_messages_from_thread
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +93,33 @@ def index_thread_post_save(sender, instance, created, **kwargs):
     except Exception as e:
         logger.exception(
             "Error scheduling thread indexing for thread %s: %s",
+            instance.id,
+            e,
+        )
+
+
+@receiver(post_save, sender=models.Thread)
+def summarize_thread_post_save(sender, instance, created, **kwargs):
+    """Summarize a thread if its number of tokens is greater than 1000."""
+
+    try:
+        if instance.summary:
+            return
+        
+        # Count the tokens in the thread's messages
+        messages = get_messages_from_thread(instance)
+        token_count = count_tokens_in_messages(messages)
+
+        # Summarize the thread if the token count exceeds 1000
+        if token_count >= 400:
+            summary = summarize_thread(instance)
+            instance.summary = summary
+            instance.save(update_fields=["summary"])
+
+    # pylint: disable=broad-exception-caught
+    except Exception as e:
+        logger.exception(
+            "Error summarizing thread %s: %s",
             instance.id,
             e,
         )

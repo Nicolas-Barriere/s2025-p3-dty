@@ -87,6 +87,7 @@ export const MessageForm = ({
     })?.id ?? mailboxes?.[0]?.id;
     const hideFromField = defaultSenderId && (mailboxes?.length ?? 0) === 1;
     const { addQueuedMessage } = useSentBox();
+    const [showAttachmentsForgetAlert, setShowAttachmentsForgetAlert] = useState(false)
 
     const getMailboxOptions = () => {
         if(!mailboxes) return [];
@@ -321,6 +322,16 @@ export const MessageForm = ({
         });
     };
 
+    const areAttachmentsMentionnedInDraft = (): boolean => {
+        const keyWordsAttachments = ['pièce jointe', 'document', 'fichier', 'image', 'pdf', 'zip',
+            'archive', 'annexe', 'joint', 'fichier joint', 'document joint', 'attachment', 'attached',
+            'veuillez trouver', 'pj'];
+        const messageEditorDraft = form.getValues('messageEditorDraft')?.toLowerCase() || '';
+        
+        // Check if any of the keywords are mentioned in the draft
+        return keyWordsAttachments.some(keyword => messageEditorDraft.includes(keyword));
+    };
+
     /**
      * Prevent the Enter key press to trigger onClick on input children (like file input)
      */
@@ -354,6 +365,10 @@ export const MessageForm = ({
             form.clearErrors("bcc");
         }
     }, [showBCCField])
+
+    useEffect(() => {
+        setShowAttachmentsForgetAlert(areAttachmentsMentionnedInDraft() && form.getValues('attachments')?.length === 0);
+    }, [form.getValues('messageEditorDraft'), form.getValues('attachments')]);
 
     return (
         <FormProvider {...form}>
@@ -435,6 +450,8 @@ export const MessageForm = ({
 
                 <AttachmentUploader initialAttachments={getDefaultAttachments()} onChange={form.handleSubmit(saveDraft)} />
 
+                {showAttachmentsForgetAlert && <p className="attachments-forget__alert"> N&apos;avez-vous pas oublié la pièce jointe ? </p>}
+                
                 <footer className="form-footer">
                     <Button
                         color="primary"

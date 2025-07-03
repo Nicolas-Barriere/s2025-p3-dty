@@ -107,3 +107,10 @@
     grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr));
     gap: 10px;
 }
+
+.attachments-forget__alert {
+    color : darkorange;
+    margin-left: var(--c--theme--spacings--base);
+    margin-top: var(--c--theme--spacings--base);
+    margin-bottom: var(--c--theme--spacings--base);
+}

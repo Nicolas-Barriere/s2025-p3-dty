@@ -1,12 +1,8 @@
-
 """ AI services """
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from openai import OpenAI
-
-from core import enums
-
 
 
 class AIService:
