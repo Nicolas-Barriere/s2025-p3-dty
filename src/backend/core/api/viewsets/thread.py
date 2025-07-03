@@ -17,7 +17,7 @@ from rest_framework.response import Response
 
 from core import models, enums
 from core.search import search_threads
-from core.ai.thread_summarizer import summarize_thread
+from core.ai.thread_summarizer import summarize_thread, generate_answer
 
 from .. import permissions, serializers
 
@@ -477,6 +477,37 @@ class ThreadViewSet(
 
         return Response({
             "summary": thread.summary
+        }, status=status.HTTP_200_OK)
+    
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                response={"type": "object", "properties": {
+                    "answer": {"type": "string"}
+                }},
+                description="Answer successfully generated.",
+            ),
+            403: OpenApiResponse(
+                response={"detail": "Permission denied"},
+                description="User does not have permission to generate an answer to this thread.",
+            ),
+        },
+        tags=["threads"]
+    )
+    @drf.decorators.action(
+        detail=True,
+        methods=["post"],
+        url_path="generate-answer",
+        url_name="generate-answer",
+    )
+    def generate_answer_thread(self, request, pk=None, id=None):
+        pk = id or pk
+        self.kwargs["pk"] = pk
+        thread = self.get_object()
+
+        answer = generate_answer(thread)
+        return Response({
+            "answer": answer
         }, status=status.HTTP_200_OK)
 
 
