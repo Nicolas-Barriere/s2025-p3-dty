@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from .chatbot import get_chatbot
+from .email_generator import get_email_generator
 from .email_writer import create_draft_email
 from .email_retrieval import get_message_full_content
 
@@ -57,25 +57,18 @@ def generate_email_response(request):
         logger.info(f"Generating email response for message {message_id} from mailbox {mailbox_id}")
         
         # Get the original message content
-        message_content = get_message_full_content(message_id)
+        message_content = get_message_full_content(message_id, user_id)
         if not message_content:
             return Response({
                 'success': False,
                 'error': 'Message not found or content could not be retrieved'
             }, status=status.HTTP_404_NOT_FOUND)
         
-        # Use the chatbot to generate a response
-        chatbot = get_chatbot()
+        # Use the email generator to generate a response
+        generator = get_email_generator()
         
-        # Create a prompt for the chatbot that asks it to generate a response to the email
-        prompt = f"""
-        Tu dois générer une réponse professionnelle et concise à cet email. 
-        Utilise un ton formel et adapté à un échange professionnel.
-        Ne réponds qu'aux points essentiels de l'email.
-        La réponse doit être en français et doit suivre les conventions d'un email professionnel.
-        
-        CONTENU DE L'EMAIL ORIGINAL:
-        
+        # Format the original email content for the generator
+        original_mail = f"""
         Sujet: {message_content.get('subject', '(Pas de sujet)')}
         
         De: {message_content.get('sender', {}).get('name', '')} <{message_content.get('sender', {}).get('email', '')}>
@@ -83,9 +76,13 @@ def generate_email_response(request):
         {message_content.get('text_body', message_content.get('html_body', '(Contenu vide)'))}
         """
         
-        # Get the response from the chatbot
+        # Get the response using the Albert API
         logger.info(f"Generating response for message with subject: {message_content.get('subject', '(No subject)')}")
-        result = chatbot.process_user_message(prompt, user_id, [])
+        result = generator.generate_response_with_albert(
+            original_mail=original_mail,
+            tone="professional",
+            language="french"
+        )
         
         if not result.get('success'):
             logger.error(f"Failed to generate response: {result.get('error')}")
@@ -94,7 +91,9 @@ def generate_email_response(request):
                 'error': result.get('error', 'Failed to generate response')
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        generated_response = result.get('response', '')
+        # Extract the generated response from the result
+        response_data = result.get('response', {})
+        generated_response = response_data.get('response', '')
         logger.info(f"Response generated successfully ({len(generated_response)} characters)")
         
         # Extract recipients based on reply_all flag
@@ -110,14 +109,14 @@ def generate_email_response(request):
         
         # Add CC if reply_all is True
         if reply_all:
-            for recipient in message_content.get('to', []):
+            for recipient in message_content.get('recipients', {}).get('to', []):
                 if recipient.get('email'):
                     recipients_to.append({
                         'email': recipient.get('email', ''),
                         'name': recipient.get('name', '')
                     })
             
-            for recipient in message_content.get('cc', []):
+            for recipient in message_content.get('recipients', {}).get('cc', []):
                 if recipient.get('email'):
                     recipients_cc.append({
                         'email': recipient.get('email', ''),
