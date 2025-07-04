@@ -285,6 +285,7 @@ class Base(Configuration):
     INSTALLED_APPS = [
         "core",
         "chatbot",
+        "answer_generator",
         "drf_spectacular",
         # Third party apps
         "corsheaders",

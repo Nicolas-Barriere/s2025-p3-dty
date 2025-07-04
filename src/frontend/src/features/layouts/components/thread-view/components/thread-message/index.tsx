@@ -9,6 +9,7 @@ import { Badge } from "@/features/ui/components/badge";
 import useTrash from "@/features/message/use-trash";
 import MessageBody from "./message-body"
 import MessageReplyForm from "../message-reply-form";
+import GenerateResponseButton from "../generate-response-button";
 import { AttachmentList } from "../thread-attachment-list";
 import { Banner } from "@/features/ui/components/banner";
 
@@ -27,7 +28,7 @@ export const ThreadMessage = forwardRef<HTMLElement, ThreadMessageProps>(
         })
         const { markAsUnread } = useRead()
         const { markAsTrashed, markAsUntrashed } = useTrash()
-        const { unselectThread, selectedThread, messages, queryStates } = useMailboxContext()
+        const { unselectThread, selectedThread, messages, queryStates, selectedMailbox, invalidateThreadMessages } = useMailboxContext()
         const isFetchingMessages = queryStates.messages.isFetching;
         const [isDropdownOpen, setIsDropdownOpen] = useState(false)
         const hasSiblingMessages = useMemo(() => {
@@ -202,6 +203,17 @@ export const ThreadMessage = forwardRef<HTMLElement, ThreadMessageProps>(
                                 >
                                     {t('actions.reply')}
                                 </Button>
+                                <GenerateResponseButton
+                                    messageId={message.id}
+                                    mailboxId={selectedMailbox?.id || ''}
+                                    replyAll={hasSeveralRecipients}
+                                    isLatest={isLatest}
+                                    disabled={message.is_draft || message.is_trashed}
+                                    onSuccess={(draftId, threadId) => {
+                                        invalidateThreadMessages();
+                                        // This will automatically refresh the thread view
+                                    }}
+                                />
                             </div>
                         )
                     }

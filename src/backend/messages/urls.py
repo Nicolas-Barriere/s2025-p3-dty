@@ -16,6 +16,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("core.urls")),
     path("mails/chatbot/", include("chatbot.urls")),
+    path("api/", include("answer_generator.urls")),
 ]
 
 if settings.DEBUG:

@@ -60,7 +60,9 @@
         "close": "Close",
         "import": "Import",
         "import_messages": "Import messages",
-        "show": "Show"
+        "show": "Show",
+        "generate_response": "Generate response",
+        "generating": "Generating..."
       },
       "tooltips": {
         "has_attachments": "This email has an attachment",
@@ -273,7 +275,9 @@
         "close": "Fermer",
         "import": "Importer",
         "import_messages": "Importer des messages",
-        "show": "Afficher"
+        "show": "Afficher",
+        "generate_response": "Générer une réponse",
+        "generating": "Génération en cours..."
       },
       "tooltips": {
         "has_attachments": "Cette email contient une pièce jointe",

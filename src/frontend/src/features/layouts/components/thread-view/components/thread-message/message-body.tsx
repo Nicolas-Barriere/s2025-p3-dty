@@ -7,8 +7,8 @@ type MessageBodyProps = {
 }
 
 const CSP = [
-    // Allow images from our domain and data URIs
-    "img-src 'self' data: http://localhost:3000",
+    // Allow images from our domain, data URIs, blob URLs, and https sources
+    "img-src 'self' data: blob: http://localhost:3000 http://localhost:8071 https:",
     // Disable everything else by default
     "default-src 'none'",
     // No scripts at all
@@ -47,6 +47,17 @@ const MessageBody = ({ rawHtmlBody, rawTextBody }: MessageBodyProps) => {
                     node.setAttribute('target', '_blank');
                 }
                 node.setAttribute('rel', 'noopener noreferrer');
+            }
+            
+            // Handle problematic image sources
+            if(node.tagName === 'IMG') {
+                const src = node.getAttribute('src');
+                if (src?.startsWith('cid:')) {
+                    // Replace cid: images with a placeholder or remove them
+                    node.setAttribute('src', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTkgMTJsMS4yNS0xLjI1IDIuNSAyLjUgMy41LTMuNSAxLjI1IDEuMjUtNC43NSA0Ljc1TDkgMTJ6IiBmaWxsPSIjOTk5Ii8+Cjwvc3ZnPgo=');
+                    node.setAttribute('alt', '[Embedded image not available]');
+                    node.setAttribute('title', 'Embedded image removed for security');
+                }
             }
         }
     );
