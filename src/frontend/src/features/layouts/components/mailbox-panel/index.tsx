@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import { useSearchParams } from "next/navigation";
 import { useLayoutContext } from "../main";
 import { MailboxLabels } from "./components/mailbox-labels";
+import { Badge } from "@/features/ui/components/badge";
 
 export const MailboxPanel = () => {
     const { t } = useTranslation();

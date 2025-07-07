@@ -89,7 +89,11 @@ export const ThreadItem = ({ thread }: ThreadItemProps) => {
                                     ))}
                                 </div>
                             )}
-                        </div>
+                            <Badge>
+                            {thread.tag}
+                        </Badge>
+                        
+                    </div>
                     </div>
                 </div>
                 <div className="thread-item__right">

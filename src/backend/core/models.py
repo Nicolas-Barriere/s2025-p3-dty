@@ -338,6 +338,7 @@ class Thread(BaseModel):
     messaged_at = models.DateTimeField(_("messaged at"), null=True, blank=True)
     sender_names = models.JSONField(_("sender names"), null=True, blank=True)
     summary = models.TextField(_("summary"), blank=True, default="")
+    tag = models.TextField(_("tag"), blank=True, default="")
 
     class Meta:
         db_table = "messages_thread"
@@ -463,6 +464,7 @@ class Thread(BaseModel):
                 "has_active",
                 "messaged_at",
                 "sender_names",
+                "tag",
             ]
         )
 

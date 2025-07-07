@@ -1,0 +1,377 @@
+[
+    {
+        "id": "0",
+        "tag": [
+            "DEFERRED",
+            "DEFERRED",
+            "DEFERRED",
+            "DEFERRED"
+        ],
+        "explanation": [
+            "Le mail donne des informations importantes mais il n'y a pas d'urgence à les consulter",
+            "Le mail ne mentionne aucune deadline ou urgence, et la non-réponse n'a aucune conséquence grave",
+            "Le mail contient une information qui me concerne et que je peux consulter dans 5 jours. Aucune action urgente n'est requise.",
+            "L'information est pertinente mais il n'y a pas d'urgence à consulter le tableau de bord avant la revue trimestrielle de la semaine prochaine"
+        ]
+    },
+    {
+        "id": "1",
+        "tag": [
+            "DEFERRED",
+            "IRRELEVANT",
+            "DEFERRED",
+            "DEFERRED"
+        ],
+        "explanation": [
+            "Il y a une recommandation de ne pas diffuser les anciens visuels, mais pas d'urgence",
+            "Il s'agit d'une information qui ne nécessite aucune action de ta part",
+            "Le mail contient une information qui me concerne mais aucune action n'est requise avant plusieurs jours",
+            "La mise à jour des modèles PowerPoint est automatique et il n'y a pas d'urgence à agir de suite"
+        ]
+    },
+    {
+        "id": "2",
+        "tag": [
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "La fermeture du parking est prévue dans 4 jours et cela nécessite une action de ma part si je dois venir en voiture",
+            "La fermeture du parking a lieu dans moins de 5 jours, et cela nécessite une action ou une prise de connaissance de l'information dans ce délai",
+            "L'événement a lieu dans moins de 5 jours et nécessite une action/réponse en moins de 5 jours",
+            "La fermeture du parking se produit dans moins de 5 jours et nécessite une action si tu dois te rendre en voiture au bureau"
+        ]
+    },
+    {
+        "id": "3",
+        "tag": [
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "IRRELEVANT"
+        ],
+        "explanation": [
+            "C'est une newsletter qui ne nécessite ni action ni réponse de ma part",
+            "Il s'agit d'une newsletter interne qui ne nécessite aucune action de ta part",
+            "Le mail est une newsletter générale et ne nécessite aucune action de ma part",
+            "Une newsletter qui ne contient pas d'informations urgentes ou pertinentes pour une action rapide"
+        ]
+    },
+    {
+        "id": "4",
+        "tag": [
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "La tenue vestimentaire assouplie commence demain et je dois m'assurer de respecter les consignes",
+            "L'information sur la tenue vestimentaire assouplie commence dans moins de 5 jours et nécessite une prise de connaissance de l'information",
+            "L'information concerne une tenue vestimentaire assouplie à partir de demain, il est donc important de prendre connaissance de l'information avant",
+            "L'assouplissement de la tenue vestimentaire concerne la semaine prochaine et doit être pris en compte rapidement"
+        ]
+    },
+    {
+        "id": "5",
+        "tag": [
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "Le kick-off du projet Helios est reprogrammé pour demain et ma présence est requise",
+            "Le kick-off du projet Helios est déplacé à mercredi 25 juin, et tu es invité à confirmer ta présence",
+            "Le kick-off est reprogrammé pour demain, il est donc important de confirmer ma présence",
+            "Le kick-off du projet est reprogrammé pour mercredi 25 juin, ce qui nécessite une confirmation de présence"
+        ]
+    },
+    {
+        "id": "6",
+        "tag": [
+            "DEFERRED",
+            "DEFERRED",
+            "DEFERRED",
+            "DEFERRED"
+        ],
+        "explanation": [
+            "Ce mail informe d'un changement d'horaire pour une réunion, mais pas d'urgence",
+            "Le changement d'heure du meeting est une information qui nécessite une prise de connaissance, mais il n'y a pas d'urgence",
+            "Le changement d'horaire est pour lundi 23 juin à 9h, ce qui est déjà passé. Cependant il est possible que cela concerne un mot de passe ou un lien de connexion à modifier avant lundi prochain",
+            "Le changement d'heure pour le meeting est une information pertinente mais il n'y a pas d'urgence à confirmer"
+        ]
+    },
+    {
+        "id": "7",
+        "tag": [
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "Une réunion est prévue pour aujourd'hui à 16h30 et une confirmation est nécessaire",
+            "Le call Teams a lieu aujourd'hui à 16h30, et il nécessite une confirmation de ta part",
+            "L'appel est prévu pour aujourd'hui à 16h30, il est donc important de confirmer ma présence",
+            "La réunion de l'alignement est prévue pour aujourd'hui, donc cela nécessite une réponse rapide"
+        ]
+    },
+    {
+        "id": "8",
+        "tag": [
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "Une action est requise avant vendredi 12h et elle est nécessaire pour le projet Orion",
+            "Il y a une action requise à réaliser pour vendredi 26 juin, qui est dans moins de 5 jours",
+            "Une action est requise avant vendredi 12h. Si ce jour est déjà passé, il est important de prendre connaissance de l'information car cela peut bloquer la phase de conception détaillée",
+            "Un dossier décisionnel doit être soumis dans les cinq jours, ce qui nécessite une action rapide"
+        ]
+    },
+    {
+        "id": "9",
+        "tag": [
+            "DEFERRED",
+            "IMPORTANT",
+            "DEFERRED",
+            "DEFERRED"
+        ],
+        "explanation": [
+            "Une réponse est nécessaire pour organiser une démonstration dans les prochains jours, mais pas d'urgence immédiate",
+            "Le mail demande une réponse rapide pour la disponibilité de créneaux, et cela concerne une démonstration à organiser dans moins de 5 jours",
+            "Le mail contient une information qui me concerne mais aucune action n'est requise avant plusieurs jours",
+            "La disponibilité pour la démonstration est demandée pour les jours suivants, donc il n'y a pas d'urgence immédiate"
+        ]
+    },
+    {
+        "id": "10",
+        "tag": [
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "une action est requise pour l'incident INC–4279 dans les 24 dernières heures, et la demande provient du support technique, donc il est urgent",
+            "il s'agit d'une demande urgente de logs pour un incident technique, nécessitant une action rapide dans les 24 dernières heures",
+            "le mail demande une action rapide pour extraire les logs et les déposer avant que le problème ne soit exacerbé",
+            "Le mail demande une action rapide pour résoudre une incohérence technique, nécessitant une réponse ou une action dans les 24 heures."
+        ]
+    },
+    {
+        "id": "11",
+        "tag": [
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "la demande concerne le rapport ESG 2025 qui doit être finalisé avant le 30 juin 2025, et une réponse est attendue avant mercredi soir",
+            "la demande de données pour le rapport ESG doit être faite avant mercredi, soit dans moins de 5 jours",
+            "le mail demande une information urgente pour le rapport ESG, à fournir avant le 26 juin",
+            "Le mail demande une réponse avant mercredi soir, soit le 25 juin, pour fournir des données pour un rapport ESG 2025 avant le 30 juin."
+        ]
+    },
+    {
+        "id": "12",
+        "tag": [
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "une action est requise avant demain 17h, donc dans moins de 5 jours",
+            "la commande des roll-ups doit être passée avant demain 17h, soit dans moins de 5 jours",
+            "le mail demande une action urgente avant demain à 17h",
+            "Le mail nécessite une action immédiate pour commander des roll-ups et vérifier la compatibilité électrique avant la fermeture des commandes demain à 17h."
+        ]
+    },
+    {
+        "id": "13",
+        "tag": [
+            "DEFERRED",
+            "DEFERRED",
+            "DEFERRED",
+            "DEFERRED"
+        ],
+        "explanation": [
+            "la demande de David Morel ne mentionne aucune urgence et peut être traitée dans les 5 prochains jours",
+            "demande de réunion pour discuter de l'avancement d'un projet, sans deadline précise",
+            "le mail est pour une réunion qui peut être planifiée sans urgence",
+            "Le mail propose un point rapide sur l’avancement d'un projet, il n'y a pas d'urgence pour répondre aujourd'hui."
+        ]
+    },
+    {
+        "id": "14",
+        "tag": [
+            "DEFERRED",
+            "DEFERRED",
+            "DEFERRED",
+            "DEFERRED"
+        ],
+        "explanation": [
+            "la demande d'interview est pour la semaine du 7 juillet, donc dans plus de 5 jours",
+            "demande d'interview pour une publication dans deux semaines, pas d'urgence",
+            "l'interview est prévue pour dans deux semaines, il n'y a pas d'urgence",
+            "Le mail propose une interview dans deux semaines, il n'y a pas d'urgence pour répondre immédiatement."
+        ]
+    },
+    {
+        "id": "15",
+        "tag": [
+            "DEFERRED",
+            "DEFERRED",
+            "DEFERRED",
+            "DEFERRED"
+        ],
+        "explanation": [
+            "la proposition de partenariat est pour les 8 et 9 juillet, donc dans plus de 5 jours",
+            "proposition de partenariat avec une date de disponibilité dans plus de 5 jours",
+            "le mail propose une discussion sur un potentiel partenariat, sans urgence",
+            "Le mail propose un partenariat avec une disponibilité pour une réunion dans une semaine, il n'y a pas d'urgence pour répondre aujourd'hui."
+        ]
+    },
+    {
+        "id": "16",
+        "tag": [
+            "IMPORTANT",
+            "DEFERRED",
+            "IMPORTANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "une action est requise avant que le système ne bloque le règlement de la facture, donc il est urgent",
+            "question sur une facture, sans urgence mentionnée",
+            "le mail demande une information urgente pour finaliser un paiement",
+            "Le mail demande une information nécessaire pour finaliser un paiement, il est important de répondre dans les plus brefs délais."
+        ]
+    },
+    {
+        "id": "17",
+        "tag": [
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "IRRELEVANT"
+        ],
+        "explanation": [
+            "email spam",
+            "mail de spam",
+            "le mail est une offre promotionnelle de spam",
+            "Le mail est un spam publicitaire."
+        ]
+    },
+    {
+        "id": "18",
+        "tag": [
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "IRRELEVANT"
+        ],
+        "explanation": [
+            "email spam",
+            "mail de spam",
+            "le mail est une offre promotionnelle de spam",
+            "Le mail est un spam publicitaire."
+        ]
+    },
+    {
+        "id": "19",
+        "tag": [
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "IRRELEVANT"
+        ],
+        "explanation": [
+            "email spam",
+            "mail de spam",
+            "le mail est une offre promotionnelle de spam",
+            "Le mail est un spam publicitaire."
+        ]
+    },
+    {
+        "id": "7951a4b0-4fbd-443f-8452-1d35127ee373",
+        "tag": [
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "La réunion RH a lieu mercredi, ce mail requiert une action de ma part avant la réunion",
+            "Il y a une réunion RH jeudi matin et il faut finaliser les slides",
+            "la réunion RH a lieu jeudi, donc dans moins de 5 jours, et une action est requise de ta part",
+            "le mail contient une information sur un événement qui a lieu dans moins de 5 jours (jeudi 27 juin 2025), et requiert une action de ma part en moins de 5 jours"
+        ]
+    },
+    {
+        "id": "dfc9afb0-79a5-4558-a1e1-abdb6439c0c0",
+        "tag": [
+            "IMPORTANT",
+            "DEFERRED",
+            "IRRELEVANT",
+            "IRRELEVANT"
+        ],
+        "explanation": [
+            "Le client souhaite avancer la livraison au 1er juillet, il faut ajuster le rétroplanning immédiatement",
+            "Il faut ajuster le rétroplanning mais la livraison est prévue pour le 1er juillet, après 5 jours",
+            "le mail ne concerne pas l'utilisateur",
+            "le mail ne me concerne pas du tout"
+        ]
+    },
+    {
+        "id": "b67fd9d9-7a88-41f6-91be-830c70e1a99d",
+        "tag": [
+            "DEFERRED",
+            "IMPORTANT",
+            "IRRELEVANT",
+            "IMPORTANT"
+        ],
+        "explanation": [
+            "Le budget doit être bouclé d'ici vendredi, mais comme nous avons encore quelques jours, on peut se permettre de consulter ce mail dans 5 jours",
+            "Il faut boucler le budget d'ici vendredi",
+            "le mail ne concerne pas l'utilisateur",
+            "le mail contient une information sur un événement qui a lieu dans moins de 5 jours (vendredi 28 juin 2025), et requiert une action de ma part en moins de 5 jours"
+        ]
+    },
+    {
+        "id": "12c4a7d5-2eb1-4fb2-b2c3-df11d770e3be",
+        "tag": [
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "IRRELEVANT"
+        ],
+        "explanation": [
+            "Ce mail ne me concerne pas car je ne suis pas Nicolas Lenoir",
+            "Le mail est adressé à Nicolas et ne concerne pas le destinataire",
+            "le mail ne concerne pas l'utilisateur",
+            "le mail ne me concerne pas du tout"
+        ]
+    },
+    {
+        "id": "518fe205-6f03-482e-8d35-66b06a369325",
+        "tag": [
+            "DEFERRED",
+            "IRRELEVANT",
+            "IRRELEVANT",
+            "DEFERRED"
+        ],
+        "explanation": [
+            "Ce mail ne requiert pas une action immédiate et il n'y a pas d'urgence mentionnée",
+            "Le mail est adressé à Sophie et ne concerne pas le destinataire",
+            "le mail ne concerne pas l'utilisateur",
+            "le mail me concerne mais peut être consulté dans 5 jours, il n'y a pas d'urgence ou de deadline mentionnée"
+        ]
+    }
+]

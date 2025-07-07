@@ -1,0 +1,394 @@
+[
+  [{
+    "datetime": "2025-06-20T09:00:00",
+    "sender": "alice.martin@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "0",
+    "cc": [
+      "manager@company.com"
+    ],
+    "subject": "Tableau de bord financier – nouvelle version disponible",
+    "body": "Bonjour équipe,\n\nLa version 3.0 du tableau de bord financier vient d’être mise en ligne sur l’intranet. Vous y trouverez les marges par BU, les indicateurs de trésorerie et une prévision jusqu’à la fin de l’exercice.\n\nAucune action immédiate n’est requise, mais je vous encourage à le parcourir avant la revue trimestrielle de la semaine prochaine.\n\nCordialement,\nAlice",
+    "attachments": [
+      "report.pdf"
+    ],
+    "tags": [],
+    "summary": "Bonjour équipe,"
+  }],
+  [{
+    "datetime": "2025-06-20T09:10:00",
+    "sender": "clara.lefevre@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "1",
+    "cc": [],
+    "subject": "Nouvelle charte graphique – points clés",
+    "body": "Bonjour à tous,\n\nLe service communication a finalisé la nouvelle charte graphique. Les principales évolutions portent sur la palette de couleurs et la typographie de nos supports externes.\n\nLes modèles PowerPoint seront mis à jour automatiquement lundi. En attendant, merci de ne pas diffuser les anciens visuels à des clients.\n\nMerci,\nClara",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T09:20:00",
+    "sender": "facility@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "2",
+    "cc": [
+      "manager@company.com"
+    ],
+    "subject": "🚧 Fermeture du parking souterrain du 3 au 5 juillet",
+    "body": "Bonjour,\n\nPour cause de maintenance électrique préventive, le parking P–2 sera inaccessible du mercredi 3 juillet 20 h au samedi 5 juillet 6 h. Les badgeages seront bloqués.\n\nSi vous devez venir en voiture, pensez à réserver une place dans le parking public Indigo situé rue Mozart. La société remboursera les frais sur justificatif (barème interne).\n\nBien à vous,\nService Facilities",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T09:30:00",
+    "sender": "newsletter@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "3",
+    "cc": [],
+    "subject": "Newsletter interne – Juin 2025",
+    "body": "Bonjour à toutes et à tous,\n\nAu sommaire de ce numéro :\n• Interview de notre CEO sur la stratégie Gen–AI\n• Retour en images sur le hackathon ‘GreenTower’\n• Zoom RH : nouveaux avantages mobilité durable\n\nBonne lecture !\n\nL’équipe Com’ interne",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T09:40:00",
+    "sender": "sophie.bernard@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "4",
+    "cc": [],
+    "subject": "Tenue vestimentaire assouplie lors de la vague de chaleur",
+    "body": "Bonjour,\n\nLa météo annonce des températures supérieures à 32 °C la semaine prochaine. La direction autorise, à titre exceptionnel, une tenue plus casual du 24 au 28 juin.\n\nMerci cependant de conserver une tenue professionnelle lors de réunions avec des clients externes. Les shorts et tongs restent interdits.\n\nSophie – RH",
+    "attachments": [
+      "report.pdf"
+    ],
+    "tags": [],
+    "summary": "Bonjour,"
+  }],
+  [{
+    "datetime": "2025-06-20T09:50:00",
+    "sender": "thomas.garnier@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "5",
+    "cc": [
+      "manager@company.com"
+    ],
+    "subject": "Reprogrammation du kick–off projet Helios",
+    "body": "Bonjour équipe Helios,\n\nPlusieurs parties prenantes étant indisponibles demain, le kick–off est déplacé au mercredi 25 juin à 11 h en salle Neptune (B304).\n\nOrdre du jour :\n1. Objectifs et livrables majeurs\n2. Organisation des sprints\n3. Processus de validation client\n\nMerci de confirmer votre présence.\n\nÀ bientôt,\nThomas – Responsable Projets",
+    "attachments": [],
+    "tags": [],
+    "summary": "Bonjour équipe Helios,"
+  }],
+  [{
+    "datetime": "2025-06-20T10:00:00",
+    "sender": "luc.dubois@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "6",
+    "cc": [],
+    "subject": "Avance de 30 min du KPI meeting projet Nebula",
+    "body": "Bonjour,\n\nPour éviter le chevauchement avec le steering committee, le point hebdomadaire KPI du projet Nebula se tiendra lundi à 9 h au lieu de 9 h 30.\n\nLe lien Teams reste inchangé.\n\nLuc – DSI",
+    "attachments": [
+      "report.pdf"
+    ],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T10:10:00",
+    "sender": "elodie.faucher@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "7",
+    "cc": [],
+    "subject": "Alignment Q3 Roadmap – Teams call today 16 h 30",
+    "body": "Hello,\n\nWe need a quick 15–minute alignment on the Q3 roadmap before tomorrow’s budget review. Could you please join me on Teams today at 16:30 ? I’ll send the invite as soon as you confirm.\n\nThanks,\nÉlodie – PMO",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T10:20:00",
+    "sender": "karim.elidrissi@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "8",
+    "cc": [
+      "manager@company.com"
+    ],
+    "subject": "Action requise – Dossier décisionnel projet Orion",
+    "body": "Bonjour,\n\nLe comité de pilotage nous a demandé de soumettre un dossier décisionnel pour le projet Orion. Peux–tu rassembler les estimations de charge, le budget prévisionnel et une mise à jour de l’analyse de risques d’ici vendredi 12 h ?\n\nSans ces éléments, le passage en phase de conception détaillée sera bloqué.\n\nKarim – Comptabilité",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T10:30:00",
+    "sender": "client.success@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "9",
+    "cc": [],
+    "subject": "Demo live ‘SmartDashboard’ – disponibilités demandées",
+    "body": "Bonjour,\n\nLe client Vega Corp souhaite organiser une démonstration en direct de la fonctionnalité ‘SmartDashboard’. Merci de me communiquer tes créneaux disponibles (45 min) entre mardi et jeudi afin que je puisse envoyer l’Invite Teams.\n\nObjectif : valider l’intégration avec leur SSO avant signature du contrat.\n\nBien à toi,\nNina – Customer Success",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T10:40:00",
+    "sender": "support@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "10",
+    "cc": [
+      "manager@company.com"
+    ],
+    "subject": "⚠️ Logs demandés pour l’incident INC–4279",
+    "body": "Bonjour,\n\nNous avons détecté une incohérence entre le micro–service ‘Billing’ et l’API ‘Ledger’. Pour accélérer l’analyse, merci d’extraire les logs des 24 dernières heures et de les déposer dans le dossier partagé ‘INC–4279’.\n\nD’avance merci pour ta réactivité.\n\nSupport Technique",
+    "attachments": [
+      "report.pdf"
+    ],
+    "tags": [],
+    "summary": "Bonjour,"
+  }],
+  [{
+    "datetime": "2025-06-20T10:50:00",
+    "sender": "sustainability@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "11",
+    "cc": [],
+    "subject": "Données consommation énergétique DC Lyon – Rapport ESG 2025",
+    "body": "Bonjour,\n\nNous devons finaliser le rapport ESG 2025 avant le 30 juin. Pour la section ‘Consommation énergétique’, j’ai besoin du total kWh consommé par le data center de Lyon sur les 12 derniers mois, ventilé par mois.\n\nPeux–tu me transmettre le fichier Excel avant mercredi soir ?\n\nMerci,\nIsabelle – Sustainability Officer",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T11:00:00",
+    "sender": "events@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "12",
+    "cc": [
+      "manager@company.com"
+    ],
+    "subject": "VivaTech – roll–ups et compatibilité électrique",
+    "body": "Bonjour,\n\nNous finalisons la préparation de notre stand (D23) pour VivaTech. Peux–tu passer commande des deux roll–ups ‘Aurora AI’ et vérifier que le matériel de démo (écran 65” + mini–serveur) est compatible avec l’alimentation 220 V fournie par l’organisateur ?\n\nLe fournisseur imprimeur ferme les commandes demain à 17 h.\n\nMerci beaucoup,\nClara",
+    "attachments": [
+      "report.pdf"
+    ],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T11:10:00",
+    "sender": "david.morel@company.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "13",
+    "cc": [],
+    "subject": "Besoin de te parler cet après–midi",
+    "body": "Salut,\n\nJe voudrais faire un point rapide avec toi sur l’avancement du chantier ‘Data Lake Migration’. As–tu 20 minutes de disponibles aujourd’hui entre 14 h 30 et 16 h 30 ? Nous pourrions passer en revue le planning et les risques identifiés la semaine dernière.\n\nDis–moi le créneau qui t’arrange, je bloque la salle.\n\nÀ bientôt,\nDavid",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T11:20:00",
+    "sender": "marie.lacourt@techjournal.fr",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "14",
+    "cc": [
+      "manager@company.com"
+    ],
+    "subject": "Interview sur l’initiative open–source ‘Gallium’ – disponibilité la semaine prochaine",
+    "body": "Bonjour,\n\nJe suis journaliste pour TechJournal.fr et prépare un article de fond sur les initiatives open–source portées par des ETI françaises. Votre projet ‘Gallium’ a particulièrement retenu mon attention.\n\nSeriez–vous disponible pour une interview (30 min, visioconférence) dans deux semaines (semaine du 7 juillet) ? J’aimerais aborder la gouvernance du projet, la roadmap et les contributions externes.\n\nAu plaisir de vous lire,\n\nMarie Lacourt\nTechJournal.fr",
+    "attachments": [],
+    "tags": [],
+    "summary": "Bonjour,"
+  }],
+  [{
+    "datetime": "2025-06-20T11:30:00",
+    "sender": "paul.henri@greengrid.io",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "15",
+    "cc": [],
+    "subject": "Proposition de partenariat GreenGrid ↔ Aurora AI",
+    "body": "Bonjour,\n\nJe me permets de vous contacter au sujet d’un potentiel partenariat entre GreenGrid (optimisation énergétique des bâtiments) et votre solution Aurora AI. Nos clients nous demandent de plus en plus d’intégrer des prédictions de consommation basées sur le machine learning.\n\nPouvons–nous organiser un échange de 45 min pour explorer les synergies ? Je suis disponible les 8 et 9 juillet matin.\n\nCordialement,\nPaul–Henri Dupuy\nCTO – GreenGrid",
+    "attachments": [
+      "report.pdf"
+    ],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T11:40:00",
+    "sender": "accounting@megacorp.com",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "16",
+    "cc": [
+      "manager@company.com"
+    ],
+    "subject": "Question sur la facture #45231 – référence manquante",
+    "body": "Bonjour,\n\nNous traitons actuellement la facture #45231 datée du 3 mai, émise par vos services. Afin de finaliser le paiement, il nous manque la référence du bon de commande mentionnée au paragraphe 2.\n\nPouvez–vous nous transmettre cette information ? Sans cela, notre système bloque le règlement.\n\nMerci d’avance,\nService Comptabilité\nMegaCorp",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T11:50:00",
+    "sender": "promo@spamtech.io",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "17",
+    "cc": [],
+    "subject": "🎉 -70 % sur CloudBoost Plus aujourd’hui seulement !",
+    "body": "⚡️ Offre Flash – Boostez votre productivité !\n\nProfitez de CloudBoost Plus à –70 % et décuplez vos performances DevOps. Inscrivez–vous avant minuit pour un audit gratuit et sans engagement !\n\nL’équipe SpamTech",
+    "attachments": [
+      "report.pdf"
+    ],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T12:00:00",
+    "sender": "upgrade@emailpro.net",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "18",
+    "cc": [],
+    "subject": "Upgrade gratuit vers EmailPro 3000",
+    "body": "Bonjour,\n\nVotre compte a été sélectionné pour un passage gratuit à EmailPro 3000. Cliquez ici pour activer l’offre et découvrir des fonctionnalités révolutionnaires !\n\nCordialement,\nService Marketing EmailPro",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-20T12:10:00",
+    "sender": "trial@superia.ai",
+    "recipients": [
+      "arfire.fabian@gmail.com"
+    ],
+    "id": "19",
+    "cc": [
+      "manager@company.com"
+    ],
+    "subject": "Débloquez un mois d’essai illimité SUPERIA–2025",
+    "body": "Bonjour,\n\nNous avons remarqué que vous ne profitez pas encore de toute la puissance de notre solution IA. Utilisez le code SUPERIA–2025 et bénéficiez d’un mois d’essai illimité, sans carte bancaire.\n\nÀ très vite,\nL’équipe SuperIA",
+    "attachments": [],
+    "tags": [],
+    "summary": "Bonjour,"
+  }],
+  [{
+    "datetime": "2025-06-25 14:04:00",
+    "sender": "clotilde@company.com",
+    "recipients": [
+      "clotilde.bernard@company.com"
+    ],
+    "id": "7951a4b0-4fbd-443f-8452-1d35127ee373",
+    "cc": [
+      "arfire.fabian@gmail.com"
+    ],
+    "subject": "Préparation de la présentation RH",
+    "body": "Bonjour Clotilde,\n\nPeux-tu finaliser les slides pour la réunion RH de jeudi matin ? J’ai ajouté quelques points dans le drive.\n\nMerci beaucoup,\n\n— Émilie",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-24 14:04:00",
+    "sender": "marc@company.com",
+    "recipients": [
+      "marc.duval@company.com"
+    ],
+    "id": "dfc9afb0-79a5-4558-a1e1-abdb6439c0c0",
+    "cc": [
+      "arfire.fabian@gmail.com"
+    ],
+    "subject": "Retour sur le devis client",
+    "body": "Salut Marc,\n\nLe client a finalement accepté la proposition à 12k€, mais souhaite qu’on avance la livraison au 1er juillet.\nPeux-tu ajuster le rétroplanning ?\n\nBonne fin de journée,\n— Adrien",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-26 14:04:00",
+    "sender": "leïla@company.com",
+    "recipients": [
+      "leila.rahmani@company.com"
+    ],
+    "id": "b67fd9d9-7a88-41f6-91be-830c70e1a99d",
+    "cc": [
+      "arfire.fabian@gmail.com"
+    ],
+    "subject": "Point budget événementiel",
+    "body": "Bonjour Leïla,\n\nAs-tu une estimation mise à jour pour les frais de traiteur et de location de salle ? Il faut qu’on boucle le budget d’ici vendredi.\n\nBien à toi,\n— Thomas",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-22 14:04:00",
+    "sender": "nicolas@company.com",
+    "recipients": [
+      "nicolas.lenoir@company.com"
+    ],
+    "id": "12c4a7d5-2eb1-4fb2-b2c3-df11d770e3be",
+    "cc": [
+      "arfire.fabian@gmail.com"
+    ],
+    "subject": "Urgent : Changement de lieu pour le tournage",
+    "body": "Salut Nicolas,\n\nLe lieu initialement prévu n’est plus disponible. On bascule sur le studio Canal, rue du Chemin Vert.\nPréviens bien les équipes, c’est pour ce mercredi !\n\n— Chloé",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }],
+  [{
+    "datetime": "2025-06-27 14:04:00",
+    "sender": "sophie@company.com",
+    "recipients": [
+      "sophie.levasseur@company.com"
+    ],
+    "id": "518fe205-6f03-482e-8d35-66b06a369325",
+    "cc": [
+      "arfire.fabian@gmail.com"
+    ],
+    "subject": "Document à relire avant validation juridique",
+    "body": "Bonjour Sophie,\n\nPeux-tu jeter un œil à la dernière version du contrat avant qu’on le transmette au pôle juridique ?\nJ’ai quelques doutes sur la clause 4.2.\n\nMerci d’avance !\n— Paul",
+    "attachments": [],
+    "tags": [],
+    "summary": ""
+  }]
+]
