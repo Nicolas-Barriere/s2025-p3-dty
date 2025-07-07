@@ -26,18 +26,27 @@ const AIToolbar = ({ threadId, editor, getCurrentMessage }: AIToolbarProps) => {
 
             // Ajouter le message brouillon au contexte s'il existe
             if (currentMessage) {
-                context += `\n\nVoici le contexte du message brouillon si jamais la demande de l'utilisateur le nécessite :\n${currentMessage}. Notamment essaye de partir de ce brouillon pour ta réponse`;
+                context += `\n\nVoici le brouillon que l'utilisateur est en train de rédiger:\n${currentMessage}. Notamment essaye de partir de ce brouillon pour ta réponse`;
             }
             await requestAIAnswer(context, editor);
             setInstruction(""); // Clear input after sending
         }
     };
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter' && !isPending && instruction.trim()) {
+            event.preventDefault(); // Empêche le comportement par défaut
+            handleSend();
+        }
+    };
+
     return (
         <div className="ai-toolbar-extension">
             <input
                 type="text"
                 value={instruction}
                 onChange={e => setInstruction(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Consigne IA…"
                 className="ai-toolbar-input"
                 disabled={isPending}
