@@ -1,4 +1,5 @@
 """Signal handlers for core models."""
+
 # pylint: disable=unused-argument
 
 import logging
@@ -14,10 +15,24 @@ from core.identity.keycloak import (
 )
 from core.search import MESSAGE_INDEX, get_es_client
 from core.tasks import index_message_task, reindex_thread_task
-from core.ai.thread_summarizer import count_tokens_in_messages, summarize_thread, get_messages_from_thread
-from django.db.models.signals import pre_migrate, post_migrate, pre_init, post_init, pre_save, pre_delete, m2m_changed
+from core.ai.thread_summarizer import (
+    count_tokens_in_messages,
+    summarize_thread,
+    get_messages_from_thread,
+)
+from django.db.models.signals import (
+    pre_migrate,
+    post_migrate,
+    pre_init,
+    post_init,
+    pre_save,
+    pre_delete,
+    m2m_changed,
+)
 
 from core.tags.classification import classify_single_emails
+import json
+from time import time
 
 
 logger = logging.getLogger(__name__)
@@ -83,16 +98,23 @@ def index_message_recipient_post_save(sender, instance, created, **kwargs):
         )
 
 
-@receiver(post_init, sender=models.Thread)
-def print_post_init(sender, instance, **kwargs):
-    if instance.messages.count() == 0 or \
-        not instance.messages.all()[instance.messages.count() - 1].is_unread or \
-            instance.tag:
-        return
-    
-    messages = get_messages_from_thread(instance)
+# @receiver(post_init, sender=models.Thread)
+# def print_post_init(sender, instance, **kwargs):
+#     if (
+#         instance.messages.count() == 0
+#         or not instance.messages.all()[instance.messages.count() - 1].is_unread
+#         or instance.tag
+#     ):
+#         return
 
-    instance.tag = messages[0].subject
+#     messages = get_messages_from_thread(instance)
+
+#     # classification = classify_single_emails(str(messages))
+#     start = time()
+#     while time() < start + 3:
+#         pass
+#     instance.tag = "Hey"  # classification[0]["tag"].name
+#     print("VOICI LES MESSAGES", messages, "VOICI LA CLASSIFICATION", instance.tag)
 
 
 @receiver(post_save, sender=models.Thread)
@@ -121,7 +143,7 @@ def summarize_thread_post_save(sender, instance, created, **kwargs):
     try:
         if instance.summary:
             return
-        
+
         # Count the tokens in the thread's messages
         messages = get_messages_from_thread(instance)
         token_count = count_tokens_in_messages(messages)
@@ -139,8 +161,8 @@ def summarize_thread_post_save(sender, instance, created, **kwargs):
             instance.id,
             e,
         )
-        
-        
+
+
 @receiver(post_save, sender=models.Thread)
 def print_save(sender, instance, created, **kwargs):
     """Print a message when a thread is saved."""
