@@ -29,6 +29,7 @@ export * from "./flag_create200";
 export * from "./flag_create400";
 export * from "./flag_create403";
 export * from "./flag_enum";
+export * from "./generate_answer_request_request";
 export * from "./import_file_create202";
 export * from "./import_file_request";
 export * from "./import_imap_create202";

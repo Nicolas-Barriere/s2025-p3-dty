@@ -1,8 +1,16 @@
 import { BasicTextStyleButton, BlockTypeSelect, CreateLinkButton, FormattingToolbar } from "@blocknote/react";
-import { AIGroupButton } from './AIButton';
+import { AIButton } from './AIButton';
+import React, { useState } from "react";
 
+type MessageEditorToolbarProps = {
+    onAIClick: () => void;
+};
 
-const MessageEditorToolbar = () => {
+const MessageEditorToolbar = ({ onAIClick }: MessageEditorToolbarProps) => {
+    const [showAIInput, setShowAIInput] = useState(false);
+    const [aiPrompt, setAIPrompt] = useState("");
+    const [showTooltip, setShowTooltip] = useState(false);
+
     return (
         <FormattingToolbar>
             <BlockTypeSelect key={"blockTypeSelect"} />
@@ -26,11 +34,23 @@ const MessageEditorToolbar = () => {
                 key={"codeStyleButton"}
                 basicTextStyle={"code"}
             />
-
-            {/* Extra button to do some AI powered actions */}
-            <AIGroupButton key="AIButton" />
-
             <CreateLinkButton key={"createLinkButton"} />
+
+            <button
+                type="button"
+                onClick={onAIClick}
+                className="ai-toolbar-btn"
+                title="Ouvrir la barre IA"
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+            >
+                <span class="material-icons">auto_awesome</span>
+                {showTooltip && (
+                    <div className="ai-toolbar-tooltip">
+                        Actions IA
+                    </div>
+                )}
+            </button>
         </FormattingToolbar>
     )
 }

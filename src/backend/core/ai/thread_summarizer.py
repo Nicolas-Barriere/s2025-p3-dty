@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List
 from core.models import Thread
-
+from typing import Optional
 from core.services.ai_services import AIService
 
 
@@ -122,7 +122,7 @@ def summarize_thread(thread: Thread) -> str:
     return summary
 
 
-def generate_answer(thread: Thread) -> str:
+def generate_answer(thread: Optional[Thread], context: str) -> str:
     """
     Generates an answer to a thread using the ALBERT model.
     Args:
@@ -132,11 +132,15 @@ def generate_answer(thread: Thread) -> str:
     """
 
     # Prepare the prompt for the AI model
-    messages = get_messages_from_thread(thread)
-    conversation_text = "\n\n".join([str(message) for message in messages])
-    prompt_query = "Tu es un assistant intelligent qui génère une réponse à des mails. Tu dois fournir une réponse aux emails suivants qui forment une conversation cohérente et prendre en compte le contexte avec les destinataires et les copies. Ta réponse doit être la plus concise possible et ne pas repréciser les informations du mails (destinataires, ...). En cas de détection de SPAM ta réponse doit être précédée de la mention 'POTENTIEL SPAM DÉTECTÉ'"
-    prompt = prompt_query + conversation_text + "\n\nRéponse en français aux emails ci-dessus :"
-    
+    messages = get_messages_from_thread(thread) if thread else []
+    conversation_text = "\n\n".join([str(message) for message in messages]) if messages else ""
+    prompt_query = "Tu es un assistant intelligent qui est intégré dans une boîte mail. Tu dois fournir une réponse à la demande suivante. La réponse est un mail rédigé assez pro, sauf si c'est une réponse à un mail qui a lui même un autre style. Notamment réutilise la même formule de salutation si présente (Bonjour, Hello, Salut, Coucou, etc...). La demande est : "
+    thread_rules = "Voici en contexte les mails précédents du thread : \n\n"
+    answer_rules = "Ta réponse doit être la plus concise possible et ne pas repréciser les informations du mails (destinataires, Objet, ...) ni être entre guillemets."
+    prompt = prompt_query + context
+    if messages:
+        prompt += thread_rules + conversation_text
+    prompt += answer_rules + "\n\nRéponse à la demande ci-dessus :"
     # Make the API call to get the summary
     answer = AIService().call_ai_api(prompt)
     return answer

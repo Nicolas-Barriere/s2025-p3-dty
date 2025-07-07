@@ -9,7 +9,11 @@ import MailHelper from '@/features/utils/mail-helper';
 import MessageEditorToolbar from './toolbar';
 import { Field, FieldProps } from '@openfun/cunningham-react';
 import { useFormContext } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import AIToolbar from "./AIToolbar";
+import { useAIAnswer } from "./utils/ai";
+import { useMailboxContext } from "@/features/providers/mailbox"
+
 
 type MessageEditorProps = FieldProps & {
     blockNoteOptions?: Partial<BlockNoteEditorOptions<BlockSchema, InlineContentSchema, StyleSchema>>
@@ -28,6 +32,48 @@ type MessageEditorProps = FieldProps & {
 const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEditorProps) => {
     const form = useFormContext();
     const { t, i18n } = useTranslation();
+    const editorRef = useRef<HTMLDivElement>(null);
+    const [selectedText, setSelectedText] = useState<string | null>(null);
+    const [showAIToolbar, setShowAIToolbar] = useState(true);
+    const { selectedThread } = useMailboxContext();
+    const { requestAIAnswer, isPending } = useAIAnswer(selectedThread?.id);
+
+
+    // Fonction pour détecter la sélection
+    const handleSelection = () => {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            const editorRect = editorRef.current?.getBoundingClientRect();
+            const text = selection.toString();
+            console.log("coucou");
+
+            if (editorRect) {
+                setSelectedText(text);
+            }
+        } else {
+            setSelectedText(null);
+        }
+    };
+
+    // Ajoute un listener sur la sélection
+    useEffect(() => {
+        const editorNode = editorRef.current;
+        if (!editorNode) return;
+        editorNode.addEventListener("mouseup", handleSelection);
+        editorNode.addEventListener("keyup", handleSelection);
+        return () => {
+            editorNode.removeEventListener("mouseup", handleSelection);
+            editorNode.removeEventListener("keyup", handleSelection);
+        };
+    }, []);
+
+    // Action IA à déclencher
+    const handlePromptAction = (action: string) => {
+        // Appelle ici ta logique IA selon l'action
+    };
+
     const editor = useCreateBlockNote({
         tabBehavior: "prefer-navigate-ui",
         trailingBlock: false,
@@ -69,7 +115,10 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
                 formattingToolbar={false}
                 onChange={handleChange}
             >
-                <MessageEditorToolbar />
+                {showAIToolbar && <AIToolbar threadId={selectedThread?.id} editor={editor} />}
+                <MessageEditorToolbar onAIClick={() => {
+                    setShowAIToolbar(v => !v);
+                }} />
             </BlockNoteView>
             <input {...form.register("messageEditorHtml")} type="hidden" />
             <input {...form.register("messageEditorText")} type="hidden" />

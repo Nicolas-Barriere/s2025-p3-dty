@@ -3058,6 +3058,20 @@
                 "tags": [
                     "threads"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateAnswerRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateAnswerRequestRequest"
+                            }
+                        }
+                    }
+                },
                 "security": [
                     {
                         "cookieAuth": []
@@ -3828,6 +3842,16 @@
                 ],
                 "type": "string",
                 "description": "* `unread` - unread\n* `starred` - starred\n* `trashed` - trashed"
+            },
+            "GenerateAnswerRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "context": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Contexte optionnel pour la génération de la réponse"
+                    }
+                }
             },
             "ImportFileRequest": {
                 "type": "object",

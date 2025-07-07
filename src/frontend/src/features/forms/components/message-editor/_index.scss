@@ -4,12 +4,14 @@
             border-color: var(--c--theme--colors--error);
         }
     }
+
     &--success {
         .message-editor {
             border-color: var(--c--theme--colors--success);
         }
     }
 }
+
 .message-editor {
     border-radius: var(--c--components--forms-input--border-radius);
     border-width: var(--c--components--forms-input--border-width);
@@ -22,7 +24,7 @@
     background-color: var(--bn-colors-editor-background);
     position: relative;
     min-height: 20rem;
-     
+
     & .bn-toolbar.bn-formatting-toolbar {
         background: none;
         box-shadow: none;
@@ -35,6 +37,7 @@
         padding-block: var(--c--theme--spacings--2xs);
         flex: 0 0 43px;
         height: 43px;
+        overflow: visible;
     }
 
     & .bn-editor {
@@ -45,4 +48,86 @@
         padding-inline: var(--c--theme--spacings--base);
         flex: 1;
     }
+}
+
+.ai-toolbar-extension {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: #fff;
+    border-bottom: 1px solid var(--c--theme--colors--greyscale-200);
+    padding: 0 12px 0 2px;
+    height: 43px; // même hauteur que la toolbar
+    box-sizing: border-box;
+}
+
+.ai-toolbar-input::placeholder {
+    color: #ccced3;
+    font-style: italic;
+}
+
+.ai-toolbar-input {
+    flex: 1;
+    padding: 0px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    background: #fff;
+    outline: none;
+    color: #3f3f3f;
+}
+
+.ai-toolbar-send {
+    background: none;
+    color: #3F3F3F;
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    font-weight: 500;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+    transform: rotate(-40deg);
+    opacity: 0.7;
+}
+
+.ai-toolbar-send:hover {
+    color: #9e9e9e;
+    cursor: pointer;
+}
+
+
+.ai-toolbar-btn {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0px 6px;
+    border-radius: 6px !important;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    color: #3f3f3f;
+    transition: background 0.15s;
+}
+
+.ai-toolbar-btn:hover {
+    background: #eee;
+    transition: background 0.15s;
+}
+
+.ai-toolbar-tooltip {
+    position: absolute;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #eee;
+    color: #3f3f3f;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 10;
 }
