@@ -20,15 +20,6 @@ from core.ai.thread_summarizer import (
     summarize_thread,
     get_messages_from_thread,
 )
-from django.db.models.signals import (
-    pre_migrate,
-    post_migrate,
-    pre_init,
-    post_init,
-    pre_save,
-    pre_delete,
-    m2m_changed,
-)
 
 from core.tags.classification import classify_single_emails
 import json
@@ -96,25 +87,6 @@ def index_message_recipient_post_save(sender, instance, created, **kwargs):
             instance.message.id,
             e,
         )
-
-
-# @receiver(post_init, sender=models.Thread)
-# def print_post_init(sender, instance, **kwargs):
-#     if (
-#         instance.messages.count() == 0
-#         or not instance.messages.all()[instance.messages.count() - 1].is_unread
-#         or instance.tag
-#     ):
-#         return
-
-#     messages = get_messages_from_thread(instance)
-
-#     # classification = classify_single_emails(str(messages))
-#     start = time()
-#     while time() < start + 3:
-#         pass
-#     instance.tag = "Hey"  # classification[0]["tag"].name
-#     print("VOICI LES MESSAGES", messages, "VOICI LA CLASSIFICATION", instance.tag)
 
 
 @receiver(post_save, sender=models.Thread)
