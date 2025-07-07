@@ -1,8 +1,9 @@
 import json
 from .email_class import Email, Tag
-from .llm import call_llm_with_new_prompt
 from .tools import get_prompt
 import os
+from core.services.ai_services import AIService
+
 
 # Clear le terminal au lancement du script
 os.system("cls" if os.name == "nt" else "clear")
@@ -23,7 +24,7 @@ def classify_single_emails(single_emails: str) -> dict[str, Tag | str]:
     print(single_emails)
     prompt_mail_solo = get_prompt("prompt_solo")
 
-    response = call_llm_with_new_prompt(prompt_mail_solo + single_emails)
+    response = AIService().call_ai_api(prompt_mail_solo + single_emails)
     ans = []
     for line in response.splitlines():
         if not line.strip():
@@ -52,7 +53,7 @@ def classify_single_emails(single_emails: str) -> dict[str, Tag | str]:
 def classify_email_conversation(email_conversation: str) -> tuple[str, Tag, str]:
     prompt_mails_conv = get_prompt("prompt_conv")
 
-    return call_llm_with_new_prompt(prompt_mails_conv + email_conversation)
+    return AIService().call_ai_api(prompt_mails_conv + email_conversation)
 
 
 def save_classification(classification: list[dict]) -> None:

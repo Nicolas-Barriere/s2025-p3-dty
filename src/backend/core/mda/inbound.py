@@ -13,6 +13,9 @@ from django.utils import timezone
 
 from core import models
 
+from core.tags.classification import classify_single_emails
+from core.ai.thread_summarizer import get_messages_from_thread
+
 logger = logging.getLogger(__name__)
 
 # Helper function to extract Message-IDs
@@ -570,6 +573,12 @@ def deliver_inbound_message(  # pylint: disable=too-many-branches, too-many-stat
         if new_snippet:
             thread.snippet = new_snippet
             thread.save(update_fields=["snippet"])
+
+        # Tag
+        messages = get_messages_from_thread(thread)
+        classification = classify_single_emails(str(messages))
+        thread.tag = classification[0]["tag"].name
+        thread.save(update_fields=["tag"])
 
     except Exception as e:
         logger.exception(
