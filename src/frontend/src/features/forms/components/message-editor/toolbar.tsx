@@ -37,10 +37,6 @@ const MessageEditorToolbar = ({ onAIClick, active = false }: MessageEditorToolba
                 key={"codeStyleButton"}
                 basicTextStyle={"code"}
             />
-
-            {/* Extra button to do some AI powered actions */}
-            <AIGroupButton key="AIButton" />
-
             <CreateLinkButton key={"createLinkButton"} />
 
             <button

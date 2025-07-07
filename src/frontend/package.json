@@ -23,6 +23,7 @@
     "@blocknote/core": "0.33.0",
     "@blocknote/mantine": "0.33.0",
     "@blocknote/react": "0.33.0",
+    "@blocknote/xl-ai": "^0.32.0",
     "@gouvfr-lasuite/ui-kit": "0.8.2",
     "@hookform/resolvers": "5.1.1",
     "@openfun/cunningham-react": "3.1.0",

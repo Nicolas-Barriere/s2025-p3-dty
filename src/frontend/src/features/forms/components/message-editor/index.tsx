@@ -10,6 +10,7 @@ import MessageEditorToolbar from './toolbar';
 import { Field, FieldProps } from '@openfun/cunningham-react';
 import { useFormContext } from 'react-hook-form';
 import { useEffect, useRef, useState } from 'react';
+
 import { QuotedMessageBlock } from '@/features/blocknote/quoted-message-block';
 import { Message } from '@/features/api/gen/models/message';
 
@@ -42,6 +43,48 @@ type MessageEditorProps = FieldProps & {
 const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props }: MessageEditorProps) => {
     const form = useFormContext();
     const { t, i18n } = useTranslation();
+    const editorRef = useRef<HTMLDivElement>(null);
+    const [selectedText, setSelectedText] = useState<string | null>(null);
+    const [showAIToolbar, setShowAIToolbar] = useState(true);
+    const { selectedThread } = useMailboxContext();
+    const { requestAIAnswer, isPending } = useAIAnswer(selectedThread?.id);
+
+
+    // Fonction pour détecter la sélection
+    const handleSelection = () => {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            const editorRect = editorRef.current?.getBoundingClientRect();
+            const text = selection.toString();
+            console.log("coucou");
+
+            if (editorRect) {
+                setSelectedText(text);
+            }
+        } else {
+            setSelectedText(null);
+        }
+    };
+
+    // Ajoute un listener sur la sélection
+    useEffect(() => {
+        const editorNode = editorRef.current;
+        if (!editorNode) return;
+        editorNode.addEventListener("mouseup", handleSelection);
+        editorNode.addEventListener("keyup", handleSelection);
+        return () => {
+            editorNode.removeEventListener("mouseup", handleSelection);
+            editorNode.removeEventListener("keyup", handleSelection);
+        };
+    }, []);
+
+    // Action IA à déclencher
+    const handlePromptAction = (action: string) => {
+        // Appelle ici ta logique IA selon l'action
+    };
+
 
     /**
      * Prepare initial content of the editor

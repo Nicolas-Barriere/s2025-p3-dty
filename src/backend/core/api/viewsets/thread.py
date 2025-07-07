@@ -487,6 +487,12 @@ class ThreadViewSet(
         }, status=status.HTTP_200_OK)
     
     @extend_schema(
+        request=inline_serializer(
+            name="GenerateAnswerRequest",
+            fields={
+                "context": drf_serializers.CharField(required=False, help_text="Contexte optionnel pour la génération de la réponse"),
+            },
+        ),
         responses={
             200: OpenApiResponse(
                 response={"type": "object", "properties": {
@@ -510,9 +516,12 @@ class ThreadViewSet(
     def generate_answer_thread(self, request, pk=None, id=None):
         pk = id or pk
         self.kwargs["pk"] = pk
-        thread = self.get_object()
-
-        answer = generate_answer(thread)
+        if not pk:
+            thread = None
+        else:
+            thread = self.get_object()
+        context = request.data.get("context")
+        answer = generate_answer(thread, context)
         return Response({
             "answer": answer
         }, status=status.HTTP_200_OK)

@@ -5,6 +5,8 @@ import {
     useComponentsContext,
     useSelectedBlocks,
 } from '@blocknote/react';
+import { BasicTextStyleButton } from "@blocknote/react";
+
 import {
     Loader,
     VariantType,
@@ -16,12 +18,12 @@ import { useThreadsGenerateAnswerCreate } from "@/features/api/gen/threads/threa
 import { useMailboxContext } from "@/features/providers/mailbox"
 
 
-export function AIGroupButton() {
+export function AIButton() {
     const editor = useBlockNoteEditor();
     const Components = useComponentsContext();
     const selectedBlocks = useSelectedBlocks(editor);
     const { t } = useTranslation();
-    const { selectedThread, messages, queryStates } = useMailboxContext();
+    const { selectedThread } = useMailboxContext();
 
     if (!selectedThread) return null
 
@@ -33,25 +35,9 @@ export function AIGroupButton() {
                     data-test="ai-actions"
                     label="AI"
                     mainTooltip={t('AI Actions')}
-                    icon={<span>✨</span>}
+                    icon={<span class="material-icons">auto_awesome</span>}
                 />
             </Components.Generic.Menu.Trigger>
-            <Components.Generic.Menu.Dropdown
-                className="bn-menu-dropdown bn-drag-handle-menu --docs--ai-actions-menu"
-                sub={true}
-            >
-                {(
-                    <>
-                        <AIMenuItemTransform
-                            action="answer"
-                            icon={<span>📝</span>}
-                            threadId={selectedThread.id} // Ajoute cette prop
-                        >
-                            {t('Generate answer')}
-                        </AIMenuItemTransform>
-                    </>
-                )}
-            </Components.Generic.Menu.Dropdown>
         </Components.Generic.Menu.Root>
     );
 }
@@ -86,7 +72,10 @@ const AIMenuItemTransform = ({
             throw new Error("No thread selected");
         }
         // Appel à l'API pour générer la réponse
-        const response = await generateAnswer({ id: threadId });
+        const response = await generateAnswer({
+            id: threadId,
+            data: { context: "COUCOU" }
+        });
         console.log(response);
         // Récupère la réponse générée (adapte selon la structure réelle)
         const answer = response.data.answer || "Aucune réponse générée";
@@ -94,7 +83,6 @@ const AIMenuItemTransform = ({
         const blocks = await editor.tryParseMarkdownToBlocks(answer);
         editor.replaceBlocks(selectedBlocks, blocks);
     };
-
     return (
         <AIMenuItem icon={icon} requestAI={requestThreadAnswer} isPending={isPending}>
             {children}

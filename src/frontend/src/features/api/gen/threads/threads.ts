@@ -686,6 +686,7 @@ export const getThreadsGenerateAnswerCreateUrl = (id: string) => {
 
 export const threadsGenerateAnswerCreate = async (
   id: string,
+  generateAnswerRequestRequest: GenerateAnswerRequestRequest,
   options?: RequestInit,
 ): Promise<threadsGenerateAnswerCreateResponse> => {
   return fetchAPI<threadsGenerateAnswerCreateResponse>(
@@ -693,6 +694,8 @@ export const threadsGenerateAnswerCreate = async (
     {
       ...options,
       method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(generateAnswerRequestRequest),
     },
   );
 };
@@ -704,14 +707,14 @@ export const getThreadsGenerateAnswerCreateMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
     TError,
-    { id: string },
+    { id: string; data: GenerateAnswerRequestRequest },
     TContext
   >;
   request?: SecondParameter<typeof fetchAPI>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
   TError,
-  { id: string },
+  { id: string; data: GenerateAnswerRequestRequest },
   TContext
 > => {
   const mutationKey = ["threadsGenerateAnswerCreate"];
@@ -725,11 +728,11 @@ export const getThreadsGenerateAnswerCreateMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
-    { id: string }
+    { id: string; data: GenerateAnswerRequestRequest }
   > = (props) => {
-    const { id } = props ?? {};
+    const { id, data } = props ?? {};
 
-    return threadsGenerateAnswerCreate(id, requestOptions);
+    return threadsGenerateAnswerCreate(id, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -738,7 +741,8 @@ export const getThreadsGenerateAnswerCreateMutationOptions = <
 export type ThreadsGenerateAnswerCreateMutationResult = NonNullable<
   Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>
 >;
-
+export type ThreadsGenerateAnswerCreateMutationBody =
+  GenerateAnswerRequestRequest;
 export type ThreadsGenerateAnswerCreateMutationError = unknown;
 
 export const useThreadsGenerateAnswerCreate = <
@@ -749,7 +753,7 @@ export const useThreadsGenerateAnswerCreate = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
       TError,
-      { id: string },
+      { id: string; data: GenerateAnswerRequestRequest },
       TContext
     >;
     request?: SecondParameter<typeof fetchAPI>;
@@ -758,7 +762,7 @@ export const useThreadsGenerateAnswerCreate = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof threadsGenerateAnswerCreate>>,
   TError,
-  { id: string },
+  { id: string; data: GenerateAnswerRequestRequest },
   TContext
 > => {
   const mutationOptions =

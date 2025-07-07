@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List
 from core.models import Thread
-
+from typing import Optional
 from core.services.ai_services import AIService
 
 
