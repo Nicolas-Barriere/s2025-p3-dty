@@ -13,9 +13,9 @@ export const useAIAnswer = (threadId?: string) => {
 
         if (editor) {
             const blocks = await editor.tryParseMarkdownToBlocks(answer);
-            const lastBlock = editor.document[editor.document.length - 1];
-            // Insère à la fin du document
-            const insertedBlocks = editor.insertBlocks(blocks, lastBlock?.id);
+            editor.removeBlocks(editor.document.map(block => block.id));
+            const insertedBlocks = editor.insertBlocks(blocks, editor.document[0]);
+            editor.focus();
         }
 
         return answer;
