@@ -48,6 +48,7 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
     const [showAIToolbar, setShowAIToolbar] = useState(true);
     const { selectedThread } = useMailboxContext();
     const { requestAIAnswer, isPending } = useAIAnswer(selectedThread?.id);
+    const [message, setMessage] = useState<string | null>(null);
 
 
     // Fonction pour détecter la sélection
