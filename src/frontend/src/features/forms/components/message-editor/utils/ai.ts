@@ -9,7 +9,7 @@ export const useAIAnswer = (threadId?: string) => {
             id: threadId ?? "",
             data: { context }
         });
-        const answer = response.data.answer || "Aucune réponse générée";
+        const answer = response.data.answer || "";
 
         if (editor) {
             const blocks = await editor.tryParseMarkdownToBlocks(answer);

@@ -37,6 +37,7 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
     const [showAIToolbar, setShowAIToolbar] = useState(true);
     const { selectedThread } = useMailboxContext();
     const { requestAIAnswer, isPending } = useAIAnswer(selectedThread?.id);
+    const [message, setMessage] = useState<string | null>(null);
 
 
     // Fonction pour détecter la sélection
@@ -92,6 +93,7 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
     const handleChange = async () => {
         form.setValue("messageEditorDraft", JSON.stringify(editor.document), { shouldDirty: true });
         const markdown = await editor.blocksToMarkdownLossy(editor.document);
+        setMessage(markdown);
         const html = await MailHelper.markdownToHtml(markdown);
         form.setValue("messageEditorText", markdown);
         form.setValue("messageEditorHtml", html);
@@ -104,6 +106,11 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
         handleChange();
     }, [])
 
+    const getCurrentMessage = async () => {
+        const markdown = await editor.blocksToMarkdownLossy(editor.document);
+        return markdown;
+    };
+
     return (
         <Field {...props}>
             <BlockNoteView
@@ -115,7 +122,7 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
                 formattingToolbar={false}
                 onChange={handleChange}
             >
-                {showAIToolbar && <AIToolbar threadId={selectedThread?.id} editor={editor} />}
+                {showAIToolbar && <AIToolbar threadId={selectedThread?.id} editor={editor} getCurrentMessage={getCurrentMessage} />}
                 <MessageEditorToolbar onAIClick={() => {
                     setShowAIToolbar(v => !v);
                 }} />

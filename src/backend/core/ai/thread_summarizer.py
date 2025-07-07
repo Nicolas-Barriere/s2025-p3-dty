@@ -134,9 +134,9 @@ def generate_answer(thread: Optional[Thread], context: str) -> str:
     # Prepare the prompt for the AI model
     messages = get_messages_from_thread(thread) if thread else []
     conversation_text = "\n\n".join([str(message) for message in messages]) if messages else ""
-    prompt_query = "Tu es un assistant intelligent qui est intégré dans une boîte mail. Tu dois fournir une réponse à la demande suivante. La réponse est un mail rédigé assez pro, sauf si c'est une réponse à un mail qui a lui même un autre style. Notamment réutilise la même formule de salutation si présente (Bonjour, Hello, Salut, Coucou, etc...). La demande est : "
+    prompt_query = "Tu es un assistant intelligent qui est intégré dans une boîte mail. Tu dois fournir une réponse à la demande suivante. La réponse attendue est un mail rédigé assez pro, sauf si c'est une réponse à un mail qui a lui même un autre style. Notamment réutilise la même formule de salutation si présente (Bonjour, Hello, Salut, Coucou, etc...)."
     thread_rules = "Voici en contexte les mails précédents du thread : \n\n"
-    answer_rules = "Ta réponse doit être la plus concise possible et ne pas repréciser les informations du mails (destinataires, Objet, ...) ni être entre guillemets."
+    answer_rules = "Ta réponse doit être uniquement le corps du message (ne mentionne pas l'objet ni les destinataires) NE mets PAS de guillemets autour de ta réponse"
     prompt = prompt_query + context
     if messages:
         prompt += thread_rules + conversation_text
