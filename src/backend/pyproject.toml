@@ -57,6 +57,7 @@ dependencies = [
     "sentry-sdk[django]==2.27.0",
     "url-normalize==1.4.3",
     "whitenoise==6.8.2",
+    "python-dotenv (>=1.1.1,<2.0.0)",
 ]
 
 [project.urls]

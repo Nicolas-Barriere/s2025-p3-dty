@@ -1,0 +1,70 @@
+prompts:
+  prompt_solo: |
+    Actuellement nous sommes le lundi 23 juin 2025, il est 10h44.
+    Je vais t'envoyer un ou plusieurs mails indépendants. Il faut que tu attribues un tag à chacun de ces mails:
+
+    - 'URGENT': les mail URGENTS qui donnent une information sur un événement qui a lieu dans moins de 5 jours, et requierent une action/réponse de ta part en moins de 5 jours, ou une prise de connaissance de l'information en moins de 5 jours.
+    - 'DEFERRED': les mails contenant une information qui me concerne ou auxquels je dois répondre, mais que je peux me permettre de consulter dans 5 jours. L'envoyeur ne mentionne aucune deadline ou urgence, et ma non réponse n'a aucune conséquence grave.
+    - 'IRRELEVANT': les mails qui ne me concernent pas du tout, une information qui ne me regarde pas, ou des spams
+
+
+    ##########
+    Ta réponse toi être au format suivant pour chaque mail (lorsque quelque chose est entre crochets, il faut que tu remplaces par la valeur, sans la mettre en gras, et sans les crochets):
+    [email id] --- [URGENT/DEFERRED/IRRELEVANT] ([explication de pourquoi tu as rangé le mail dans cette catégorie])
+    [email id] --- [URGENT/DEFERRED/IRRELEVANT] ([explication])
+    [email id] --- [URGENT/DEFERRED/IRRELEVANT] ([explication])
+    ##########
+
+    Réponds directement dans le format que je t'ai demandé, sans crochets, sans aucune saut de ligne, sans aucun texte supplémentaire du style "Voici la catégorisation des mails comme demandé:".
+    Voici l'email ou les emails que tu dois traiter:
+  
+
+  prompt_conv: |
+    Actuellement nous sommes le lundi 23 juin 2025, il est 10h44.
+    Je vais t'envoyer un échange de mails. Tu est le destinataire du dernier mail de la conversation. Il faut que tu détermines si une réponse est attendue de ta part. 
+
+    Pour cela, il faut que tu attribues le bon tag au mail:
+
+    - 'URGENT': le dernier mail reçu est URGENT, il donne une information sur un événement qui a lieu dans moins de 5 jours, et require une action/réponse de ta part en moins de 5 jours, ou une prise de connaissance de l'information en moins de 5 jours.
+    - 'DEFERRED': le dernier mail  reçu contient une information qui te concerne ou auquel tu dois répondre, mais tu peux te permettre de consulter ce mail dans au moins 5 jours. L'envoyeur ne mentionne aucune deadline ou urgence, et ta non réponse n'a aucune conséquence grave.
+    - 'IRRELEVANT': le dernier mail ne me concerne pas du tout, une information qui ne me regarde pas, ou un spam
+
+
+    ##########
+    Ta réponse doit être au format suivant (lorsque quelque chose est entre crochets, il faut que tu remplaces par la valeur, sans la mettre en gras, et sans les crochets):
+    [email id] --- [URGENT/DEFERRED/IRRELEVANT] ([explication de pourquoi le dernier mail qui t'est adressé, s'est vu attribuer ce tag])
+    [email id] --- [URGENT/DEFERRED/IRRELEVANT] ([explication])
+    [email id] --- [URGENT/DEFERRED/IRRELEVANT] ([explication])
+    ##########
+
+    Réponds directement dans le format que je t'ai demandé, sans crochets, sans aucun texte supplémentaire du style "Voici la catégorisation comme demandé:".
+
+    Voici la conversation d'emails, dans laquelle tu es le destinataire du dernier mail:
+
+
+  prompt_answer_from_user: |
+    Actuellement nous sommes le lundi 23 juin 2025, il est 10h44.
+    Voici le mail ou la conversation de mails que j'ai reçu:
+
+    [[EMAIL]]
+
+    L'utilisateur souhaite rédiger un mail pour répondre, le mail doit être rédigé dans un langage professionnel, concis, et l'utilisateur a demandé que le mail contienne les informations suivantes:
+
+    [[USER PROMPT]]
+
+    Réponds directement le mail comme demandé, sans aucun texte supplémentaire du style "Voici le mail que j'ai rédigé comme demandé:".
+
+
+  prompt_3_answers: |
+    Actuellement nous sommes le lundi 23 juin 2025, il est 10h44.
+    Je vais t'envoyer un mail ou une liste de conversations de mails dans l'ordre, il faut que tu détermines si une réponse est attendue. Si c'est le cas, génère 2 ou 3 réponses possibles que l'utilisateur pourrait vouloir envoyer selon sa situation. Les réponses ne doivent pas se superposer ! Imagine des réponses très variées. Ta réponse doit être rédigée dans le même style que le mail reçu. Il faut que ta réponse soit adaptée au mail reçu selon si la personne en face de toi met les formes ou non, selon si le mail est verbeux ou très concis.
+
+    Par exemple si on te demande si quelque chose sera fini à temps, tu peux répondre
+    - Oui ce sera fini à temps c'est sûr
+    - Non il y a aura du retard mais je sais pas combien de temps de retard, je reviens vers toi
+    - Non il y aura du retard, ce sera livré à telle date au plus tard (donner une date précise)
+
+    Ce que tu retournes doit être un fichier json avec comme fields pour chaque réponse possible: la 'response' en elle-même, un 'summary' de la réponse en maximum 8 mots, avec les infos concrètes.
+
+    Voici l'email ou la conversation de mails:
+

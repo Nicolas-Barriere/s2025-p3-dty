@@ -82,6 +82,9 @@ export const ThreadMessage = forwardRef<HTMLElement, ThreadMessageProps>(
                         </div>
                         <div className="thread-message__header-column thread-message__header-column--right flex-row flex-align-center">
                             <div className="thread-message__metadata">
+                                <Badge>
+                                    {selectedThread?.tag}
+                                </Badge>
                                 {message.sent_at && (
                                     <p className="thread-message__date">{
                                         new Date(message.sent_at).toLocaleString(i18n.resolvedLanguage, {
