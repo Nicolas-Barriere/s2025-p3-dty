@@ -38,6 +38,8 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
     const { selectedThread } = useMailboxContext();
     const { requestAIAnswer, isPending } = useAIAnswer(selectedThread?.id);
     const [message, setMessage] = useState<string | null>(null);
+    const aiToolbarRef = useRef<{ focus: () => void }>(null);
+
 
 
     // Fonction pour détecter la sélection
@@ -48,8 +50,6 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
             const rect = range.getBoundingClientRect();
             const editorRect = editorRef.current?.getBoundingClientRect();
             const text = selection.toString();
-            console.log("coucou");
-
             if (editorRect) {
                 setSelectedText(text);
             }
@@ -69,11 +69,6 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
             editorNode.removeEventListener("keyup", handleSelection);
         };
     }, []);
-
-    // Action IA à déclencher
-    const handlePromptAction = (action: string) => {
-        // Appelle ici ta logique IA selon l'action
-    };
 
     const editor = useCreateBlockNote({
         tabBehavior: "prefer-navigate-ui",
@@ -106,6 +101,40 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
         handleChange();
     }, [])
 
+    const toggleAIToolbar = () => {
+        setShowAIToolbar(prev => {
+            const newValue = !prev;
+
+            // Si on active la barre, on met le focus après le rendu
+            if (newValue) {
+                // Utiliser setTimeout pour laisser React finir le rendu
+                setTimeout(() => {
+                    aiToolbarRef.current?.focus();
+                }, 50);
+            }
+
+            return newValue;
+        });
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            // Command+Shift+P sur Mac ou Ctrl+Shift+P sur Windows
+            if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'l') {
+                event.preventDefault(); // Empêche le comportement par défaut du navigateur
+                toggleAIToolbar(); // Utiliser la nouvelle fonction
+            }
+        };
+
+        // Ajoute l'écouteur d'événements
+        window.addEventListener('keydown', handleKeyDown);
+
+        // Nettoie l'écouteur d'événements lors du démontage
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, []);
+
     const getCurrentMessage = async () => {
         const markdown = await editor.blocksToMarkdownLossy(editor.document);
         return markdown;
@@ -122,10 +151,9 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
                 formattingToolbar={false}
                 onChange={handleChange}
             >
-                {showAIToolbar && <AIToolbar threadId={selectedThread?.id} editor={editor} getCurrentMessage={getCurrentMessage} />}
-                <MessageEditorToolbar onAIClick={() => {
-                    setShowAIToolbar(v => !v);
-                }} />
+                {showAIToolbar && <AIToolbar ref={aiToolbarRef} threadId={selectedThread?.id} editor={editor} getCurrentMessage={getCurrentMessage} />}
+                <MessageEditorToolbar onAIClick={toggleAIToolbar}
+                    active={showAIToolbar} />
             </BlockNoteView>
             <input {...form.register("messageEditorHtml")} type="hidden" />
             <input {...form.register("messageEditorText")} type="hidden" />

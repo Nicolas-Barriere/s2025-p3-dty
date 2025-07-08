@@ -1,15 +1,18 @@
 import { BasicTextStyleButton, BlockTypeSelect, CreateLinkButton, FormattingToolbar } from "@blocknote/react";
-import { AIButton } from './AIButton';
 import React, { useState } from "react";
 
 type MessageEditorToolbarProps = {
     onAIClick: () => void;
+    active?: boolean;
 };
 
-const MessageEditorToolbar = ({ onAIClick }: MessageEditorToolbarProps) => {
-    const [showAIInput, setShowAIInput] = useState(false);
-    const [aiPrompt, setAIPrompt] = useState("");
+const MessageEditorToolbar = ({ onAIClick, active = false }: MessageEditorToolbarProps) => {
+
     const [showTooltip, setShowTooltip] = useState(false);
+
+    const handleAIClick = () => {
+        onAIClick();
+    }
 
     return (
         <FormattingToolbar>
@@ -38,16 +41,19 @@ const MessageEditorToolbar = ({ onAIClick }: MessageEditorToolbarProps) => {
 
             <button
                 type="button"
-                onClick={onAIClick}
-                className="ai-toolbar-btn"
+                onClick={handleAIClick}
+                className={`ai-toolbar-btn ${active ? 'ai-active' : ''}`}
                 title="Ouvrir la barre IA"
                 onMouseEnter={() => setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
             >
-                <span class="material-icons">auto_awesome</span>
+                <span className="material-icons">edit</span>
                 {showTooltip && (
                     <div className="ai-toolbar-tooltip">
-                        Actions IA
+                        <div>
+                            {active ? "Fermer l'assistant IA" : "Assistant IA"}
+                        </div>
+                        <div className="shortcut-hint">(⌘+Shift+L)</div>
                     </div>
                 )}
             </button>

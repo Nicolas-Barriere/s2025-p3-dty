@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { useAIAnswer } from "./utils/ai";
 import { BlockNoteEditor } from "@blocknote/core";
 
@@ -9,9 +9,21 @@ type AIToolbarProps = {
     getCurrentMessage?: () => Promise<string>; // Fonction pour récupérer le message actuel
 };
 
-const AIToolbar = ({ threadId, editor, getCurrentMessage }: AIToolbarProps) => {
+const AIToolbar = forwardRef(({ threadId, editor, getCurrentMessage }: AIToolbarProps, ref) => {
     const [instruction, setInstruction] = useState("");
     const { requestAIAnswer, isPending } = useAIAnswer(threadId);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useImperativeHandle(ref, () => ({
+        focus: () => {
+            inputRef.current?.focus();
+        }
+    }));
+
+    // Focus automatique à l'apparition du composant
+    useEffect(() => {
+        inputRef.current?.focus();
+    }, []);
 
     const handleSend = async () => {
         if (editor) {
@@ -43,6 +55,7 @@ const AIToolbar = ({ threadId, editor, getCurrentMessage }: AIToolbarProps) => {
     return (
         <div className="ai-toolbar-extension">
             <input
+                ref={inputRef}
                 type="text"
                 value={instruction}
                 onChange={e => setInstruction(e.target.value)}
@@ -65,6 +78,8 @@ const AIToolbar = ({ threadId, editor, getCurrentMessage }: AIToolbarProps) => {
             </button>
         </div>
     );
-};
+});
+
+AIToolbar.displayName = 'AIToolbar';
 
 export default AIToolbar;
