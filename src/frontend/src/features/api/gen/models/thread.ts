@@ -34,5 +34,5 @@ export interface Thread {
   readonly accesses: readonly ThreadAccessDetail[];
   readonly labels: readonly ThreadLabel[];
   readonly summary: string;
-  readonly tag: string;
+  readonly tags: readonly string[];
 }

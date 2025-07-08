@@ -1,6 +1,7 @@
 """
 Declare and configure the models for the messages core application
 """
+
 # pylint: disable=too-many-lines,too-many-instance-attributes
 
 import base64
@@ -338,7 +339,7 @@ class Thread(BaseModel):
     messaged_at = models.DateTimeField(_("messaged at"), null=True, blank=True)
     sender_names = models.JSONField(_("sender names"), null=True, blank=True)
     summary = models.TextField(_("summary"), blank=True, default="")
-    tag = models.TextField(_("tag"), blank=True, default="")
+    tags = models.JSONField(_("tags"), blank=True, default=list)
 
     class Meta:
         db_table = "messages_thread"
@@ -464,7 +465,7 @@ class Thread(BaseModel):
                 "has_active",
                 "messaged_at",
                 "sender_names",
-                "tag",
+                "tags",
             ]
         )
 

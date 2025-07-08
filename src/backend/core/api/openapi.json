@@ -4737,6 +4737,9 @@
                     "summary": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "tags": {
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -4757,6 +4760,7 @@
                     "snippet",
                     "subject",
                     "summary",
+                    "tags",
                     "updated_at",
                     "user_role"
                 ]

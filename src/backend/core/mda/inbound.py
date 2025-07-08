@@ -560,8 +560,8 @@ def deliver_inbound_message(  # pylint: disable=too-many-branches, too-many-stat
     try:
         messages = get_messages_from_thread(thread)
         classification = classify_single_emails(str(messages))
-        thread.tag = str(classification[0]["tags"])
-        thread.save(update_fields=["tag"])
+        thread.tags = classification[0]["tags"]
+        thread.save(update_fields=["tags"])
     except Exception as e:
         logger.exception("ERREUR FABIAN: %s", e)
 
