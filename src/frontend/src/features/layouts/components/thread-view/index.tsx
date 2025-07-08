@@ -121,6 +121,7 @@ export const ThreadView = () => {
         <div className="thread-view" ref={rootRef}>
             <ActionBar canUndelete={isThreadTrashed} />
             {selectedThread && <ThreadSummary threadId={selectedThread.id} />}
+    
             <div className="thread-view__messages-list">
                 {filteredMessages!.map((message) => {
                     const isLatest = latestMessage?.id === message.id;

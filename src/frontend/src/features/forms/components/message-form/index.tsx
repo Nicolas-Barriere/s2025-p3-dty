@@ -308,9 +308,8 @@ export const MessageForm = ({
     };
 
     const areAttachmentsMentionnedInDraft = (): boolean => {
-        const keyWordsAttachments = ['pièce jointe', 'document', 'fichier', 'image', 'pdf', 'zip',
-            'archive', 'annexe', 'joint', 'fichier joint', 'document joint', 'attachment', 'attached',
-            'veuillez trouver', 'pj'];
+        const keyWordsAttachments = ['pièce jointe', 'annexe', 'joint', 'fichier joint', 'document joint', 'attachment', 'attached',
+            'veuillez trouver', 'pj', 'attachmnet', 'jointe', 'annexée', 'fichiers joints', 'fichier jointé', 'document jointé'];
         const messageEditorDraft = form.getValues('messageEditorDraft')?.toLowerCase() || '';
         
         // Check if any of the keywords are mentioned in the draft

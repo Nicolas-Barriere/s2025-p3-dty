@@ -33,7 +33,7 @@ export function AIGroupButton() {
                     data-test="ai-actions"
                     label="AI"
                     mainTooltip={t('AI Actions')}
-                    icon={<span>✨</span>}
+                    icon={<span className="material-icons">auto_awesome</span>}
                 />
             </Components.Generic.Menu.Trigger>
             <Components.Generic.Menu.Dropdown

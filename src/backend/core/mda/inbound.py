@@ -13,6 +13,8 @@ from django.utils import timezone
 
 from core import models
 
+from core.ai.thread_summarizer import summarize_thread, get_messages_from_thread, count_tokens_in_messages
+
 logger = logging.getLogger(__name__)
 
 # Helper function to extract Message-IDs
@@ -479,6 +481,17 @@ def deliver_inbound_message(  # pylint: disable=too-many-branches, too-many-stat
         if new_snippet:
             thread.snippet = new_snippet
             thread.save(update_fields=["snippet"])
+
+        # Update summary if needed
+        messages = get_messages_from_thread(thread)
+        token_count = count_tokens_in_messages(messages)
+    
+        # Only summarize if the thread has enough content
+        if not thread.summary and (token_count >= 400 or len(messages) >= 3):
+            new_summary = summarize_thread(thread)
+            if new_summary:
+                thread.summary = new_summary
+                thread.save(update_fields=["summary"])
 
     except Exception as e:
         logger.exception(

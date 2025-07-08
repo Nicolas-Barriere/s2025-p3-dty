@@ -479,6 +479,8 @@ class ThreadViewSet(
             "summary": thread.summary
         }, status=status.HTTP_200_OK)
     
+
+    
     @extend_schema(
         responses={
             200: OpenApiResponse(

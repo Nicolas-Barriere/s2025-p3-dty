@@ -98,33 +98,6 @@ def index_thread_post_save(sender, instance, created, **kwargs):
         )
 
 
-@receiver(post_save, sender=models.Thread)
-def summarize_thread_post_save(sender, instance, created, **kwargs):
-    """Summarize a thread if its number of tokens is greater than 1000."""
-
-    try:
-        if instance.summary:
-            return
-        
-        # Count the tokens in the thread's messages
-        messages = get_messages_from_thread(instance)
-        token_count = count_tokens_in_messages(messages)
-
-        # Summarize the thread if the token count exceeds 1000
-        if token_count >= 400:
-            summary = summarize_thread(instance)
-            instance.summary = summary
-            instance.save(update_fields=["summary"])
-
-    # pylint: disable=broad-exception-caught
-    except Exception as e:
-        logger.exception(
-            "Error summarizing thread %s: %s",
-            instance.id,
-            e,
-        )
-
-
 @receiver(post_delete, sender=models.Message)
 def delete_message_from_index(sender, instance, **kwargs):
     """Remove a message from the index after it's deleted."""
