@@ -17,12 +17,3 @@ class Email:
     attachments: List[str] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
     summary: str = ""
-
-
-class Tag(Enum):
-    URGENT = 0
-    DEFERRED = 1
-    IRRELEVANT = 2
-
-    def __str__(self) -> str:
-        return self.name

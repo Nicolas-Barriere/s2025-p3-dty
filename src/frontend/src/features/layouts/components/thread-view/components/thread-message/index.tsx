@@ -82,7 +82,21 @@ export const ThreadMessage = forwardRef<HTMLElement, ThreadMessageProps>(
                         </div>
                         <div className="thread-message__header-column thread-message__header-column--right flex-row flex-align-center">
                             <div className="thread-message__metadata">
-                                <Badge>
+                                <Badge
+                                style={{
+                                    backgroundColor:
+                                        selectedThread?.tag === "URGENT"
+                                            ? "#dc3545" // red
+                                            : selectedThread?.tag === "IMPORTANT"
+                                            ? "#ff9800" // orange
+                                            : selectedThread?.tag === "POUR INFO"
+                                            ? "#ffc107" // yellow
+                                            : selectedThread?.tag === "SPAM"
+                                            ? "#007bff" // blue
+                                            : "#000", // black
+                                    color: "#fff"
+                                }}
+                            >
                                     {selectedThread?.tag}
                                 </Badge>
                                 {message.sent_at && (

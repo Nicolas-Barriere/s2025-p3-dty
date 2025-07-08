@@ -1,5 +1,4 @@
 import json
-from .email_class import Email, Tag
 from .tools import get_prompt
 import os
 from core.services.ai_services import AIService
@@ -13,7 +12,7 @@ def func(message):
     return "Bonjour Fabian!"
 
 
-def classify_single_emails(single_emails: str) -> dict[str, Tag | str]:
+def classify_single_emails(single_emails: str) -> dict[str, str | str]:
     """
     Takes a string representing a list of single emails. Each email must have an ID.
     The input can be any format comprehensible my the LLM, such as a JSON string or a list of Email objects.
@@ -32,25 +31,21 @@ def classify_single_emails(single_emails: str) -> dict[str, Tag | str]:
 
         try:
             id, end = line.split("---")
-            tag, explanation = end.split("(", maxsplit=1)
-            tag = tag.strip()
+            tags, explanation = end.split("(", maxsplit=1)
+            tags = tags.strip().split(",")
 
-            # Correct llm misspelling
-            if tag in ("DEFFERRED", "DEFFERED"):
-                tag = "DEFERRED"
-        except ValueError:
-            print("ERROR:", line, response, "END ERROR")
+        except Exception as e:
+            print("ERROR:", line, response, e, "END ERROR")
             raise ValueError(
                 "Line format is incorrect. Expected 'id: tag (explanation)' format."
             )
-        tag = Tag[tag]
         explanation = explanation.strip(")")
-        ans.append({"id": id.strip(), "tag": tag, "explanation": explanation})
+        ans.append({"id": id.strip(), "tags": tags, "explanation": explanation})
 
     return ans
 
 
-def classify_email_conversation(email_conversation: str) -> tuple[str, Tag, str]:
+def classify_email_conversation(email_conversation: str) -> tuple[str, str, str]:
     prompt_mails_conv = get_prompt("prompt_conv")
 
     return AIService().call_ai_api(prompt_mails_conv + email_conversation)
@@ -60,9 +55,10 @@ def save_classification(classification: list[dict]) -> None:
     """
     Save the classification results to a JSON file.
     """
-    # Tag class is not JSON serializable, convert to string:
+    print("Hello !")
+
     for email in classification:
-        email["tag"] = [email["tag"].name]
+        email["tag"] = [email["tag"]]
         email["explanation"] = [email["explanation"]]
 
     file_path = "data/classification_results.json"
