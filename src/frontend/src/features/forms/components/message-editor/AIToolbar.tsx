@@ -5,7 +5,7 @@ import { BlockNoteEditor } from "@blocknote/core";
 
 type AIToolbarProps = {
     threadId?: string;
-    editor?: BlockNoteEditor;
+    editor?: BlockNoteEditor<any, any, any>;
     getCurrentMessage?: () => Promise<string>; // Fonction pour récupérer le message actuel
 };
 
