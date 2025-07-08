@@ -89,25 +89,28 @@ export const ThreadItem = ({ thread }: ThreadItemProps) => {
                                     ))}
                                 </div>
                             )}
-                            {thread.tag && (
+                            {thread.tags.map((tag: string) => (
                             <Badge
+                                key={tag}
                                 style={{
                                     backgroundColor:
-                                        thread.tag === "URGENT"
+                                        tag === "URGENT"
                                             ? "#dc3545" // red
-                                            : thread.tag === "IMPORTANT"
+                                            : tag === "IMPORTANT"
                                             ? "#ff9800" // orange
-                                            : thread.tag === "POUR INFO"
+                                            : tag === "POUR INFO"
                                             ? "#ffc107" // yellow
-                                            : thread.tag === "SPAM"
+                                            : tag === "SPAM"
                                             ? "#007bff" // blue
                                             : "#000", // black
-                                    color: "#fff"
+                                    color: "#fff",
+                                    marginRight: "0.5em",
                                 }}
                             >
-                                {thread.tag}
+                                {tag}
                             </Badge>
-                        )}
+                        ))}
+                        
                         
                     </div>
                     </div>
