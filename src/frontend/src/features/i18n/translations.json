@@ -141,6 +141,7 @@
             "to": "To",
             "subject": "Subject",
             "text": "Contains the words",
+            "chatbot": "Ask the chatbot",
             "in": "In",
             "folder_all_messages": "All messages",
             "folder_sent": "Sent",
@@ -149,6 +150,14 @@
             "read": "Read",
             "unread": "Unread",
             "read_state": "Read state"
+          },
+          "chatbot": {
+            "placeholder": "Ask the chatbot to help you search...",
+            "send": "Send to chatbot",
+            "response": "Chatbot response",
+            "copy": "Copy query",
+            "copy_success": "Query copied!",
+            "examples_title": "Usage examples"
           }
         }
       },
@@ -354,10 +363,19 @@
             "to": "À",
             "subject": "Sujet",
             "text": "Contient les mots",
+            "chatbot": "Recherche avancée",
             "in": "Dans",
             "read": "Lu",
             "unread": "Non lu",
             "read_state": "État de lecture"
+          },
+          "chatbot": {
+            "placeholder": "Demandez au chatbot de vous aider à rechercher...",
+            "send": "Envoyer au chatbot",
+            "response": "Réponse du chatbot",
+            "copy": "Copier la requête",
+            "copy_success": "Requête copiée !",
+            "examples_title": "Exemples d'utilisation"
           }
         }
       },

@@ -1,33 +1,23 @@
 """
-Custom exceptions for the chatbot system.
+Custom exceptions for the chatbot module.
 """
 
 
 class ChatbotError(Exception):
-    """Base exception for chatbot operations."""
+    """Base exception for chatbot-related errors."""
     pass
 
 
 class AlbertAPIError(ChatbotError):
-    """Raised when Albert API requests fail."""
+    """Exception raised when Albert API requests fail."""
     pass
 
 
-class FunctionExecutionError(ChatbotError):
-    """Raised when function execution fails."""
+class ConfigurationError(ChatbotError):
+    """Exception raised when there are configuration issues."""
     pass
 
 
-class InvalidFunctionArgumentsError(ChatbotError):
-    """Raised when function arguments are invalid."""
-    pass
-
-
-class UserNotFoundError(ChatbotError):
-    """Raised when user is not found."""
-    pass
-
-
-class MailboxAccessError(ChatbotError):
-    """Raised when user doesn't have mailbox access."""
+class EmailRetrievalError(ChatbotError):
+    """Exception raised when email retrieval operations fail."""
     pass

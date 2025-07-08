@@ -28,6 +28,6 @@ class AlbertConfig:
     api_key: str = "sk-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0NTQsInRva2VuX2lkIjoxNjM5LCJleHBpcmVzX2F0IjoxNzgxNzMzNjAwfQ.CwVlU_n4uj6zsfxZV1AFLxfwqzd7puYzs4Agp8HhYxs"
     model: str = "albert-large"
     temperature: float = 0.3
-    max_tokens: int = 1000
+    max_tokens: int = 4000  # Increased for better response capacity
     timeout: int = 30
     max_iterations: int = 5

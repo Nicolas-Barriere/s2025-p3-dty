@@ -14,7 +14,7 @@ import { useEffect } from 'react';
 /**
  * Converts various content formats to BlockNote blocks array
  */
-const convertToBlockNoteFormat = (content: string): any[] | undefined => {
+const convertToBlockNoteFormat = (content: string): Array<Record<string, unknown>> | undefined => {
     if (!content) return undefined;
     
     try {

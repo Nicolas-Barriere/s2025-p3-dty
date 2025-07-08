@@ -3,6 +3,7 @@ import { Label } from "@gouvfr-lasuite/ui-kit";
 import { Button, Checkbox, Input, Select } from "@openfun/cunningham-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { ChatbotSearchInput } from "../chatbot-search-input";
 
 type SearchFiltersFormProps = {
     query: string;
@@ -65,6 +66,18 @@ export const SearchFiltersForm = ({ query, onChange }: SearchFiltersFormProps) =
                 label={t("search.filters.label.text")}
                 value={parsedQuery.text as string}
                 fullWidth
+            />
+            <ChatbotSearchInput
+                name="chatbot"
+                label={t("search.filters.label.chatbot")}
+                value={parsedQuery.chatbot as string}
+                fullWidth
+                onChange={(chatbotResult) => {
+                    const currentQuery = SearchHelper.parseSearchQuery(query);
+                    const newQuery = { ...currentQuery, ...chatbotResult };
+                    const queryString = SearchHelper.stringifySearchQuery(newQuery, i18n.language);
+                    onChange(queryString, true); // Submit immediately
+                }}
             />
             <Select
                 name="in"

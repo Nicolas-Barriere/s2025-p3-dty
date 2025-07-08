@@ -34,6 +34,13 @@ def parse_search_query(query: str) -> Dict[str, Any]:
     if not query:
         return result
 
+    # Handle "ids" parameter for direct message fetching
+    ids_match = re.search(r"ids=([\w,-]+)", query)
+    if ids_match:
+        ids_str = ids_match.group(1)
+        result["ids"] = [mail_id for mail_id in ids_str.split(",") if mail_id]
+        query = query.replace(ids_match.group(0), "").strip()
+
     # Define modifiers and their keywords
     modifiers = {
         # Value-taking modifiers
@@ -49,6 +56,7 @@ def parse_search_query(query: str) -> Dict[str, Any]:
         "is_starred": ["is:starred", "est:suivi"],
         "is_read_true": ["is:read", "est:lu"],
         "is_read_false": ["is:unread", "est:nonlu"],
+        "has_attachment": ["has:attachment", "a:piecesjointes"],
     }
 
     # Split modifiers into value-taking and flag modifiers
@@ -60,6 +68,7 @@ def parse_search_query(query: str) -> Dict[str, Any]:
         "is_starred": "is_starred",
         "is_read_true": "is_read",
         "is_read_false": "is_read",
+        "has_attachment": "has_attachment",
     }
     flag_values = {
         "in_trash": True,
@@ -68,6 +77,7 @@ def parse_search_query(query: str) -> Dict[str, Any]:
         "is_starred": True,
         "is_read_true": True,
         "is_read_false": False,
+        "has_attachment": True,
     }
 
     value_prefixes = {

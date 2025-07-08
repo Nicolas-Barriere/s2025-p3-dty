@@ -1,3 +1,0 @@
--mettre les prompts dans des fichiers à part
--la logique de creation de draft dans handle et pas dans generate
--parsing dans _format_multi_step_response

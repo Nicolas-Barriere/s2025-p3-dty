@@ -43,17 +43,22 @@ export const ChatWindow = () => {
             }))
 
 
-            const res = await fetchAPI<{ data: {success: boolean, response: string, type: string, function_used: string} }>("/mails/chatbot/", {
+            const res = await fetchAPI<{ 
+                success: boolean, 
+                response: string, 
+                type: string, 
+                function_used: string,
+                error?: string 
+            }>("/mails/chatbot/conversation/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     message: input,
                     conversation_history: conversationHistory
                 }),
-            }
-            )
+            })
 
-            const data = res.data;
+            const data = res;
 
             if (data.success && data.response) {
                 const botMsg: ChatMessage = {
@@ -65,9 +70,10 @@ export const ChatWindow = () => {
                 }
                 setMessages(prev => [...prev, botMsg])
             } else {
+                const errorMessage = data.error || "Je n'ai pas pu traiter votre message.";
                 const botMsg: ChatMessage = {
                     role: "bot",
-                    text: "Désolé, je n'ai pas pu traiter votre message.",
+                    text: errorMessage,
                     type: "error",
                     timestamp: new Date()
                 }

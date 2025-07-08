@@ -173,6 +173,12 @@ def search_threads(
                     {"term": {"is_unread": True}}
                 )
 
+        # Add has:attachment filter
+        if parsed_query.get("has_attachment"):
+            search_body["query"]["bool"]["filter"].append(
+                {"range": {"attachment_count": {"gt": 0}}}
+            )
+
         # Add mailbox filter if provided
         if mailbox_ids:
             search_body["query"]["bool"]["filter"].append(
