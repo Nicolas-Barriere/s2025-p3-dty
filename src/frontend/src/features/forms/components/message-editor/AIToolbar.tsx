@@ -60,7 +60,7 @@ const AIToolbar = ({ threadId, editor, getCurrentMessage }: AIToolbarProps) => {
                 {isPending ? (
                     <span className="material-icons">hourglass_empty</span>
                 ) : (
-                    <span className="material-icons">send</span>
+                    <span className="material-icons">check</span>
                 )}
             </button>
         </div>
