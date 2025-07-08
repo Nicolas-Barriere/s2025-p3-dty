@@ -49,6 +49,8 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
     const { selectedThread } = useMailboxContext();
     const { requestAIAnswer, isPending } = useAIAnswer(selectedThread?.id);
     const [message, setMessage] = useState<string | null>(null);
+    const aiToolbarRef = useRef<{ focus: () => void }>(null);
+
 
 
     // Fonction pour détecter la sélection
@@ -59,8 +61,6 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
             const rect = range.getBoundingClientRect();
             const editorRect = editorRef.current?.getBoundingClientRect();
             const text = selection.toString();
-            console.log("coucou");
-
             if (editorRect) {
                 setSelectedText(text);
             }
