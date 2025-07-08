@@ -135,15 +135,6 @@ def summarize_thread_post_save(sender, instance, created, **kwargs):
         )
 
 
-@receiver(post_save, sender=models.Thread)
-def print_save(sender, instance, created, **kwargs):
-    """Print a message when a thread is saved."""
-    if created:
-        print(f"Thread {instance.id} created with tag {instance.tag}")
-    else:
-        print(f"Thread {instance.id} updated with tag {instance.tag}")
-
-
 @receiver(post_delete, sender=models.Message)
 def delete_message_from_index(sender, instance, **kwargs):
     """Remove a message from the index after it's deleted."""

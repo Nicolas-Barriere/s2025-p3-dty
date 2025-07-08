@@ -1,16 +1,18 @@
 prompts:
   prompt_solo: |
     Actuellement nous sommes le lundi 23 juin 2025, il est 10h44.
-    Je vais t'envoyer un mail. Il faut que tu attribues un tag à ce mail:
+    Je vais t'envoyer un mail. Il faut que tu attribues un ou plusieurs TAGs à ce mail:
 
-    - 'URGENT': les mail URGENTS qui donnent une information sur un événement qui a lieu dans moins de 5 jours, et requierent une action/réponse de ta part en moins de 5 jours, ou une prise de connaissance de l'information en moins de 5 jours.
-    - 'DEFERRED': les mails contenant une information qui me concerne ou auxquels je dois répondre, mais que je peux me permettre de consulter dans 5 jours. L'envoyeur ne mentionne aucune deadline ou urgence, et ma non réponse n'a aucune conséquence grave.
-    - 'IRRELEVANT': les mails qui ne me concernent pas du tout, une information qui ne me regarde pas, ou des spams
-
+    - 'URGENT': nécessité de lire le mail ou d'y répondre dans moins de 2 jours maximum !
+    - 'IMPORTANT': le mail contient au moins une information importante
+    - 'REUNION': mail qui parle d'une réunion
+    - 'POUR INFO': contient une information, d'une importance moyenne
+    - 'SPAM': les mails qui sont des spams
 
     ##########
+    Tu peux attribuer autant de tags que te semble pertinent.
     Ta réponse doit être au format suivant (lorsque quelque chose est entre crochets, il faut que tu remplaces par la valeur, sans la mettre en gras, et sans les crochets):
-    [email id] --- [URGENT/DEFERRED/IRRELEVANT] ([explication de pourquoi tu as rangé le mail dans cette catégorie])
+    [email id] --- [TAG1,TAG2,TAG3...] ([explication de pourquoi tu as atribué ce(s) tag(s) à ce mail])
     ##########
 
     Réponds directement dans le format que je t'ai demandé, sans crochets, sans aucune saut de ligne, sans aucun texte supplémentaire du style "Voici la réponse:".

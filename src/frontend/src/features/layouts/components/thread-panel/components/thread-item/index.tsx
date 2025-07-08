@@ -89,9 +89,25 @@ export const ThreadItem = ({ thread }: ThreadItemProps) => {
                                     ))}
                                 </div>
                             )}
-                            <Badge>
-                            {thread.tag}
-                        </Badge>
+                            {thread.tag && (
+                            <Badge
+                                style={{
+                                    backgroundColor:
+                                        thread.tag === "URGENT"
+                                            ? "#dc3545" // red
+                                            : thread.tag === "IMPORTANT"
+                                            ? "#ff9800" // orange
+                                            : thread.tag === "POUR INFO"
+                                            ? "#ffc107" // yellow
+                                            : thread.tag === "SPAM"
+                                            ? "#007bff" // blue
+                                            : "#000", // black
+                                    color: "#fff"
+                                }}
+                            >
+                                {thread.tag}
+                            </Badge>
+                        )}
                         
                     </div>
                     </div>

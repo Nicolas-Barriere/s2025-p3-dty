@@ -1,4 +1,5 @@
 """Handles inbound email delivery logic: receiving messages and delivering to mailboxes."""
+
 # pylint: disable=broad-exception-caught
 
 import html
@@ -555,6 +556,17 @@ def deliver_inbound_message(  # pylint: disable=too-many-branches, too-many-stat
         _process_attachments(message, parsed_email["attachments"], mailbox)
 
     # --- 8. Final Updates --- #
+    print("BEGIN FABIAN")
+    try:
+        messages = get_messages_from_thread(thread)
+        classification = classify_single_emails(str(messages))
+        thread.tag = str(classification[0]["tags"])
+        thread.save(update_fields=["tag"])
+    except Exception as e:
+        logger.exception("ERREUR FABIAN: %s", e)
+
+    print("END FABIAN")
+
     try:
         # Update snippet using the new message's body if possible
         # (This assumes the subject was used for the initial snippet if body was empty)
@@ -573,12 +585,6 @@ def deliver_inbound_message(  # pylint: disable=too-many-branches, too-many-stat
         if new_snippet:
             thread.snippet = new_snippet
             thread.save(update_fields=["snippet"])
-
-        # Tag
-        messages = get_messages_from_thread(thread)
-        classification = classify_single_emails(str(messages))
-        thread.tag = classification[0]["tag"].name
-        thread.save(update_fields=["tag"])
 
     except Exception as e:
         logger.exception(

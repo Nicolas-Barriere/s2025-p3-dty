@@ -60,7 +60,7 @@ export const MAILBOX_FOLDERS: Folder[] = [
     {
         id: "urgent",
         name: "folders.urgent",
-        icon: "favorite",
+        icon: "priority_high",
         filter: {
             has_urgent: "1",
         },
