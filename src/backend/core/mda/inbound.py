@@ -487,7 +487,7 @@ def deliver_inbound_message(  # pylint: disable=too-many-branches, too-many-stat
         token_count = count_tokens_in_messages(messages)
     
         # Only summarize if the thread has enough content
-        if not thread.summary and (token_count >= 400 or len(messages) >= 3):
+        if token_count >= 400 or len(messages) >= 3:
             new_summary = summarize_thread(thread)
             if new_summary:
                 thread.summary = new_summary
