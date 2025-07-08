@@ -1,6 +1,10 @@
 import { useThreadsGenerateAnswerCreate } from "@/features/api/gen/threads/threads";
 import { BlockNoteEditor } from "@blocknote/core";
 
+interface AIAnswerResponse {
+    answer: string;
+}
+
 export const useAIAnswer = (threadId?: string) => {
     const { mutateAsync: generateAnswer, isPending } = useThreadsGenerateAnswerCreate();
 
@@ -9,7 +13,8 @@ export const useAIAnswer = (threadId?: string) => {
             id: threadId ?? "",
             data: { context }
         });
-        const answer = response.data.answer || "";
+        const responseData = response.data as AIAnswerResponse;
+        const answer = responseData.answer || "";
 
         if (editor) {
             const blocks = await editor.tryParseMarkdownToBlocks(answer);
