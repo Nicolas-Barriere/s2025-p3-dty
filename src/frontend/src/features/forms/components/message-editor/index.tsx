@@ -36,9 +36,10 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
     const [selectedText, setSelectedText] = useState<string | null>(null);
     const [showAIToolbar, setShowAIToolbar] = useState(true);
     const { selectedThread } = useMailboxContext();
-    const { requestAIAnswer, isPending } = useAIAnswer(selectedThread?.id);
     const [message, setMessage] = useState<string | null>(null);
     const aiToolbarRef = useRef<{ focus: () => void }>(null);
+    const [showActionButtons, setShowActionButtons] = useState(false);
+    const { requestAIAnswer, isPending, revertChanges, keepChanges, hasOriginalContent } = useAIAnswer(selectedThread?.id);
 
 
 
@@ -140,6 +141,29 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
         return markdown;
     };
 
+    const handleRevert = () => {
+        revertChanges(editor);
+        setShowActionButtons(false);
+    };
+
+    const handleKeep = () => {
+        keepChanges(editor);
+        setShowActionButtons(false);
+    };
+
+    const handleRetry = () => {
+        // Pour l'instant, juste masquer les boutons d'action et montrer l'input
+        setShowActionButtons(false);
+    };
+
+    const handleAIResponse = async (context: string) => {
+        const result = await requestAIAnswer(context, editor);
+        // Afficher les boutons d'action uniquement si des modifications ont été appliquées
+        if (result.hasChanges) {
+            setShowActionButtons(true);
+        }
+    };
+
     return (
         <Field {...props}>
             <BlockNoteView
@@ -151,7 +175,19 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
                 formattingToolbar={false}
                 onChange={handleChange}
             >
-                {showAIToolbar && <AIToolbar ref={aiToolbarRef} threadId={selectedThread?.id} editor={editor} getCurrentMessage={getCurrentMessage} />}
+                {showAIToolbar && (
+                    <AIToolbar
+                        ref={aiToolbarRef}
+                        threadId={selectedThread?.id}
+                        editor={editor}
+                        getCurrentMessage={getCurrentMessage}
+                        onRevert={handleRevert}
+                        onKeep={handleKeep}
+                        onRetry={handleRetry}
+                        showActionButtons={showActionButtons}
+                        onAIResponse={handleAIResponse}
+                    />
+                )}
                 <MessageEditorToolbar onAIClick={toggleAIToolbar}
                     active={showAIToolbar} />
             </BlockNoteView>

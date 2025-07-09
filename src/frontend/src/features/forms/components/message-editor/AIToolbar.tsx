@@ -7,9 +7,23 @@ type AIToolbarProps = {
     threadId?: string;
     editor?: BlockNoteEditor<any, any, any>;
     getCurrentMessage?: () => Promise<string>; // Fonction pour récupérer le message actuel
+    onRevert?: () => void;
+    onKeep?: () => void;
+    onRetry?: () => void;
+    showActionButtons: boolean;
+    onAIResponse?: (context: string) => Promise<void>;
 };
 
-const AIToolbar = forwardRef(({ threadId, editor, getCurrentMessage }: AIToolbarProps, ref) => {
+const AIToolbar = forwardRef(({
+    threadId,
+    editor,
+    getCurrentMessage,
+    onRevert,
+    onKeep,
+    onRetry,
+    showActionButtons = false,
+    onAIResponse
+}: AIToolbarProps, ref) => {
     const [instruction, setInstruction] = useState("");
     const { requestAIAnswer, isPending } = useAIAnswer(threadId);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +54,11 @@ const AIToolbar = forwardRef(({ threadId, editor, getCurrentMessage }: AIToolbar
             if (currentMessage) {
                 context += `\n\nVoici le brouillon que l'utilisateur est en train de rédiger:\n${currentMessage}. Notamment essaye de partir de ce brouillon pour ta réponse`;
             }
-            await requestAIAnswer(context, editor);
+            if (onAIResponse) {
+                await onAIResponse(context);
+            } else {
+                await requestAIAnswer(context, editor);
+            }
             setInstruction(""); // Clear input after sending
         }
     };
@@ -54,28 +72,62 @@ const AIToolbar = forwardRef(({ threadId, editor, getCurrentMessage }: AIToolbar
 
     return (
         <div className="ai-toolbar-extension">
-            <input
-                ref={inputRef}
-                type="text"
-                value={instruction}
-                onChange={e => setInstruction(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Consigne IA…"
-                className="ai-toolbar-input"
-                disabled={isPending}
-            />
-            <button
-                type="button"
-                className="ai-toolbar-send"
-                onClick={handleSend}
-                disabled={isPending || !instruction.trim()}
-            >
-                {isPending ? (
-                    <span className="material-icons">hourglass_empty</span>
-                ) : (
-                    <span className="material-icons">check</span>
-                )}
-            </button>
+            {showActionButtons ? (
+                <div className="ai-action-buttons">
+                    <button
+                        type="button"
+                        className="ai-action-button revert"
+                        onClick={onRevert}
+                        title="Annuler les modifications"
+                    >
+                        <span className="material-icons">undo</span>
+                        <span>Annuler</span>
+                    </button>
+                    <button
+                        type="button"
+                        className="ai-action-button keep"
+                        onClick={onKeep}
+                        title="Conserver les modifications"
+                    >
+                        <span className="material-icons">check</span>
+                        <span>Accepter</span>
+                    </button>
+                    <button
+                        type="button"
+                        className="ai-action-button retry"
+                        onClick={onRetry}
+                        title="Reformuler"
+                    >
+                        <span className="material-icons">refresh</span>
+                        <span>Reformuler</span>
+                    </button>
+                </div>
+            ) : (
+                <>
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={instruction}
+                        onChange={e => setInstruction(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Consigne IA…"
+                        className="ai-toolbar-input"
+                        disabled={isPending}
+                    />
+                    <button
+                        type="button"
+                        className="ai-toolbar-send"
+                        onClick={handleSend}
+                        disabled={isPending || !instruction.trim()}
+                    >
+                        {isPending ? (
+                            <span className="material-icons">hourglass_empty</span>
+                        ) : (
+                            <span className="material-icons">check</span>
+                        )}
+                    </button>
+                </>
+            )}
         </div>
     );
 });
