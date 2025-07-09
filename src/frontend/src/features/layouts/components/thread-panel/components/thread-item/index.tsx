@@ -71,6 +71,7 @@ export const ThreadItem = ({ thread }: ThreadItemProps) => {
                                         {t('thread_message.draft')}
                                     </Badge>
                                 )}
+                                
                         {/* {thread.has_attachments ? (
                                 <span className="thread-item__metadata-attachments">
                                     <Tooltip placement="bottom" content={t('tooltips.has_attachments')}>
@@ -78,17 +79,8 @@ export const ThreadItem = ({ thread }: ThreadItemProps) => {
                                     </Tooltip>
                                 </span>
                             ) : null} */}
+                            
                             </div>
-                        </div>
-                        <div className="thread-item__content">
-                            <p className="thread-item__subject">{thread.subject}</p>
-                            {thread.labels.length > 0 && (
-                                <div className="thread-item__labels">
-                                    {thread.labels.map((label) => (
-                                        <LabelBadge key={label.id} label={label} />
-                                    ))}
-                                </div>
-                            )}
                             {thread.tags.map((tag: string) => (
                             <Badge
                                 key={tag}
@@ -110,6 +102,16 @@ export const ThreadItem = ({ thread }: ThreadItemProps) => {
                                 {tag}
                             </Badge>
                         ))}
+                        </div>
+                        <div className="thread-item__content">
+                            <p className="thread-item__subject">{thread.subject}</p>
+                            {thread.labels.length > 0 && (
+                                <div className="thread-item__labels">
+                                    {thread.labels.map((label) => (
+                                        <LabelBadge key={label.id} label={label} />
+                                    ))}
+                                </div>
+                            )}
                         
                         
                     </div>
