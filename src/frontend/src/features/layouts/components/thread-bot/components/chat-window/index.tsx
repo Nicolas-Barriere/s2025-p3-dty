@@ -49,7 +49,7 @@ export const ChatWindow = () => {
                 type: string, 
                 function_used: string,
                 error?: string 
-            }>("/mails/chatbot/conversation/", {
+            }>("/api/v1.0/chatbot/conversation/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

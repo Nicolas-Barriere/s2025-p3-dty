@@ -114,7 +114,12 @@ class ThreadViewSet(
                 location=OpenApiParameter.QUERY,
                 description="Search threads by content (subject, sender, recipients, message body).",
             ),
-
+            OpenApiParameter(
+                name="message_ids",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Filter threads by specific message IDs (comma-separated).",
+            ),
             OpenApiParameter(
                 name="has_trashed",
                 type=OpenApiTypes.INT,
@@ -287,7 +292,12 @@ class ThreadViewSet(
                 location=OpenApiParameter.QUERY,
                 description="Search threads by content (subject, sender, recipients, message body).",
             ),
-
+            OpenApiParameter(
+                name="message_ids",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Filter threads by specific message IDs (comma-separated).",
+            ),
             OpenApiParameter(
                 name="has_trashed",
                 type=OpenApiTypes.INT,
@@ -335,6 +345,29 @@ class ThreadViewSet(
     def list(self, request, *args, **kwargs):
         """List threads with optional search functionality."""
         search_query = request.query_params.get("search", "").strip()
+        message_ids = request.query_params.get("message_ids", "").strip()
+
+        # Handle message_ids filtering (for RAG search results)
+        if message_ids:
+            # Split comma-separated message IDs
+            message_id_list = [mid.strip() for mid in message_ids.split(",") if mid.strip()]
+            
+            if message_id_list:
+                # Get threads that contain any of these messages
+                filtered_threads = models.Thread.objects.filter(
+                    messages__id__in=message_id_list,
+                    # Ensure user has access to these threads
+                    accesses__mailbox__accesses__user=request.user
+                ).distinct().order_by("-messaged_at", "-created_at")
+                
+                # Use pagination
+                page = self.paginate_queryset(filtered_threads)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True)
+                    return self.get_paginated_response(serializer.data)
+                
+                serializer = self.get_serializer(filtered_threads, many=True)
+                return drf.response.Response(serializer.data)
 
         # If search is provided and Elasticsearch is available, use it
         if search_query and hasattr(settings, "ELASTICSEARCH_HOSTS"):

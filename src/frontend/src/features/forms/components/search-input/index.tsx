@@ -25,7 +25,7 @@ export const SearchInput = () => {
         handleSearch(query, submit);
         if (submit) setShowFilters(false);
     }
-
+    
     /**
      * Each time the user types, we update the URL with the new search query.
      */

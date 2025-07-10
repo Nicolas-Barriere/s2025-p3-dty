@@ -3,7 +3,20 @@ import { Label } from "@gouvfr-lasuite/ui-kit";
 import { Button, Checkbox, Input, Select } from "@openfun/cunningham-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ChatbotSearchInput } from "../chatbot-search-input";
+import { fetchAPI } from "@/features/api/fetch-api";
+
+/**
+ * SearchFiltersForm component for email search with chatbot integration
+ * 
+ * This component provides a form interface for filtering emails with various criteria.
+ * It includes special handling for the ChatbotSearchInput component to enable intelligent search.
+ * 
+ * Key features:
+ * 1. Handles traditional email filtering (from, to, subject, text)
+ * 2. Special handling for message_ids from RAG search results
+ * 3. Directly updates URL and reloads when RAG results are available
+ * 4. Converts form fields into a query string for the mailbox search API
+ */
 
 type SearchFiltersFormProps = {
     query: string;
@@ -14,14 +27,47 @@ export const SearchFiltersForm = ({ query, onChange }: SearchFiltersFormProps) =
     const { t, i18n } = useTranslation();
     const formRef = useRef<HTMLFormElement>(null);
 
-    const updateQuery = (submit: boolean) => {
+    const updateQuery = async (submit: boolean) => {
         const formData = new FormData(formRef.current as HTMLFormElement);
+        const chatbotQuery = formData.get('chatbot');
+        // If chatbot field is filled, use Albert API for advanced search
+        if (submit && chatbotQuery && String(chatbotQuery).trim() !== "") {
+            // Call Albert API
+            const intelligentSearchRes = await fetchAPI<{ success: boolean; results?: Array<{ id: string }>; error?: string; }>(
+                "/api/v1.0/chatbot/intelligent-search/",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query: chatbotQuery }),
+                }
+            );
+            const actualResponse = (intelligentSearchRes as any)?.data || intelligentSearchRes;
+            if (actualResponse?.success && actualResponse?.results && actualResponse.results.length > 0) {
+                // Build message_ids param and update URL
+                const mailIds = actualResponse.results.map((r: any) => r.id).join(',');
+                const searchUrl = new URL(window.location.href);
+                searchUrl.searchParams.delete('text');
+                searchUrl.searchParams.delete('search');
+                searchUrl.searchParams.set('message_ids', mailIds);
+                window.history.pushState({}, '', searchUrl.toString());
+                window.location.reload();
+                return;
+            } else {
+                // Show error or fallback to classic search
+                alert(actualResponse?.error || "Aucun résultat trouvé par le chatbot.");
+                return;
+            }
+        }
+        // Otherwise, classic search
         const query = SearchHelper.serializeSearchFormData(formData, i18n.language);
         onChange(query, submit);
         formRef.current?.reset();
     }
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => updateQuery(event.type === 'submit');
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        updateQuery(true);
+    };
     const handleChange = () => updateQuery(false);
 
     const handleReset = () => {
@@ -67,17 +113,11 @@ export const SearchFiltersForm = ({ query, onChange }: SearchFiltersFormProps) =
                 value={parsedQuery.text as string}
                 fullWidth
             />
-            <ChatbotSearchInput
+            <Input
                 name="chatbot"
                 label={t("search.filters.label.chatbot")}
                 value={parsedQuery.chatbot as string}
                 fullWidth
-                onChange={(chatbotResult) => {
-                    const currentQuery = SearchHelper.parseSearchQuery(query);
-                    const newQuery = { ...currentQuery, ...chatbotResult };
-                    const queryString = SearchHelper.stringifySearchQuery(newQuery, i18n.language);
-                    onChange(queryString, true); // Submit immediately
-                }}
             />
             <Select
                 name="in"

@@ -8,18 +8,6 @@ from dataclasses import dataclass
 from enum import Enum
 
 
-class MailClassification(Enum):
-    """Mail classification categories."""
-    URGENT = "urgent"
-    NORMAL = "normal"
-    LOW_PRIORITY = "low_priority"
-    SPAM = "spam"
-    INFORMATION = "information"
-    REQUEST = "request"
-    COMPLAINT = "complaint"
-    SUPPORT = "support"
-
-
 @dataclass
 class AlbertConfig:
     """Configuration for Albert API."""
@@ -31,3 +19,7 @@ class AlbertConfig:
     max_tokens: int = 4000  # Increased for better response capacity
     timeout: int = 30
     max_iterations: int = 5
+    # RAG-specific settings
+    max_emails_per_batch: int = 50  # Limit emails processed per request
+    max_email_content_length: int = 10000  # Limit email content size
+    batch_upload_delay: float = 1.0  # Delay between batch uploads

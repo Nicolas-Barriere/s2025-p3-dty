@@ -11,6 +11,18 @@ type ChatbotSearchInputProps = {
     onChange?: (value: { [key: string]: string }) => void;
 }
 
+/**
+ * ChatbotSearchInput component for intelligent email search
+ * 
+ * This component provides an interface for users to search their emails using natural language queries.
+ * It connects to the Albert API for RAG (Retrieval Augmented Generation) search capabilities.
+ * 
+ * The component:
+ * 1. Sends user queries to the /api/v1.0/chatbot/intelligent-search/ endpoint
+ * 2. Displays a summary of search results to the user
+ * 3. Triggers a mailbox search with the message IDs returned from the RAG system
+ * 4. Uses the message_ids parameter for direct mailbox filtering without polluting the text search
+ */
 export const ChatbotSearchInput = ({ 
     name, 
     label, 
@@ -46,7 +58,7 @@ export const ChatbotSearchInput = ({
                 total_emails?: number;
                 query?: string;
                 error?: string;
-            }>("/mails/chatbot/intelligent-search/", {
+            }>("/api/v1.0/chatbot/intelligent-search/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -54,19 +66,28 @@ export const ChatbotSearchInput = ({
                 }),
             });
 
-            if (intelligentSearchRes.success && intelligentSearchRes.results && intelligentSearchRes.results.length > 0) {
+            // The fetchAPI wraps the response in { status, data, headers }
+            // So we need to extract the actual data
+            const actualResponse = (intelligentSearchRes as any)?.data || intelligentSearchRes;
+            
+            // Minimal logs for troubleshooting - conditional for production
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('RAG search:', actualResponse?.success ? 'successful' : 'failed');
+            }
+
+            if (actualResponse?.success && actualResponse?.results && actualResponse.results.length > 0) {
                 // We have intelligent search results - format them nicely
-                const resultsCount = intelligentSearchRes.total_matches || intelligentSearchRes.results.length;
-                const totalEmails = intelligentSearchRes.total_emails || 0;
+                const resultsCount = actualResponse.total_matches || actualResponse.results.length;
+                const totalEmails = actualResponse.total_emails || 0;
                 
                 let responseText = `🔍 Recherche intelligente: ${resultsCount} email(s) pertinent(s) trouvé(s) sur ${totalEmails} emails analysés.\n\n`;
                 
-                if (intelligentSearchRes.search_summary) {
-                    responseText += intelligentSearchRes.search_summary;
+                if (actualResponse.search_summary) {
+                    responseText += actualResponse.search_summary;
                 } else {
                     // If no summary, create one from the results
                     responseText += "Voici les emails les plus pertinents trouvés :\n";
-                    intelligentSearchRes.results.slice(0, 3).forEach((result, index) => {
+                    actualResponse.results.slice(0, 3).forEach((result: any, index: number) => {
                         responseText += `\n${index + 1}. ${result.subject || 'Email sans objet'}\n`;
                         if (result.from) responseText += `   De: ${result.from}\n`;
                         if (result.date && typeof result.date === 'string') responseText += `   Date: ${new Date(result.date).toLocaleDateString('fr-FR')}\n`;
@@ -78,14 +99,21 @@ export const ChatbotSearchInput = ({
 
                 // Trigger mailbox search with the received email IDs
                 if (onChange) {
-                    const mailIds = intelligentSearchRes.results.map(r => r.id).join(',');
+                    const mailIds = actualResponse.results.map((r: any) => r.id).join(',');
+                    
                     if (mailIds) {
-                        onChange({ ids: mailIds });
+                        // Use message_ids parameter for direct search instead of text search
+                        // Only pass the message_ids without any text to avoid populating the search box
+                        onChange({ message_ids: mailIds });
+                    } else {
+                        console.error('No email IDs found in search results');
                     }
+                } else {
+                    console.error('No onChange callback provided');
                 }
             } else {
                 // If intelligent search doesn't return results, show appropriate message
-                const errorMessage = intelligentSearchRes.error || "Aucun résultat trouvé";
+                const errorMessage = actualResponse?.error || "Aucun résultat trouvé";
                 setResponse(`Désolé, je n'ai pas pu trouver d'emails correspondants: ${errorMessage}`);
             }
         } catch (error) {
@@ -96,7 +124,7 @@ export const ChatbotSearchInput = ({
         }
     }, [input, isLoading, onChange]);
 
-    const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             event.preventDefault();
             sendToChatbot();
@@ -115,7 +143,7 @@ export const ChatbotSearchInput = ({
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyDown}
                     placeholder={t("search.filters.chatbot.placeholder", "Demandez au chatbot de vous aider à rechercher...")}
                     className={styles.input}
                     disabled={isLoading}

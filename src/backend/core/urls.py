@@ -118,4 +118,8 @@ urlpatterns = [
         ImportViewSet.as_view({"post": "import_imap"}),
         name="import-imap",
     ),
+    path(
+        f"api/{settings.API_VERSION}/chatbot/",
+        include("chatbot.urls"),
+    ),
 ]

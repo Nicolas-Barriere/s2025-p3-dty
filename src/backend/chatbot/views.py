@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .chatbot import get_chatbot
+from .rag import RAGSystem
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +140,7 @@ def chatbot_status_api(request):
     Returns basic information about the chatbot system.
     """
     try:
-        user_id = str(request.user.id)
+        user_id = str(request.user.id) if request.user.is_authenticated else "anonymous"
         
         return Response({
             'success': True,

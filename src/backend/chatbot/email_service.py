@@ -19,15 +19,20 @@ import re
 import html
 import time
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Set
 from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
+
 from core import models
+from .rag import RAGSystem
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+# RAG system instance to be used for embedding and retrieval
+rag_system = RAGSystem()
 
 
 class EmailService:
@@ -478,8 +483,12 @@ class EmailService:
         max_results: int = 10
     ) -> Dict[str, Any]:
         """
-        Perform intelligent email search using Albert API with optimized email summaries.
-        Uses a more efficient approach by sending email summaries instead of full content.
+        Perform intelligent email search using RAG system with embeddings.
+        This method:
+        1. Retrieves the most recent 500 emails
+        2. Checks if emails are already indexed in the RAG system
+        3. Indexes any new emails
+        4. Uses the query to retrieve the most relevant emails
         
         Args:
             user_id: UUID of the user
@@ -491,7 +500,7 @@ class EmailService:
             Dictionary containing search results and metadata
         """
         search_start_time = time.time()
-        self.logger.info(f"Starting intelligent email search - user_id: {user_id}, query: '{user_query[:100]}...'")
+        self.logger.info(f"Starting intelligent email search with RAG - user_id: {user_id}, query: '{user_query[:100]}...'")
         
         try:
             # Step 1: Get all email context
@@ -523,148 +532,286 @@ class EmailService:
                     "processing_time": time.time() - search_start_time
                 }
             
-            # Step 2: Create optimized email summaries for AI (limit content size)
-            self.logger.info("Step 2: Creating optimized email summaries for AI")
+            # Step 2: Check if RAG collection exists and create if necessary
+            if not rag_system.collection_id:
+                self.logger.info("Step 2: Creating new RAG collection for embeddings")
+                rag_system.create_collection()
+                self.logger.info(f"Step 2 completed: Created RAG collection: {rag_system.collection_id}")
+            else:
+                self.logger.info(f"Step 2: Using existing RAG collection: {rag_system.collection_id}")
             
-            emails_for_ai = []
-            for email in context_emails:
-                # Truncate content to avoid huge payloads
-                content = email.get('content', '')
-                content_preview = content[:300] if content else ''  # Limit to 300 chars
+            # Step 3: Prepare emails for indexing - format for RAG system
+            self.logger.info("Step 3: Preparing emails for RAG indexing")
+            emails_for_rag = []
+            
+            # Limit the number of emails to avoid overwhelming the Albert API
+            max_emails_to_index = min(rag_system.config.max_emails_per_batch, len(context_emails))
+            emails_to_process = context_emails[:max_emails_to_index]
+            
+            self.logger.info(f"Processing {len(emails_to_process)} emails out of {len(context_emails)} available")
+            
+            # Keep track of email IDs to ensure we're only processing unique emails
+            for email in emails_to_process:
+                email_id = email['id']
                 
-                email_summary = {
-                    'id': email['id'],
-                    'subject': email.get('subject', '')[:200],  # Limit subject length
-                    'content_preview': content_preview,
-                    'sender_name': email.get('sender', {}).get('name', '')[:100],
-                    'sender_email': email.get('sender', {}).get('email', ''),
-                    'sent_at': email.get('sent_at', ''),
-                    'attachment_count': email.get('attachment_count', 0),
-                    'has_attachments': email.get('attachment_count', 0) > 0,
-                    'attachment_names': [att.get('name', '')[:50] for att in email.get('attachments', [])][:3],  # First 3 attachment names
-                    'is_unread': email.get('flags', {}).get('is_unread', False),
-                    'is_starred': email.get('flags', {}).get('is_starred', False),
-                }
-                emails_for_ai.append(email_summary)
-            
-            # Step 3: Create a more concise search prompt
-            self.logger.info("Step 3: Creating optimized AI search prompt")
-            
-            search_prompt = f"""Find relevant emails for this query: "{user_query}"
-
-I have {len(emails_for_ai)} emails to search. Here are email summaries:
-
-{chr(10).join([f"ID: {email['id']}, Subject: {email['subject']}, From: {email['sender_name']} <{email['sender_email']}>, Attachments: {email['attachment_count']}, Content: {email['content_preview'][:100]}..." for email in emails_for_ai[:50]])}
-
-{"[Note: Showing first 50 of " + str(len(emails_for_ai)) + " emails]" if len(emails_for_ai) > 50 else ""}
-
-Return a JSON array of relevant email IDs with relevance scores:
-[{{"id": "email_id", "relevance_score": 0.95, "reason": "why relevant"}}]
-
-Instructions:
-- For attachment queries: prioritize emails with attachment_count > 0
-- For sender queries: match sender_name or sender_email
-- For content queries: search subject and content_preview
-- Maximum {max_results} results
-- Only genuinely relevant emails
-- Return empty array [] if no relevant emails"""
-            
-            prompt_length = len(search_prompt)
-            self.logger.info(f"Step 3 completed: Prepared optimized AI prompt (length: {prompt_length} chars)")
-            
-            # Step 4: Call Albert API with smaller payload
-            self.logger.info("Step 4: Calling Albert API with optimized prompt")
-            ai_start_time = time.time()
-            
-            try:
-                self.logger.debug("Calling Albert API...")
+                # Create a complete email document for RAG indexing
+                # We include the subject in the body to ensure it's part of the embedding
+                full_content = f"Subject: {email.get('subject', '')}\n\n"
+                full_content += f"From: {email.get('sender', {}).get('name', '')} <{email.get('sender', {}).get('email', '')}>\n"
                 
-                # Format the prompt as messages for the API
-                messages = [
-                    {
-                        "role": "user",
-                        "content": search_prompt
+                # Add recipients information
+                recipients = email.get('recipients', {})
+                if recipients.get('to'):
+                    to_emails = [f"{r.get('name', '')} <{r.get('email', '')}>".strip() for r in recipients.get('to', [])]
+                    full_content += f"To: {', '.join(to_emails)}\n"
+                
+                if recipients.get('cc'):
+                    cc_emails = [f"{r.get('name', '')} <{r.get('email', '')}>".strip() for r in recipients.get('cc', [])]
+                    full_content += f"CC: {', '.join(cc_emails)}\n"
+                
+                # Add date information
+                full_content += f"Date: {email.get('sent_at', '')}\n\n"
+                
+                # Add the actual content
+                full_content += email.get('content', '')
+                
+                # Add attachment information
+                if email.get('attachment_count', 0) > 0:
+                    attachment_names = [att.get('name', '') for att in email.get('attachments', [])]
+                    full_content += f"\n\nAttachments: {', '.join(attachment_names)}"
+                
+                # Add to the RAG indexing list with metadata
+                emails_for_rag.append({
+                    'id': email_id,
+                    'body': full_content,
+                    'metadata': {
+                        'subject': email.get('subject', ''),
+                        'sender': email.get('sender', {}).get('email', ''),
+                        'date': email.get('sent_at', ''),
+                        'thread_id': email.get('thread_id', '')
                     }
-                ]
+                })
+            
+            self.logger.info(f"Step 3 completed: Prepared {len(emails_for_rag)} emails for RAG indexing")
+            
+            # Step 4: Index emails in RAG system
+            self.logger.info("Step 4: Indexing emails in RAG system")
+            try:
+                rag_system.index_emails(emails_for_rag)
+                self.logger.info(f"Step 4 completed: Successfully indexed {len(emails_for_rag)} emails in RAG system")
+            except Exception as index_error:
+                self.logger.error(f"Failed to index emails in RAG system: {index_error}", exc_info=True)
                 
-                ai_response = api_client.make_request(messages=messages)
-                ai_processing_time = time.time() - ai_start_time
-                
-                self.logger.info(f"Albert API call completed in {ai_processing_time:.2f}s")
-                self.logger.info(f"Albert API response type: {type(ai_response)}")
-                self.logger.info(f"Albert API response keys: {list(ai_response.keys()) if isinstance(ai_response, dict) else 'Not a dict'}")
-                self.logger.info(f"Albert API response: {ai_response}")
-                
-                # Extract content from API response
-                if ai_response and ai_response.get("choices") and len(ai_response["choices"]) > 0:
-                    ai_content = ai_response["choices"][0].get("message", {}).get("content", "")
-                    self.logger.info(f"AI response received (length: {len(ai_content)} chars)")
-                    self.logger.info(f"AI response content preview: {ai_content[:1000]}")  # Log full content preview at INFO level
-                    
-                    # Step 5: Parse AI response
-                    self.logger.info("Step 5: Parsing AI response")
-                    self.logger.info(f"Full AI content to parse: {ai_content}")  # Log full content for debugging
-                    parsed_results = self.parse_ai_response_for_email_search(ai_content, context_emails)
-                    self.logger.info(f"Parsing completed: Found {len(parsed_results) if parsed_results else 0} results")
-                    
-                    if parsed_results:
-                        search_time = time.time() - search_start_time
-                        self.logger.info(f"AI search successful: Found {len(parsed_results)} relevant emails in {search_time:.2f}s")
-                        return {
-                            "success": True,
-                            "results": parsed_results,
-                            "search_method": "ai_optimized",
-                            "total_searched": len(context_emails),
-                            "emails_sent_to_ai": min(50, len(context_emails)),
-                            "ai_processing_time": ai_processing_time,
-                            "processing_time": search_time
-                        }
-                    else:
-                        self.logger.warning("AI response was parsed but returned no results")
-                        return {
-                            "success": True,
-                            "results": [],
-                            "message": "No relevant emails found",
-                            "search_method": "ai_optimized",
-                            "total_searched": len(context_emails),
-                            "emails_sent_to_ai": min(50, len(context_emails)),
-                            "ai_processing_time": ai_processing_time,
-                            "processing_time": time.time() - search_start_time
-                        }
-                else:
-                    self.logger.warning(f"Albert API returned no valid response structure")
-                    self.logger.warning(f"Raw Albert API response: {ai_response}")
-                    self.logger.warning(f"Response type: {type(ai_response)}")
-                    if ai_response:
-                        self.logger.warning(f"Response keys: {list(ai_response.keys()) if isinstance(ai_response, dict) else 'Not a dict'}")
-                        if isinstance(ai_response, dict):
-                            self.logger.warning(f"Choices field: {ai_response.get('choices', 'No choices field')}")
-                            if 'choices' in ai_response and ai_response['choices']:
-                                self.logger.warning(f"First choice: {ai_response['choices'][0] if len(ai_response['choices']) > 0 else 'No first choice'}")
+                # Check if this is a complete failure or partial failure
+                if "Failed to index any emails" in str(index_error):
+                    # Complete failure - return error
                     return {
                         "success": False,
-                        "error": "Albert API returned no valid response",
+                        "error": f"Failed to index emails: {str(index_error)}",
                         "results": [],
-                        "search_method": "ai_error",
+                        "search_method": "rag_error",
                         "total_searched": len(context_emails),
                         "processing_time": time.time() - search_start_time
                     }
+                else:
+                    # Partial failure - log warning but continue
+                    self.logger.warning(f"Some emails failed to index, but continuing with partial collection: {index_error}")
+                    # Continue to query step
+            
+            # Step 5: Query the RAG system with the user's query
+            self.logger.info(f"Step 5: Querying RAG system with user query: '{user_query}'")
+            try:
+                query_start_time = time.time()
+                relevant_contents = rag_system.query_emails(user_query, k=max_results)
+                query_time = time.time() - query_start_time
+                
+                self.logger.info(f"Step 5 completed: Retrieved {len(relevant_contents)} relevant emails in {query_time:.2f}s")
+                
+                if not relevant_contents:
+                    self.logger.warning("RAG query returned no results")
+                    return {
+                        "success": True,
+                        "results": [],
+                        "message": "No relevant emails found",
+                        "search_method": "rag",
+                        "total_searched": len(context_emails),
+                        "processing_time": time.time() - search_start_time
+                    }
+                
+                # Step 6: Match RAG results to original emails and format for frontend
+                self.logger.info("Step 6: Matching RAG results to original emails")
+                
+                # Create email lookup by ID
+                email_lookup = {email['id']: email for email in context_emails}
+                
+                # Format results for frontend
+                formatted_results = []
+                
+                for i, result in enumerate(relevant_contents):
+                    content = result.get("content", "")
+                    metadata = result.get("metadata", {})
+                    document_name = metadata.get("document_name", "")
+                    score = result.get("score", 0.0)
                     
-            except Exception as ai_error:
-                ai_processing_time = time.time() - ai_start_time
-                self.logger.error(f"Albert API call failed after {ai_processing_time:.2f}s: {ai_error}", exc_info=True)
+                    matched_email_id = None
+                    
+                    # Method 1: Extract email ID from document filename
+                    # The filename format is email_{i}_{email_id}.txt
+                    if document_name:
+                        self.logger.debug(f"Trying to match document: {document_name}")
+                        # Extract email ID from filename like "email_5_12345abc-def0-1234-abcd-123456789abc.txt"
+                        if document_name.startswith("email_") and document_name.endswith(".txt"):
+                            # Remove the .txt extension and split by underscore
+                            base_name = document_name.replace('.txt', '')
+                            parts = base_name.split('_')
+                            if len(parts) >= 3:
+                                # The email ID should be everything after the second underscore
+                                # In case the email ID itself contains underscores
+                                potential_email_id = '_'.join(parts[2:])
+                                if potential_email_id in email_lookup:
+                                    matched_email_id = potential_email_id
+                                    self.logger.debug(f"✅ Matched email via filename: {document_name} -> {matched_email_id}")
+                                else:
+                                    self.logger.debug(f"❌ Email ID '{potential_email_id}' from filename not found in lookup")
+                            else:
+                                self.logger.debug(f"❌ Filename format unexpected: {document_name}")
+                        else:
+                            self.logger.debug(f"❌ Filename doesn't match expected pattern: {document_name}")
+                    
+                    # Method 2: Search for email ID directly in the metadata  
+                    if not matched_email_id and metadata:
+                        # Check if there's an email ID in the metadata
+                        if 'email_id' in metadata and metadata['email_id'] in email_lookup:
+                            matched_email_id = metadata['email_id']
+                            self.logger.debug(f"✅ Matched email via metadata: {matched_email_id}")
+                    
+                    # Method 3: Search for email ID in content
+                    if not matched_email_id:
+                        for email_id in email_lookup.keys():
+                            if email_id in content:
+                                matched_email_id = email_id
+                                self.logger.debug(f"✅ Matched email via content search: {matched_email_id}")
+                                break
+                    
+                    # Method 4: Fuzzy matching based on subject and sender
+                    if not matched_email_id:
+                        best_match_id = None
+                        best_match_score = 0
+                        
+                        # Extract subject from content (it should be at the beginning)
+                        content_lines = content.split('\n')
+                        content_subject = ""
+                        content_sender = ""
+                        
+                        for line in content_lines[:5]:  # Check first few lines
+                            if line.startswith("Subject: "):
+                                content_subject = line.replace("Subject: ", "").strip()
+                            elif line.startswith("From: "):
+                                content_sender = line.replace("From: ", "").strip()
+                        
+                        if content_subject or content_sender:
+                            for email_id, email in email_lookup.items():
+                                match_score = 0
+                                
+                                # Score based on subject similarity
+                                if content_subject and email.get('subject'):
+                                    subject_words_content = set(content_subject.lower().split())
+                                    subject_words_email = set(email.get('subject', '').lower().split())
+                                    subject_overlap = len(subject_words_content & subject_words_email)
+                                    if subject_overlap > 0:
+                                        match_score += subject_overlap * 10
+                                
+                                # Score based on sender similarity
+                                if content_sender and email.get('sender', {}).get('email'):
+                                    if email.get('sender', {}).get('email').lower() in content_sender.lower():
+                                        match_score += 20
+                                
+                                if match_score > best_match_score:
+                                    best_match_score = match_score
+                                    best_match_id = email_id
+                        
+                        if best_match_score > 15:  # Threshold for a good match
+                            matched_email_id = best_match_id
+                            self.logger.debug(f"✅ Matched email via fuzzy matching: {matched_email_id} (score: {best_match_score})")
+                    
+                    if matched_email_id and matched_email_id in email_lookup:
+                        email = email_lookup[matched_email_id]
+                        
+                        # Use the Albert API score if available, otherwise calculate based on position
+                        relevance_score = score if score > 0 else (1.0 - (i / max(len(relevant_contents), 1)))
+                        
+                        # Format result for frontend compatibility
+                        formatted_result = {
+                            'id': matched_email_id,  # Frontend expects 'id'
+                            'message_id': matched_email_id,
+                            'thread_id': email.get('thread_id', ''),
+                            'subject': email.get('subject', ''),
+                            'from': email.get('sender', {}).get('email', ''),  # Frontend expects 'from'
+                            'sender': {  # Frontend expects 'sender' object
+                                'email': email.get('sender', {}).get('email', ''),
+                                'name': email.get('sender', {}).get('name', '')
+                            },
+                            'sender_name': email.get('sender', {}).get('name', ''),
+                            'sender_email': email.get('sender', {}).get('email', ''),
+                            'date': email.get('sent_at'),  # Frontend expects 'date'
+                            'sent_at': email.get('sent_at'),
+                            'snippet': email.get('content', '')[:200] if email.get('content') else '',  # Frontend expects 'snippet'
+                            'is_unread': email.get('flags', {}).get('is_unread', False),
+                            'is_starred': email.get('flags', {}).get('is_starred', False),
+                            'thread_subject': email.get('thread_subject', ''),
+                            'relevance_score': relevance_score,
+                            'ai_reason': f"Semantically relevant to query: '{user_query}'",
+                            # Additional metadata for debugging
+                            'attachment_count': email.get('attachment_count', 0),
+                            'content_preview': email.get('content', '')[:200] if email.get('content') else '',
+                            'search_method': 'rag'
+                        }
+                        formatted_results.append(formatted_result)
+                        self.logger.debug(f"Added result for email {matched_email_id} with score {relevance_score}")
+                    else:
+                        self.logger.warning(f"❌ Could not match RAG result to an email in context")
+                        self.logger.warning(f"📝 Content preview: {content[:200]}...")
+                        self.logger.warning(f"📁 Document name: {document_name}")
+                        self.logger.warning(f"🏷️ Metadata: {metadata}")
+                        # Log available email IDs for debugging
+                        self.logger.warning(f"📋 Available email IDs (first 5): {list(email_lookup.keys())[:5]}...")
+                        
+                        # Try to extract any UUID-like pattern from content
+                        import re
+                        uuid_pattern = r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+                        found_uuids = re.findall(uuid_pattern, content)
+                        if found_uuids:
+                            self.logger.warning(f"🔍 Found UUIDs in content: {found_uuids[:3]}...")
+                            for uuid in found_uuids:
+                                if uuid in email_lookup:
+                                    self.logger.warning(f"🎯 UUID {uuid} found in email lookup! This should have been matched.")
+                                    break
+                
+                self.logger.info(f"Step 6 completed: Matched and formatted {len(formatted_results)} email results")
+                
+                search_time = time.time() - search_start_time
+                return {
+                    "success": True,
+                    "results": formatted_results,
+                    "search_method": "rag",
+                    "total_searched": len(context_emails),
+                    "processing_time": search_time
+                }
+                
+            except Exception as query_error:
+                self.logger.error(f"Failed to query RAG system: {query_error}", exc_info=True)
                 return {
                     "success": False,
-                    "error": f"Albert API call failed: {str(ai_error)}",
+                    "error": f"Failed to query emails: {str(query_error)}",
                     "results": [],
-                    "search_method": "ai_error",
+                    "search_method": "rag_error",
                     "total_searched": len(context_emails),
                     "processing_time": time.time() - search_start_time
                 }
             
         except Exception as e:
             total_search_time = time.time() - search_start_time
-            self.logger.error(f"Error in chatbot_intelligent_email_search: {e}", exc_info=True)
+            self.logger.error(f"Error in chatbot_intelligent_email_search with RAG: {e}", exc_info=True)
             return {
                 "success": False,
                 "error": f"Search failed: {str(e)}",
@@ -673,4 +820,8 @@ Instructions:
                 "total_searched": 0,
                 "processing_time": total_search_time
             }
+
+
+# Create a singleton instance of the email service
+email_service = EmailService()
 
