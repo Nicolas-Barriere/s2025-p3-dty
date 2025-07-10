@@ -12,6 +12,7 @@ type AIToolbarProps = {
     onRetry?: () => void;
     showActionButtons: boolean;
     onAIResponse?: (context: string) => Promise<void>;
+    isPending?: boolean;
 };
 
 const AIToolbar = forwardRef(({
@@ -22,10 +23,11 @@ const AIToolbar = forwardRef(({
     onKeep,
     onRetry,
     showActionButtons = false,
-    onAIResponse
+    onAIResponse,
+    isPending = false
 }: AIToolbarProps, ref) => {
     const [instruction, setInstruction] = useState("");
-    const { requestAIAnswer, isPending } = useAIAnswer(threadId);
+    const { requestAIAnswer } = useAIAnswer(threadId);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useImperativeHandle(ref, () => ({
@@ -40,7 +42,7 @@ const AIToolbar = forwardRef(({
     }, []);
 
     const handleSend = async () => {
-        if (editor) {
+        if (editor && !isPending) {
             // Récupérer le contenu actuel du brouillon
             let currentMessage = "";
             if (getCurrentMessage) {

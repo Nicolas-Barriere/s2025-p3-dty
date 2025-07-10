@@ -186,6 +186,7 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
                         onRetry={handleRetry}
                         showActionButtons={showActionButtons}
                         onAIResponse={handleAIResponse}
+                        isPending={isPending}
                     />
                 )}
                 <MessageEditorToolbar onAIClick={toggleAIToolbar}
