@@ -39,7 +39,8 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
     const [message, setMessage] = useState<string | null>(null);
     const aiToolbarRef = useRef<{ focus: () => void }>(null);
     const [showActionButtons, setShowActionButtons] = useState(false);
-    const { requestAIAnswer, isPending, revertChanges, keepChanges, hasOriginalContent } = useAIAnswer(selectedThread?.id);
+    const { requestAIAnswer, isPending, revertChanges, keepChanges } = useAIAnswer(selectedThread?.id);
+    const [lastInstruction, setLastInstruction] = useState(""); // Ajouter cet état
 
 
 
@@ -148,19 +149,24 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
 
     const handleKeep = () => {
         keepChanges(editor);
-        setShowActionButtons(false);
-    };
-
-    const handleRetry = () => {
-        // Pour l'instant, juste masquer les boutons d'action et montrer l'input
+        setLastInstruction("");
         setShowActionButtons(false);
     };
 
     const handleAIResponse = async (context: string) => {
-        const result = await requestAIAnswer(context, editor);
-        // Afficher les boutons d'action uniquement si des modifications ont été appliquées
-        if (result.hasChanges) {
-            setShowActionButtons(true);
+        try {
+            // Extraire et sauvegarder l'instruction à partir du contexte
+            const instructionMatch = context.match(/La demande est : (.*?)(?:\n|$)/);
+            const extractedInstruction = instructionMatch ? instructionMatch[1] : "";
+            setLastInstruction(extractedInstruction);
+
+            const result = await requestAIAnswer(context, editor);
+            // Afficher les boutons d'action uniquement si des modifications ont été appliquées
+            if (result.hasChanges) {
+                setShowActionButtons(true);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la génération de la réponse IA:", error);
         }
     };
 
@@ -183,10 +189,10 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, ...props }: MessageEdit
                         getCurrentMessage={getCurrentMessage}
                         onRevert={handleRevert}
                         onKeep={handleKeep}
-                        onRetry={handleRetry}
                         showActionButtons={showActionButtons}
                         onAIResponse={handleAIResponse}
                         isPending={isPending}
+                        lastInstruction={lastInstruction}
                     />
                 )}
                 <MessageEditorToolbar onAIClick={toggleAIToolbar}

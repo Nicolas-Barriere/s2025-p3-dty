@@ -9,10 +9,10 @@ type AIToolbarProps = {
     getCurrentMessage?: () => Promise<string>; // Fonction pour récupérer le message actuel
     onRevert?: () => void;
     onKeep?: () => void;
-    onRetry?: () => void;
     showActionButtons: boolean;
     onAIResponse?: (context: string) => Promise<void>;
     isPending?: boolean;
+    lastInstruction?: string;
 };
 
 const AIToolbar = forwardRef(({
@@ -21,14 +21,16 @@ const AIToolbar = forwardRef(({
     getCurrentMessage,
     onRevert,
     onKeep,
-    onRetry,
     showActionButtons = false,
     onAIResponse,
-    isPending = false
+    isPending = false,
+    lastInstruction = ""
 }: AIToolbarProps, ref) => {
-    const [instruction, setInstruction] = useState("");
+    const [instruction, setInstruction] = useState(lastInstruction);
     const { requestAIAnswer } = useAIAnswer(threadId);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const isInitialMount = useRef(true);
 
     useImperativeHandle(ref, () => ({
         focus: () => {
@@ -40,6 +42,33 @@ const AIToolbar = forwardRef(({
     useEffect(() => {
         inputRef.current?.focus();
     }, []);
+
+    useEffect(() => {
+        // Si c'est le montage initial ET lastInstruction n'est pas vide
+        if (isInitialMount.current && lastInstruction) {
+            setInstruction(lastInstruction);
+            isInitialMount.current = false;
+        }
+        // Si ce n'est pas le montage initial (mise à jour) ET lastInstruction a changé
+        else if (!isInitialMount.current && lastInstruction) {
+            setInstruction(lastInstruction);
+        }
+    }, [lastInstruction]);
+
+    // Écouter les changements de showActionButtons pour réinitialiser l'état initial
+    useEffect(() => {
+        // Quand on passe de "action buttons" à "input"
+        if (!showActionButtons) {
+            // Si lastInstruction existe, utilisons-le
+            if (lastInstruction) {
+                setInstruction(lastInstruction);
+            }
+            // Mettre le focus sur l'input après un court délai pour s'assurer qu'il est rendu
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 50);
+        }
+    }, [showActionButtons, lastInstruction]);
 
     const handleSend = async () => {
         if (editor && !isPending) {
