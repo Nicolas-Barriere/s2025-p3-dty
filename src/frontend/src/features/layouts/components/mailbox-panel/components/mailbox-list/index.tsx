@@ -57,14 +57,6 @@ export const MAILBOX_FOLDERS: Folder[] = [
             has_trashed: "1",
         },
     },
-    {
-        id: "urgent",
-        name: "folders.urgent",
-        icon: "priority_high",
-        filter: {
-            has_urgent: "1",
-        },
-    },
     // {
     //     id: "spam",
     //     name: "folders.spam",

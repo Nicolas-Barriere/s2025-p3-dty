@@ -81,27 +81,6 @@ export const ThreadItem = ({ thread }: ThreadItemProps) => {
                             ) : null} */}
                             
                             </div>
-                            {thread.tags.map((tag: string) => (
-                            <Badge
-                                key={tag}
-                                style={{
-                                    backgroundColor:
-                                        tag === "URGENT"
-                                            ? "#dc3545" // red
-                                            : tag === "IMPORTANT"
-                                            ? "#ff9800" // orange
-                                            : tag === "POUR INFO"
-                                            ? "#ffc107" // yellow
-                                            : tag === "SPAM"
-                                            ? "#007bff" // blue
-                                            : "#000", // black
-                                    color: "#fff",
-                                    marginRight: "0.5em",
-                                }}
-                            >
-                                {tag}
-                            </Badge>
-                        ))}
                         </div>
                         <div className="thread-item__content">
                             <p className="thread-item__subject">{thread.subject}</p>

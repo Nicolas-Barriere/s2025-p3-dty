@@ -21,7 +21,7 @@ from core.ai.thread_summarizer import (
     get_messages_from_thread,
 )
 
-from core.tags.classification import classify_single_emails
+from core.tags.classification import get_most_relevant_labels
 import json
 from time import time
 

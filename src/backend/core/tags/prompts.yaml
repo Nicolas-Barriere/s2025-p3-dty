@@ -1,22 +1,13 @@
 prompts:
   prompt_solo: |
-    Actuellement nous sommes le lundi 23 juin 2025, il est 10h44.
-    Je vais t'envoyer un mail. Il faut que tu attribues un ou plusieurs TAGs à ce mail:
+    Date et heure actuelle: [DATE_TIME]
+    Email conversation: [THREAD_EMAILS]
+    Liste des labels existants: [LABELS]
 
-    - 'URGENT': nécessité de lire le mail ou d'y répondre dans moins de 2 jours maximum !
-    - 'IMPORTANT': le mail contient au moins une information importante
-    - 'REUNION': mail qui parle d'une réunion
-    - 'POUR INFO': contient une information, d'une importance moyenne
-    - 'SPAM': les mails qui sont des spams
-
-    ##########
-    Tu peux attribuer autant de tags que te semble pertinent.
-    Ta réponse doit être au format suivant (lorsque quelque chose est entre crochets, il faut que tu remplaces par la valeur, sans la mettre en gras, et sans les crochets):
-    [email id] --- [TAG1,TAG2,TAG3...] ([explication de pourquoi tu as atribué ce(s) tag(s) à ce mail])
-    ##########
-
-    Réponds directement dans le format que je t'ai demandé, sans crochets, sans aucune saut de ligne, sans aucun texte supplémentaire du style "Voici la réponse:".
-    Voici l'email que tu dois traiter:
+    A partir de ce mail ou de cette conversation d'emails, tu dois déterminer les labels les plus pertinents à attribuer à ce mail ou cette conversation.
+    Ta réponse doit être au format suivant:
+    ["LABEL1", "LABEL2", ...]
+    Sans aucun texte supplémentaire du style "Voici les labels que j'ai déterminé comme pertinents:".
   
 
   prompt_conv: |

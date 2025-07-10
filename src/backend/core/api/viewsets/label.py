@@ -1,4 +1,5 @@
 """API ViewSet for Label model."""
+
 # pylint: disable=line-too-long
 
 import uuid

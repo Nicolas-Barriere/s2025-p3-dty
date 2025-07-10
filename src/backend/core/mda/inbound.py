@@ -14,8 +14,9 @@ from django.utils import timezone
 
 from core import models
 
-from core.tags.classification import classify_single_emails
-from core.ai.thread_summarizer import get_messages_from_thread
+
+from core.api.viewsets.call_label import assign_label_to_thread
+
 
 logger = logging.getLogger(__name__)
 
@@ -558,12 +559,12 @@ def deliver_inbound_message(  # pylint: disable=too-many-branches, too-many-stat
     # --- 8. Final Updates --- #
     print("BEGIN FABIAN")
     try:
-        messages = get_messages_from_thread(thread)
-        classification = classify_single_emails(str(messages))
-        thread.tags = classification[0]["tags"]
-        thread.save(update_fields=["tags"])
+        assign_label_to_thread(thread, mailbox.id)
+
     except Exception as e:
-        logger.exception("ERREUR FABIAN: %s", e)
+        logger.exception(
+            "An error occurred while trying to assign labels to the new thread: %s", e
+        )
 
     print("END FABIAN")
 

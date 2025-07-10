@@ -298,8 +298,7 @@
         "all_messages": "Toutes les messages",
         "drafts": "Brouillons",
         "sent": "Envoyés",
-        "trash": "Corbeille",
-        "urgent": "Urgent"
+        "trash": "Corbeille"
       },
       "actions": {
         "new_message": "Nouveau message",

@@ -82,31 +82,6 @@ export const ThreadMessage = forwardRef<HTMLElement, ThreadMessageProps>(
                         </div>
                         <div className="thread-message__header-column thread-message__header-column--right flex-row flex-align-center">
                             <div className="thread-message__metadata">
-                                {Array.isArray(selectedThread?.tags) && selectedThread.tags.map((tag: string) => (
-                                    <Badge
-                                        key={tag}
-                                        style={{
-                                            backgroundColor:
-                                                tag === "URGENT"
-                                                    ? "#dc3545" // red
-                                                    : tag === "IMPORTANT"
-                                                    ? "#ff9800" // orange
-                                                    : tag === "POUR INFO"
-                                                    ? "#ffc107" // yellow
-                                                    : tag === "SPAM"
-                                                    ? "#007bff" // blue
-                                                    : "#000", // black
-                                            color: "#fff",
-                                            whiteSpace: "nowrap",
-                                            maxWidth: "150px", // adapte la valeur selon ton besoin
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            marginRight: "0.5em",
-                                        }}
-                                    >
-                                        {tag}
-                                    </Badge>
-                                ))}
                                 {message.sent_at && (
                                     <p className="thread-message__date">{
                                         new Date(message.sent_at).toLocaleString(i18n.resolvedLanguage, {
