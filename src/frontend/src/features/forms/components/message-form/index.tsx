@@ -147,14 +147,11 @@ export const MessageForm = ({
   }, [parentMessage, mode, selectedMailbox]);
 
   const getDefaultSubject = () => {
-    if (draft?.subject) return draft.subject;
-    if (parentMessage) {
-      if (mode === "forward")
-        return MailHelper.prefixSubjectIfNeeded(parentMessage.subject, "Fwd:");
-      if (mode.startsWith("reply"))
-        return MailHelper.prefixSubjectIfNeeded(parentMessage.subject, "Re:");
-    }
-
+        if (draft?.subject) return draft.subject
+        if (parentMessage) {
+            if (mode === "forward") return MailHelper.prefixSubjectIfNeeded(parentMessage.subject ?? "", "Fwd:");
+            if (mode.startsWith("reply")) return MailHelper.prefixSubjectIfNeeded(parentMessage.subject ?? "", "Re:");
+        }
     return "";
   };
 
@@ -180,6 +177,7 @@ export const MessageForm = ({
     }),
     [draft, selectedMailbox]
   );
+    
 
   const form = useForm({
     resolver: zodResolver(messageFormSchema),
