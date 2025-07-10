@@ -76,33 +76,28 @@ const AIToolbar = forwardRef(({
         <div className="ai-toolbar-extension">
             {showActionButtons ? (
                 <div className="ai-action-buttons">
-                    <button
-                        type="button"
-                        className="ai-action-button revert"
-                        onClick={onRevert}
-                        title="Annuler les modifications"
-                    >
-                        <span className="material-icons">undo</span>
-                        <span>Annuler</span>
-                    </button>
-                    <button
-                        type="button"
-                        className="ai-action-button keep"
-                        onClick={onKeep}
-                        title="Conserver les modifications"
-                    >
-                        <span className="material-icons">check</span>
-                        <span>Accepter</span>
-                    </button>
-                    <button
-                        type="button"
-                        className="ai-action-button retry"
-                        onClick={onRetry}
-                        title="Reformuler"
-                    >
-                        <span className="material-icons">refresh</span>
-                        <span>Reformuler</span>
-                    </button>
+                    <div className="ai-action-controls">
+                        <button
+                            type="button"
+                            className="revert confirm-button"
+                            onClick={onRevert}
+                            title="Annuler les modifications"
+                            disabled={isPending}
+                        >
+                            <span className="material-icons">undo</span>
+                            <span>Annuler</span>
+                        </button>
+                        <button
+                            type="button"
+                            className="keep confirm-button"
+                            onClick={onKeep}
+                            title="Conserver les modifications"
+                            disabled={isPending}
+                        >
+                            <span className="material-icons">check</span>
+                            <span>Accepter</span>
+                        </button>
+                    </div>
                 </div>
             ) : (
                 <>

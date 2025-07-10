@@ -56,7 +56,7 @@
     width: 100%;
     background: #fff;
     border-bottom: 1px solid var(--c--theme--colors--greyscale-200);
-    padding: 0 12px 0 2px;
+    padding: 0 12px 4px 5px;
     height: 43px; // même hauteur que la toolbar
     box-sizing: border-box;
 }
@@ -148,5 +148,57 @@
 .ai-toolbar-tooltip .shortcut-hint {
     display: block;
     font-size: 11px;
-    margin-top: 2px;
+}
+
+.ai-action-buttons {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    margin: 0;
+}
+
+.ai-action-prompt {
+    font-size: 16px;
+    color: #4a4a4a;
+    font-weight: 500;
+    margin-right: 20px;
+}
+
+.ai-action-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.confirm-button {
+    border: none;
+    padding: 7px 15px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.confirm-button .material-icons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-right: 10px;
+
+}
+
+.confirm-button:hover {
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.confirm-button:hover .material-icons {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
 }
