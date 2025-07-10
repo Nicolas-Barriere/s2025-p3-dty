@@ -65,6 +65,13 @@ export const ThreadItem = ({ thread }: ThreadItemProps) => {
                                     messagesCount={thread.messages.length}
                                 />
                             )}
+                            {thread.labels.length > 0 && (
+                                <div className="thread-item__labels">
+                                    {thread.labels.map((label) => (
+                                        <LabelBadge key={label.id} label={label} />
+                                    ))}
+                                </div>
+                            )}
                             <div className="thread-item__metadata">
                                 {thread.has_draft && (
                                     <Badge>
@@ -84,13 +91,7 @@ export const ThreadItem = ({ thread }: ThreadItemProps) => {
                         </div>
                         <div className="thread-item__content">
                             <p className="thread-item__subject">{thread.subject}</p>
-                            {thread.labels.length > 0 && (
-                                <div className="thread-item__labels">
-                                    {thread.labels.map((label) => (
-                                        <LabelBadge key={label.id} label={label} />
-                                    ))}
-                                </div>
-                            )}
+                            
                         
                         
                     </div>
