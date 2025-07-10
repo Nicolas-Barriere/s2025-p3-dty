@@ -29,7 +29,6 @@ const AIToolbar = forwardRef(({
     const [instruction, setInstruction] = useState(lastInstruction);
     const { requestAIAnswer } = useAIAnswer(threadId);
     const inputRef = useRef<HTMLInputElement>(null);
-
     const isInitialMount = useRef(true);
 
     useImperativeHandle(ref, () => ({
@@ -38,37 +37,53 @@ const AIToolbar = forwardRef(({
         }
     }));
 
-    // Focus automatique à l'apparition du composant
     useEffect(() => {
         inputRef.current?.focus();
     }, []);
 
     useEffect(() => {
-        // Si c'est le montage initial ET lastInstruction n'est pas vide
         if (isInitialMount.current && lastInstruction) {
             setInstruction(lastInstruction);
             isInitialMount.current = false;
         }
-        // Si ce n'est pas le montage initial (mise à jour) ET lastInstruction a changé
         else if (!isInitialMount.current && lastInstruction) {
             setInstruction(lastInstruction);
         }
     }, [lastInstruction]);
 
-    // Écouter les changements de showActionButtons pour réinitialiser l'état initial
     useEffect(() => {
-        // Quand on passe de "action buttons" à "input"
         if (!showActionButtons) {
-            // Si lastInstruction existe, utilisons-le
             if (lastInstruction) {
                 setInstruction(lastInstruction);
             }
-            // Mettre le focus sur l'input après un court délai pour s'assurer qu'il est rendu
             setTimeout(() => {
                 inputRef.current?.focus();
             }, 50);
         }
     }, [showActionButtons, lastInstruction]);
+
+    useEffect(() => {
+        // Ne créer l'écouteur que si les boutons d'action sont affichés
+        if (showActionButtons && !isPending) {
+            const handleActionKeys = (event: KeyboardEvent) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    onKeep && onKeep();
+                } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    onRevert && onRevert();
+                }
+            };
+
+            // Ajouter l'écouteur au document
+            document.addEventListener('keydown', handleActionKeys);
+
+            // Nettoyer l'écouteur lors du démontage ou quand showActionButtons devient false
+            return () => {
+                document.removeEventListener('keydown', handleActionKeys);
+            };
+        }
+    }, [showActionButtons, isPending, onKeep, onRevert]);
 
     const handleSend = async () => {
         if (editor && !isPending) {
