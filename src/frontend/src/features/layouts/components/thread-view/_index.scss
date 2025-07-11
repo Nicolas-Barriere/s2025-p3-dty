@@ -25,6 +25,11 @@
     height: 100%;
 }
 
+.thread-view__subject {
+    font-weight: bold;
+    margin: var(--c--theme--spacings--base);
+}
+
 .thread-view__labels-list {
     display: flex;
     flex-wrap: wrap;

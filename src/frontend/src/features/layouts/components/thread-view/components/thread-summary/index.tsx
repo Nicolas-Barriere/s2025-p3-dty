@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Button } from "@openfun/cunningham-react";
+import { Button, Tooltip } from "@openfun/cunningham-react";
 import { Spinner } from "@gouvfr-lasuite/ui-kit";
 import { addToast, ToasterItem } from "@/features/ui/components/toaster";
 import ReactMarkdown from "react-markdown";
 import { useThreadsRefreshSummaryCreate } from "@/features/api/gen";
-
+import { useTranslation } from "react-i18next";
 
 interface ThreadSummaryProps {
   threadId: string;
@@ -12,7 +12,12 @@ interface ThreadSummaryProps {
   onSummaryUpdated?: (newSummary: string) => void;
 }
 
-export const ThreadSummary = ({ threadId, summary, onSummaryUpdated }: ThreadSummaryProps) => {
+export const ThreadSummary = ({
+  threadId,
+  summary,
+  onSummaryUpdated,
+}: ThreadSummaryProps) => {
+  const { t } = useTranslation();
   const [localSummary, setLocalSummary] = useState(summary);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -22,28 +27,34 @@ export const ThreadSummary = ({ threadId, summary, onSummaryUpdated }: ThreadSum
         setIsRefreshing(true);
         addToast(
           <ToasterItem type="info">
-            Génération du résumé en cours ...
+            {t("summary.generation_in_progress")}
           </ToasterItem>
         );
       },
       onSuccess: (data) => {
         // Type guard for API response
-        const newSummary = (data && typeof data === 'object' && 'data' in data && data.data && typeof data.data === 'object' && 'summary' in data.data)
-          ? (data.data as { summary?: string }).summary
-          : undefined;
+        const newSummary =
+          data &&
+          typeof data === "object" &&
+          "data" in data &&
+          data.data &&
+          typeof data.data === "object" &&
+          "summary" in data.data
+            ? (data.data as { summary?: string }).summary
+            : undefined;
         if (newSummary) {
           setLocalSummary(newSummary);
           if (onSummaryUpdated) {
             onSummaryUpdated(newSummary);
           }
-          addToast(<ToasterItem type="info">Résumé mis à jour !</ToasterItem>);
+          addToast(<ToasterItem type="info">{t("summary.refresh_success")}</ToasterItem>);
         }
         setIsRefreshing(false);
       },
       onError: () => {
         addToast(
           <ToasterItem type="error">
-            Erreur lors de la mise à jour du résumé.
+            {t("summary.refresh_error")}
           </ToasterItem>
         );
         setIsRefreshing(false);
@@ -56,38 +67,34 @@ export const ThreadSummary = ({ threadId, summary, onSummaryUpdated }: ThreadSum
   };
 
   useEffect(() => {
-    if (summary) {
-      setLocalSummary(summary);
-    }
+    setLocalSummary(summary);
   }, [summary]);
 
   return (
     <div className="thread-summary__container">
-      <h3>
-        Résumé du Thread <span className="material-icons">autorenew</span>
-      </h3>
-
       {isRefreshing ? (
-        <div className="thread-summary__loading">
+        <div className="thread-summary__content">
           <Spinner />
         </div>
       ) : (
         <>
           <div className="thread-summary__content">
             {localSummary ? (
-              <ReactMarkdown>{localSummary}</ReactMarkdown>
+              <ReactMarkdown>{`**${t("summary.title")} :** ${localSummary}`}</ReactMarkdown>
             ) : (
-              <p>Aucun résumé disponible.</p>
+              <p>{t("summary.no_summary")}</p>
             )}
           </div>
-          <div className="thread-summary__actions">
-            <Button
-              color="primary"
-              icon={<span className="material-icons">summarize</span>}
-              onClick={handleRefresh}
-            >
-              Mettre à jour le résumé
-            </Button>
+          <div className="thread-summary__refresh-button">
+            <Tooltip content={t("actions.refresh_summary")}>
+              <Button
+                color="tertiary-text"
+                size="small"
+                icon={<span className="material-icons">autorenew</span>}
+                aria-label={t("actions.refresh_summary")}
+                onClick={handleRefresh}
+              />
+            </Tooltip>
           </div>
         </>
       )}

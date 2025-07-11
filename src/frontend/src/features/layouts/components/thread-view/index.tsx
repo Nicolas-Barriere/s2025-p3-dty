@@ -186,6 +186,7 @@ export const ThreadView = () => {
   return (
     <div className="thread-view" ref={rootRef}>
       <ActionBar canUndelete={isThreadTrashed} />
+      <h2 className="thread-view__subject">{selectedThread.subject}</h2>
       <ThreadSummary
         threadId={selectedThread.id}
         summary={selectedThread.summary}
