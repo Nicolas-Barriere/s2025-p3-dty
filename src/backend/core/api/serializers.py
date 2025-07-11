@@ -249,6 +249,7 @@ class ThreadSerializer(serializers.ModelSerializer):
     user_role = serializers.SerializerMethodField()
     accesses = serializers.SerializerMethodField()
     labels = serializers.SerializerMethodField()
+    summary = serializers.SerializerMethodField(read_only=True)
 
     @extend_schema_field(ThreadAccessDetailSerializer(many=True))
     def get_accesses(self, instance):
@@ -295,6 +296,10 @@ class ThreadSerializer(serializers.ModelSerializer):
         ).distinct()
         return ThreadLabelSerializer(labels, many=True).data
 
+    def get_summary(self, instance):
+            """Return the summary of the thread."""
+            return instance.summary or ""
+
     class Meta:
         model = models.Thread
         fields = [
@@ -316,6 +321,7 @@ class ThreadSerializer(serializers.ModelSerializer):
             "user_role",
             "accesses",
             "labels",
+            "summary"
         ]
         read_only_fields = fields  # Mark all as read-only for safety
 
