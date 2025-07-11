@@ -2916,7 +2916,7 @@
         "/api/v1.0/threads/{id}/refresh-summary/": {
             "post": {
                 "operationId": "threads_refresh_summary_create",
-                "description": "ViewSet for Thread model.",
+                "description": "Refresh the summary of a thread.",
                 "parameters": [
                     {
                         "in": "path",
@@ -2967,7 +2967,7 @@
         "/api/v1.0/threads/{id}/summary/": {
             "get": {
                 "operationId": "threads_summary_retrieve",
-                "description": "ViewSet for Thread model.",
+                "description": "Retrieve the summary of a thread.",
                 "parameters": [
                     {
                         "in": "path",

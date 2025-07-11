@@ -34,7 +34,7 @@ import type {
   ThreadsStatsRetrieve400,
   ThreadsStatsRetrieveParams,
   ThreadsSummaryRetrieve200,
-} from '../models';
+} from ".././models";
 
 import { fetchAPI } from "../../fetch-api";
 
@@ -655,7 +655,7 @@ export const useThreadsDestroy = <TError = unknown, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 /**
- * ViewSet for Thread model.
+ * Refresh the summary of a thread.
  */
 export type threadsRefreshSummaryCreateResponse200 = {
   data: ThreadsRefreshSummaryCreate200;
@@ -763,7 +763,7 @@ export const useThreadsRefreshSummaryCreate = <
   return useMutation(mutationOptions, queryClient);
 };
 /**
- * ViewSet for Thread model.
+ * Retrieve the summary of a thread.
  */
 export type threadsSummaryRetrieveResponse200 = {
   data: ThreadsSummaryRetrieve200;
