@@ -68,11 +68,11 @@ export const ChatbotSearchInput = ({
 
             // The fetchAPI wraps the response in { status, data, headers }
             // So we need to extract the actual data
-            const actualResponse = (intelligentSearchRes as any)?.data || intelligentSearchRes;
+            const actualResponse = (intelligentSearchRes as { data?: typeof intelligentSearchRes })?.data || intelligentSearchRes;
             
             // Minimal logs for troubleshooting - conditional for production
             if (process.env.NODE_ENV !== 'production') {
-                console.log('RAG search:', actualResponse?.success ? 'successful' : 'failed');
+                console.warn('RAG search:', actualResponse?.success ? 'successful' : 'failed');
             }
 
             if (actualResponse?.success && actualResponse?.results && actualResponse.results.length > 0) {
@@ -87,7 +87,7 @@ export const ChatbotSearchInput = ({
                 } else {
                     // If no summary, create one from the results
                     responseText += "Voici les emails les plus pertinents trouvés :\n";
-                    actualResponse.results.slice(0, 3).forEach((result: any, index: number) => {
+                    actualResponse.results.slice(0, 3).forEach((result: { subject?: string; from?: string; date?: string; snippet?: string }, index: number) => {
                         responseText += `\n${index + 1}. ${result.subject || 'Email sans objet'}\n`;
                         if (result.from) responseText += `   De: ${result.from}\n`;
                         if (result.date && typeof result.date === 'string') responseText += `   Date: ${new Date(result.date).toLocaleDateString('fr-FR')}\n`;
@@ -99,7 +99,7 @@ export const ChatbotSearchInput = ({
 
                 // Trigger mailbox search with the received email IDs
                 if (onChange) {
-                    const mailIds = actualResponse.results.map((r: any) => r.id).join(',');
+                    const mailIds = actualResponse.results.map((r: { id: string }) => r.id).join(',');
                     
                     if (mailIds) {
                         // Use message_ids parameter for direct search instead of text search
@@ -117,7 +117,7 @@ export const ChatbotSearchInput = ({
                 setResponse(`Désolé, je n'ai pas pu trouver d'emails correspondants: ${errorMessage}`);
             }
         } catch (error) {
-            console.error('Chatbot search error:', error);
+            console.error('Chatbot search error:', error instanceof Error ? error.message : String(error));
             setResponse("Erreur lors de la communication avec le chatbot. Veuillez réessayer.");
         } finally {
             setIsLoading(false);

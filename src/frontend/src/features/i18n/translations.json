@@ -142,6 +142,7 @@
             "subject": "Subject",
             "text": "Contains the words",
             "chatbot": "Ask the chatbot",
+            "advanced_research": "Advanced research",
             "in": "In",
             "folder_all_messages": "All messages",
             "folder_sent": "Sent",
@@ -151,13 +152,20 @@
             "unread": "Unread",
             "read_state": "Read state"
           },
+          "placeholder": {
+            "advanced_research": "Ask the AI to help you search..."
+          },
+          "advanced_research": {
+            "send": "Send to AI"
+          },
           "chatbot": {
             "placeholder": "Ask the chatbot to help you search...",
             "send": "Send to chatbot",
             "response": "Chatbot response",
             "copy": "Copy query",
             "copy_success": "Query copied!",
-            "examples_title": "Usage examples"
+            "examples_title": "Usage examples",
+            "no_results": "No results found by the chatbot."
           }
         }
       },
@@ -364,10 +372,17 @@
             "subject": "Sujet",
             "text": "Contient les mots",
             "chatbot": "Recherche avancée",
+            "advanced_research": "Recherche avancée",
             "in": "Dans",
             "read": "Lu",
             "unread": "Non lu",
             "read_state": "État de lecture"
+          },
+          "placeholder": {
+            "advanced_research": "Demandez à l'IA de vous aider à rechercher..."
+          },
+          "advanced_research": {
+            "send": "Envoyer à l'IA"
           },
           "chatbot": {
             "placeholder": "Demandez au chatbot de vous aider à rechercher...",
@@ -375,7 +390,8 @@
             "response": "Réponse du chatbot",
             "copy": "Copier la requête",
             "copy_success": "Requête copiée !",
-            "examples_title": "Exemples d'utilisation"
+            "examples_title": "Exemples d'utilisation",
+            "no_results": "Aucun résultat trouvé par le chatbot."
           }
         }
       },

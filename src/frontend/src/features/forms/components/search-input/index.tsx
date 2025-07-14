@@ -94,6 +94,7 @@ export const SearchInput = () => {
                         placeholder={t("search.placeholder")}
                     />
                 </div>
+                
                 { value && (
                 <Button
                     color="tertiary-text"
