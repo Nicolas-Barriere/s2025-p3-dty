@@ -4,6 +4,8 @@ import { Button, Checkbox, Input, Select } from "@openfun/cunningham-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchAPI } from "@/features/api/fetch-api";
+import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 
 /**
  * SearchFiltersForm component for email search with chatbot integration
@@ -25,6 +27,8 @@ type SearchFiltersFormProps = {
 
 export const SearchFiltersForm = ({ query, onChange }: SearchFiltersFormProps) => {
     const { t, i18n } = useTranslation();
+    const router = useRouter();
+    const pathname = usePathname();
     const formRef = useRef<HTMLFormElement>(null);
 
     const updateQuery = async (submit: boolean) => {
@@ -43,14 +47,13 @@ export const SearchFiltersForm = ({ query, onChange }: SearchFiltersFormProps) =
             );
             const actualResponse = (intelligentSearchRes as any)?.data || intelligentSearchRes;
             if (actualResponse?.success && actualResponse?.results && actualResponse.results.length > 0) {
-                // Build message_ids param and update URL
+                // Build message_ids param and update URL using router (no page reload)
                 const mailIds = actualResponse.results.map((r: any) => r.id).join(',');
-                const searchUrl = new URL(window.location.href);
-                searchUrl.searchParams.delete('text');
-                searchUrl.searchParams.delete('search');
-                searchUrl.searchParams.set('message_ids', mailIds);
-                window.history.pushState({}, '', searchUrl.toString());
-                window.location.reload();
+                const newSearchParams = new URLSearchParams();
+                newSearchParams.set('message_ids', mailIds);
+                
+                // Use router navigation instead of window.location.reload()
+                router.replace(pathname + '?' + newSearchParams.toString(), undefined, { shallow: true });
                 return;
             } else {
                 // Show error or fallback to classic search

@@ -532,13 +532,17 @@ class EmailService:
                     "processing_time": time.time() - search_start_time
                 }
             
-            # Step 2: Check if RAG collection exists and create if necessary
+            # Step 2: Set user-specific collection and check if it exists
+            self.logger.info("Step 2: Setting user-specific RAG collection")
+            rag_system.set_user_collection(user_id)
+            
             if not rag_system.collection_id:
-                self.logger.info("Step 2: Creating new RAG collection for embeddings")
+                self.logger.info("Step 2: Creating new RAG collection for user")
                 rag_system.create_collection()
                 self.logger.info(f"Step 2 completed: Created RAG collection: {rag_system.collection_id}")
             else:
                 self.logger.info(f"Step 2: Using existing RAG collection: {rag_system.collection_id}")
+                self.logger.info(f"Step 2: Found {len(rag_system.indexed_email_ids)} previously indexed emails")
             
             # Step 3: Prepare emails for indexing - format for RAG system
             self.logger.info("Step 3: Preparing emails for RAG indexing")
@@ -594,11 +598,11 @@ class EmailService:
             
             self.logger.info(f"Step 3 completed: Prepared {len(emails_for_rag)} emails for RAG indexing")
             
-            # Step 4: Index emails in RAG system
-            self.logger.info("Step 4: Indexing emails in RAG system")
+            # Step 4: Index emails in RAG system (with smart reindexing)
+            self.logger.info("Step 4: Checking if email indexing is needed")
             try:
                 rag_system.index_emails(emails_for_rag)
-                self.logger.info(f"Step 4 completed: Successfully indexed {len(emails_for_rag)} emails in RAG system")
+                self.logger.info(f"Step 4 completed: Email indexing process finished")
             except Exception as index_error:
                 self.logger.error(f"Failed to index emails in RAG system: {index_error}", exc_info=True)
                 
