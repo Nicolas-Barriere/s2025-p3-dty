@@ -23,3 +23,4 @@ class AlbertConfig:
     max_emails_per_batch: int = 500  # Limit emails processed per request
     max_email_content_length: int = 10000  # Limit email content size
     batch_upload_delay: float = 1.0  # Delay between batch uploads
+    min_relevance_score_percentage: float = 0.8  # Minimum score as percentage of highest score (0.0-1.0)

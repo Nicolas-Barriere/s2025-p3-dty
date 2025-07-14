@@ -631,6 +631,22 @@ class EmailService:
                 
                 self.logger.info(f"Step 5 completed: Retrieved {len(relevant_contents)} relevant emails in {query_time:.2f}s")
                 
+                # Log detailed scores for all retrieved emails
+                if relevant_contents:
+                    self.logger.info("=== RAG RETRIEVAL SCORES ===")
+                    for i, result in enumerate(relevant_contents):
+                        score = result.get("score", 0.0)
+                        document_name = result.get("metadata", {}).get("document_name", "unknown")
+                        content_preview = result.get("content", "")[:100].replace('\n', ' ')
+                        self.logger.info(f"  #{i+1:2d}: Score {score:.4f} | {document_name} | Preview: {content_preview}...")
+                    
+                    scores = [result.get("score", 0.0) for result in relevant_contents]
+                    avg_score = sum(scores) / len(scores)
+                    min_score = min(scores)
+                    max_score = max(scores)
+                    self.logger.info(f"Score Statistics: Max={max_score:.4f}, Min={min_score:.4f}, Avg={avg_score:.4f}")
+                    self.logger.info("=== END RAG SCORES ===")
+                
                 if not relevant_contents:
                     self.logger.warning("RAG query returned no results")
                     return {
@@ -647,6 +663,15 @@ class EmailService:
                 
                 # Create email lookup by ID
                 email_lookup = {email['id']: email for email in context_emails}
+                
+                # Calculate dynamic score threshold based on highest score
+                if relevant_contents:
+                    scores = [result.get("score", 0.0) for result in relevant_contents]
+                    highest_score = max(scores) if scores else 0.0
+                    dynamic_threshold = highest_score * rag_system.config.min_relevance_score_percentage
+                    self.logger.info(f"Dynamic threshold: {dynamic_threshold:.3f} ({rag_system.config.min_relevance_score_percentage:.1%} of highest score {highest_score:.3f})")
+                else:
+                    dynamic_threshold = 0.0
                 
                 # Format results for frontend
                 formatted_results = []
@@ -744,6 +769,13 @@ class EmailService:
                         # Use the Albert API score if available, otherwise calculate based on position
                         relevance_score = score if score > 0 else (1.0 - (i / max(len(relevant_contents), 1)))
                         
+                        # Apply dynamic score threshold filtering - only include results above percentage of highest score
+                        if relevance_score < dynamic_threshold:
+                            self.logger.info(f"🚫 FILTERED: Email {matched_email_id[:8]}... | Score: {relevance_score:.4f} < Threshold: {dynamic_threshold:.4f} | Subject: {email.get('subject', 'No subject')[:50]}...")
+                            continue
+                        
+                        self.logger.info(f"✅ INCLUDED: Email {matched_email_id[:8]}... | Score: {relevance_score:.4f} ≥ Threshold: {dynamic_threshold:.4f} | Subject: {email.get('subject', 'No subject')[:50]}...")
+                        
                         # Format result for frontend compatibility
                         formatted_result = {
                             'id': matched_email_id,  # Frontend expects 'id'
@@ -764,14 +796,14 @@ class EmailService:
                             'is_starred': email.get('flags', {}).get('is_starred', False),
                             'thread_subject': email.get('thread_subject', ''),
                             'relevance_score': relevance_score,
-                            'ai_reason': f"Semantically relevant to query: '{user_query}'",
+                            'ai_reason': f"Semantically relevant to query: '{user_query}' (score: {relevance_score:.3f}, threshold: {dynamic_threshold:.3f})",
                             # Additional metadata for debugging
                             'attachment_count': email.get('attachment_count', 0),
                             'content_preview': email.get('content', '')[:200] if email.get('content') else '',
                             'search_method': 'rag'
                         }
                         formatted_results.append(formatted_result)
-                        self.logger.debug(f"Added result for email {matched_email_id} with score {relevance_score}")
+                        self.logger.debug(f"Added result for email {matched_email_id} with score {relevance_score:.3f}")
                     else:
                         self.logger.warning(f"❌ Could not match RAG result to an email in context")
                         self.logger.warning(f"📝 Content preview: {content[:200]}...")
@@ -791,7 +823,21 @@ class EmailService:
                                     self.logger.warning(f"🎯 UUID {uuid} found in email lookup! This should have been matched.")
                                     break
                 
-                self.logger.info(f"Step 6 completed: Matched and formatted {len(formatted_results)} email results")
+                # Log filtering summary
+                total_rag_results = len(relevant_contents)
+                filtered_count = total_rag_results - len(formatted_results)
+                self.logger.info("=== FILTERING SUMMARY ===")
+                self.logger.info(f"📊 RAG Retrieved: {total_rag_results} emails")
+                self.logger.info(f"✅ Passed Filter: {len(formatted_results)} emails") 
+                self.logger.info(f"🚫 Filtered Out: {filtered_count} emails")
+                self.logger.info(f"📈 Filter Rate: {(filtered_count/total_rag_results*100):.1f}% removed")
+                self.logger.info(f"🎯 Threshold Used: {dynamic_threshold:.4f} ({rag_system.config.min_relevance_score_percentage:.0%} of {max([result.get('score', 0.0) for result in relevant_contents]):.4f})")
+                if formatted_results:
+                    final_scores = [r.get('relevance_score', 0) for r in formatted_results]
+                    self.logger.info(f"📋 Final Score Range: {min(final_scores):.4f} - {max(final_scores):.4f}")
+                self.logger.info("=== END FILTERING ===")
+                
+                self.logger.info(f"Step 6 completed: Matched and formatted {len(formatted_results)} email results (after dynamic score filtering with threshold {dynamic_threshold:.3f})")
                 
                 search_time = time.time() - search_start_time
                 return {
@@ -799,6 +845,11 @@ class EmailService:
                     "results": formatted_results,
                     "search_method": "rag",
                     "total_searched": len(context_emails),
+                    "total_matched": len(relevant_contents),
+                    "results_after_filtering": len(formatted_results),
+                    "dynamic_score_threshold": dynamic_threshold,
+                    "highest_score": max([result.get("score", 0.0) for result in relevant_contents]) if relevant_contents else 0.0,
+                    "score_threshold_percentage": rag_system.config.min_relevance_score_percentage,
                     "processing_time": search_time
                 }
                 

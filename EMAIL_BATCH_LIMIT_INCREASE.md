@@ -36,3 +36,4 @@ This change allows the RAG (Retrieval Augmented Generation) system to:
 2. **Better AI understanding**: More context for intelligent search
 3. **Improved user experience**: Better chance of finding relevant emails
 4. **Future-proof**: Can handle larger mailboxes effectively
+5. **Intelligent filtering**: Dynamic score thresholds ensure only high-quality results are shown
