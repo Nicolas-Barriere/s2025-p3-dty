@@ -354,11 +354,30 @@ class ThreadViewSet(
             
             if message_id_list:
                 # Get threads that contain any of these messages
-                filtered_threads = models.Thread.objects.filter(
+                base_threads = models.Thread.objects.filter(
                     messages__id__in=message_id_list,
                     # Ensure user has access to these threads
                     accesses__mailbox__accesses__user=request.user
-                ).distinct().order_by("-messaged_at", "-created_at")
+                ).distinct()
+                
+                # Preserve the RAG score ordering by sorting threads based on message_id order
+                # Create a mapping of message_id -> order position for sorting
+                message_order = {msg_id: idx for idx, msg_id in enumerate(message_id_list)}
+                
+                # Get threads with their highest-ranked message position
+                thread_rankings = []
+                for thread in base_threads:
+                    # Find the best (lowest index = highest score) message position for this thread
+                    thread_messages = thread.messages.filter(id__in=message_id_list)
+                    best_position = min(
+                        message_order.get(str(msg.id), len(message_id_list)) 
+                        for msg in thread_messages
+                    )
+                    thread_rankings.append((thread, best_position))
+                
+                # Sort by RAG score order (lowest position = highest relevance)
+                thread_rankings.sort(key=lambda x: x[1])
+                filtered_threads = [thread for thread, _ in thread_rankings]
                 
                 # Use pagination
                 page = self.paginate_queryset(filtered_threads)
