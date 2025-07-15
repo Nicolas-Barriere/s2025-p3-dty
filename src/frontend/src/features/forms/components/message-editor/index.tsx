@@ -4,12 +4,15 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import { useCreateBlockNote } from "@blocknote/react";
 import { useTranslation } from "react-i18next";
-import { BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core';
+import { BlockNoteSchema, defaultBlockSpecs, BlockNoteEditorOptions, BlockSchema, InlineContentSchema, StyleSchema } from '@blocknote/core';
 import MailHelper from '@/features/utils/mail-helper';
 import MessageEditorToolbar from './toolbar';
 import { Field, FieldProps } from '@openfun/cunningham-react';
 import { useFormContext } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import AIToolbar from "./AIToolbar";
+import { useAIAnswer } from "./utils/ai";
+import { useMailboxContext } from "@/features/providers/mailbox"
 import { QuotedMessageBlock } from '@/features/blocknote/quoted-message-block';
 import { Message } from '@/features/api/gen/models/message';
 
@@ -38,6 +41,44 @@ type MessageEditorProps = FieldProps & {
 const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props }: MessageEditorProps) => {
     const form = useFormContext();
     const { t, i18n } = useTranslation();
+    const editorRef = useRef<HTMLDivElement>(null);
+    const [selectedText, setSelectedText] = useState<string | null>(null);
+    const [showAIToolbar, setShowAIToolbar] = useState(true);
+    const { selectedThread } = useMailboxContext();
+    const [message, setMessage] = useState<string | null>(null);
+    const aiToolbarRef = useRef<{ focus: () => void }>(null);
+    const [showActionButtons, setShowActionButtons] = useState(false);
+    const { requestAIAnswer, isPending, revertChanges, keepChanges } = useAIAnswer(selectedThread?.id);
+    const [lastInstruction, setLastInstruction] = useState("");
+
+
+    // Detect the selection
+    const handleSelection = () => {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            const editorRect = editorRef.current?.getBoundingClientRect();
+            const text = selection.toString();
+            if (editorRect) {
+                setSelectedText(text);
+            }
+        } else {
+            setSelectedText(null);
+        }
+    };
+
+    // Ajoute un listener sur la sélection
+    useEffect(() => {
+        const editorNode = editorRef.current;
+        if (!editorNode) return;
+        editorNode.addEventListener("mouseup", handleSelection);
+        editorNode.addEventListener("keyup", handleSelection);
+        return () => {
+            editorNode.removeEventListener("mouseup", handleSelection);
+            editorNode.removeEventListener("keyup", handleSelection);
+        };
+    }, []);
 
     /**
      * Prepare initial content of the editor
@@ -81,6 +122,7 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
 
     const handleChange = async () => {
         const markdown = await editor.blocksToMarkdownLossy(editor.document);
+        setMessage(markdown);
         const html = await MailHelper.markdownToHtml(markdown);
         form.setValue("messageEditorDraft", JSON.stringify(editor.document), { shouldDirty: true });
         form.setValue("messageEditorText", markdown);
@@ -94,6 +136,73 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
         handleChange();
     }, [])
 
+    const toggleAIToolbar = () => {
+        setShowAIToolbar(prev => {
+            const newValue = !prev;
+
+            // Si on active la barre, on met le focus après le rendu
+            if (newValue) {
+                // Utiliser setTimeout pour laisser React finir le rendu
+                setTimeout(() => {
+                    aiToolbarRef.current?.focus();
+                }, 50);
+            }
+
+            return newValue;
+        });
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            // Command+Shift+P sur Mac ou Ctrl+Shift+P sur Windows
+            if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'l') {
+                event.preventDefault(); // Empêche le comportement par défaut du navigateur
+                toggleAIToolbar(); // Utiliser la nouvelle fonction
+            }
+        };
+
+        // Ajoute l'écouteur d'événements
+        window.addEventListener('keydown', handleKeyDown);
+
+        // Nettoie l'écouteur d'événements lors du démontage
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, []);
+
+    const getCurrentMessage = async () => {
+        const markdown = await editor.blocksToMarkdownLossy(editor.document);
+        return markdown;
+    };
+
+    const handleRevert = () => {
+        revertChanges(editor);
+        setShowActionButtons(false);
+    };
+
+    const handleKeep = () => {
+        keepChanges(editor);
+        setLastInstruction("");
+        setShowActionButtons(false);
+    };
+
+    const handleAIResponse = async (context: string) => {
+        try {
+            // Extraire et sauvegarder l'instruction à partir du contexte
+            const instructionMatch = context.match(/La demande est : (.*?)(?:\n|$)/);
+            const extractedInstruction = instructionMatch ? instructionMatch[1] : "";
+            setLastInstruction(extractedInstruction);
+
+            const result = await requestAIAnswer(context, editor);
+            // Afficher les boutons d'action uniquement si des modifications ont été appliquées
+            if (result.hasChanges) {
+                setShowActionButtons(true);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la génération de la réponse IA:", error);
+        }
+    };
+
     return (
         <Field {...props}>
             <BlockNoteView
@@ -105,7 +214,22 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
                 formattingToolbar={false}
                 onChange={handleChange}
             >
-                <MessageEditorToolbar />
+                {showAIToolbar && (
+                    <AIToolbar
+                        ref={aiToolbarRef}
+                        threadId={selectedThread?.id}
+                        editor={editor}
+                        getCurrentMessage={getCurrentMessage}
+                        onRevert={handleRevert}
+                        onKeep={handleKeep}
+                        showActionButtons={showActionButtons}
+                        onAIResponse={handleAIResponse}
+                        isPending={isPending}
+                        lastInstruction={lastInstruction}
+                    />
+                )}
+                <MessageEditorToolbar onAIClick={toggleAIToolbar}
+                    active={showAIToolbar} />
             </BlockNoteView>
             <input {...form.register("messageEditorHtml")} type="hidden" />
             <input {...form.register("messageEditorText")} type="hidden" />
