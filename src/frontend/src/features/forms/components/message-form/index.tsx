@@ -6,7 +6,16 @@ import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Attachment, DraftMessageRequestRequest, Message, sendCreateResponse200, useDraftCreate, useDraftUpdate2, useMessagesDestroy, useSendCreate } from "@/features/api/gen";
+import {
+  Attachment,
+  DraftMessageRequestRequest,
+  Message,
+  sendCreateResponse200,
+  useDraftCreate,
+  useDraftUpdate2,
+  useMessagesDestroy,
+  useSendCreate,
+} from "@/features/api/gen";
 import MessageEditor from "@/features/forms/components/message-editor";
 import { useMailboxContext } from "@/features/providers/mailbox";
 import MailHelper from "@/features/utils/mail-helper";
@@ -17,49 +26,44 @@ import { useSentBox } from "@/features/providers/sent-box";
 import { useRouter } from "next/router";
 import { AttachmentUploader } from "./attachment-uploader";
 
-export type MessageFormMode = "new" |"reply" | "reply_all" | "forward";
+export type MessageFormMode = "new" | "reply" | "reply_all" | "forward";
 
 interface MessageFormProps {
-    // For reply mode
-    draftMessage?: Message;
-    parentMessage?: Message;
-    mode?: MessageFormMode;
-    onClose?: () => void;
-    // For new message mode
-    showSubject?: boolean;
-    onSuccess?: () => void;
+  // For reply mode
+  draftMessage?: Message;
+  parentMessage?: Message;
+  mode?: MessageFormMode;
+  onClose?: () => void;
+  // For new message mode
+  showSubject?: boolean;
+  onSuccess?: () => void;
 }
 
 // Zod schema for form validation
 const toEmailArray = (value?: string) => {
-    if (!value) return [];
-    return value.split(',');
-}
-const emailArraySchema = z.array(z.string().trim().email("message_form.error.invalid_recipient"));
+  if (!value) return [];
+  return value.split(",");
+};
+const emailArraySchema = z.array(
+  z.string().trim().email("message_form.error.invalid_recipient")
+);
 const messageFormSchema = z.object({
-    from: z.string().nonempty("message_form.error.mailbox_required"),
-    to: z.string()
-         .optional()
-         .transform(toEmailArray)
-         .pipe(emailArraySchema),
-    cc: z.string()
-         .optional()
-         .transform(toEmailArray)
-         .pipe(emailArraySchema),
-    bcc: z.string()
-          .optional()
-          .transform(toEmailArray)
-          .pipe(emailArraySchema),
-    subject: z.string()
-        .trim()
-        .nonempty("message_form.error.subject_required"),
-    messageEditorHtml: z.string().optional().readonly(),
-    messageEditorText: z.string().optional().readonly(),
-    messageEditorDraft: z.string().optional().readonly(),
-    attachments: z.array(z.object({
+  from: z.string().nonempty("message_form.error.mailbox_required"),
+  to: z.string().optional().transform(toEmailArray).pipe(emailArraySchema),
+  cc: z.string().optional().transform(toEmailArray).pipe(emailArraySchema),
+  bcc: z.string().optional().transform(toEmailArray).pipe(emailArraySchema),
+  subject: z.string().trim().nonempty("message_form.error.subject_required"),
+  messageEditorHtml: z.string().optional().readonly(),
+  messageEditorText: z.string().optional().readonly(),
+  messageEditorDraft: z.string().optional().readonly(),
+  attachments: z
+    .array(
+      z.object({
         blobId: z.string(),
         name: z.string(),
-    })).optional(),
+      })
+    )
+    .optional(),
 });
 
 type MessageFormFields = z.infer<typeof messageFormSchema>;
@@ -67,405 +71,553 @@ type MessageFormFields = z.infer<typeof messageFormSchema>;
 const DRAFT_TOAST_ID = "MESSAGE_FORM_DRAFT_TOAST";
 
 export const MessageForm = ({
-    parentMessage,
-    mode = "new",
-    onClose,
-    draftMessage,
-    onSuccess
+  parentMessage,
+  mode = "new",
+  onClose,
+  draftMessage,
+  onSuccess,
 }: MessageFormProps) => {
-    const { t } = useTranslation();
-    const router = useRouter();
-    const [draft, setDraft] = useState<Message | undefined>(draftMessage);
-    const [showCCField, setShowCCField] = useState((draftMessage?.cc?.length ?? 0) > 0);
-    const [showBCCField, setShowBCCField] = useState((draftMessage?.bcc?.length ?? 0) > 0);
-    const [pendingSubmit, setPendingSubmit] = useState(false);
-    const { selectedMailbox, mailboxes, invalidateThreadMessages, invalidateThreadsStats, unselectThread } = useMailboxContext();
-    const hideSubjectField = Boolean(parentMessage);
-    const defaultSenderId = mailboxes?.find((mailbox) => {
-        if (draft?.sender) return draft.sender.email === mailbox.email;
-        return selectedMailbox?.id === mailbox.id;
+  const { t } = useTranslation();
+  const router = useRouter();
+  const [draft, setDraft] = useState<Message | undefined>(draftMessage);
+  const [showCCField, setShowCCField] = useState(
+    (draftMessage?.cc?.length ?? 0) > 0
+  );
+  const [showBCCField, setShowBCCField] = useState(
+    (draftMessage?.bcc?.length ?? 0) > 0
+  );
+  const [pendingSubmit, setPendingSubmit] = useState(false);
+  const {
+    selectedMailbox,
+    mailboxes,
+    invalidateThreadMessages,
+    invalidateThreadsStats,
+    unselectThread,
+  } = useMailboxContext();
+  const hideSubjectField = Boolean(parentMessage);
+  const defaultSenderId =
+    mailboxes?.find((mailbox) => {
+      if (draft?.sender) return draft.sender.email === mailbox.email;
+      return selectedMailbox?.id === mailbox.id;
     })?.id ?? mailboxes?.[0]?.id;
-    const hideFromField = defaultSenderId && (mailboxes?.length ?? 0) === 1;
-    const { addQueuedMessage } = useSentBox();
+  const hideFromField = defaultSenderId && (mailboxes?.length ?? 0) === 1;
+  const { addQueuedMessage } = useSentBox();
+  const [showAttachmentsForgetAlert, setShowAttachmentsForgetAlert] =
+    useState(false);
 
-    const getMailboxOptions = () => {
-        if(!mailboxes) return [];
-        return mailboxes.map((mailbox) => ({
-            label: mailbox.email,
-            value: mailbox.id
-        }));
+  const getMailboxOptions = () => {
+    if (!mailboxes) return [];
+    return mailboxes.map((mailbox) => ({
+      label: mailbox.email,
+      value: mailbox.id,
+    }));
+  };
+
+  const recipients = useMemo(() => {
+    if (draft) return draft.to.map((contact) => contact.email);
+    if (!mode.startsWith("reply") || !parentMessage) return [];
+
+    if (mode === "reply_all") {
+      return [
+        ...new Set(
+          [
+            { email: parentMessage.sender.email },
+            ...parentMessage.to,
+            ...parentMessage.cc,
+          ]
+            .filter((contact) => contact.email !== selectedMailbox!.email)
+            .map((contact) => contact.email)
+        ),
+      ];
+    }
+    // If the sender is replying to himself, we can consider that it prefers
+    // to reply to the message recipient.
+    if (parentMessage.sender.email === selectedMailbox?.email) {
+      if (parentMessage.to.length > 0) {
+        return parentMessage.to.map((contact) => contact.email);
+      }
+      if (parentMessage.cc.length > 0) {
+        return parentMessage.cc.map((contact) => contact.email);
+      }
+      if (parentMessage.bcc.length > 0) {
+        return parentMessage.bcc.map((contact) => contact.email);
+      }
+    }
+    return [parentMessage.sender.email];
+  }, [parentMessage, mode, selectedMailbox]);
+
+  const getDefaultSubject = () => {
+    if (draft?.subject) return draft.subject;
+    if (parentMessage) {
+      if (mode === "forward")
+        return MailHelper.prefixSubjectIfNeeded(parentMessage.subject, "Fwd:");
+      if (mode.startsWith("reply"))
+        return MailHelper.prefixSubjectIfNeeded(parentMessage.subject, "Re:");
     }
 
-    const recipients = useMemo(() => {
-        if (draft) return draft.to.map(contact => contact.email);
-        if (!mode.startsWith("reply") || !parentMessage) return [];
+    return "";
+  };
 
-        if (mode === "reply_all") {
-            return [...new Set([
-                {email: parentMessage.sender.email},
-                ...parentMessage.to,
-                ...parentMessage.cc
-                ]
-                .filter(contact => contact.email !== selectedMailbox!.email)
-                .map(contact => contact.email)
-            )]
-        }
-        // If the sender is replying to himself, we can consider that it prefers
-        // to reply to the message recipient.
-        if (parentMessage.sender.email === selectedMailbox?.email) {
-            if (parentMessage.to.length > 0) {
-                return parentMessage.to.map(contact => contact.email);
-            }
-            if (parentMessage.cc.length > 0) {
-                return parentMessage.cc.map(contact => contact.email);
-            }
-            if (parentMessage.bcc.length > 0) {
-                return parentMessage.bcc.map(contact => contact.email);
-            }
-        }
-        return [parentMessage.sender.email];
-    }, [parentMessage, mode, selectedMailbox]);
+  const getDefaultAttachments = () => {
+    let attachments: readonly Attachment[] = [];
+    if (draft?.attachments) attachments = draft.attachments;
+    if (mode === "forward" && parentMessage?.attachments)
+      attachments = parentMessage.attachments;
+    return attachments;
+  };
 
-    const getDefaultSubject = () => {
-        if (draft?.subject) return draft.subject
-        if (parentMessage) {
-            if (mode === "forward") return MailHelper.prefixSubjectIfNeeded(parentMessage.subject, "Fwd:");
-            if (mode.startsWith("reply")) return MailHelper.prefixSubjectIfNeeded(parentMessage.subject, "Re:");
-        }
+  const formDefaultValues = useMemo(
+    () => ({
+      from: defaultSenderId ?? "",
+      to: (draft?.to?.map((contact) => contact.email) ?? recipients).join(", "),
+      cc: (draft?.cc?.map((contact) => contact.email) ?? []).join(", "),
+      bcc: (draft?.bcc?.map((contact) => contact.email) ?? []).join(", "),
+      subject: getDefaultSubject(),
+      messageEditorDraft: draft?.draftBody,
+      messageEditorHtml: undefined,
+      messageEditorText: undefined,
+      attachments: [],
+    }),
+    [draft, selectedMailbox]
+  );
 
-        return '';
-    }
+  const form = useForm({
+    resolver: zodResolver(messageFormSchema),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
+    shouldFocusError: false,
+    defaultValues: formDefaultValues,
+  });
 
-    const getDefaultAttachments = () => {
-        let attachments: readonly Attachment[]= [];
-        if (draft?.attachments) attachments = draft.attachments;
-        if (mode === "forward" && parentMessage?.attachments) attachments = parentMessage.attachments;
-        return attachments;
-    }
+  const messageMutation = useSendCreate({
+    mutation: {
+      onSettled: () => {
+        form.clearErrors();
+        setPendingSubmit(false);
+        toast.dismiss(DRAFT_TOAST_ID);
+      },
+      onSuccess: async (response) => {
+        const data = (response as sendCreateResponse200).data;
+        const taskId = data.task_id;
+        addQueuedMessage(taskId);
+        onSuccess?.();
+      },
+    },
+  });
 
-    const formDefaultValues = useMemo(() => ({
-        from: defaultSenderId ?? '',
-        to: (draft?.to?.map(contact => contact.email) ?? recipients).join(', '),
-        cc: (draft?.cc?.map(contact => contact.email) ?? []).join(', '),
-        bcc: (draft?.bcc?.map(contact => contact.email) ?? []).join(', '),
-        subject: getDefaultSubject(),
-        messageEditorDraft: draft?.draftBody,
-        messageEditorHtml: undefined,
-        messageEditorText: undefined,
-        attachments: [],
-    }), [draft, selectedMailbox])
-
-    const form = useForm({
-        resolver: zodResolver(messageFormSchema),
-        mode: "onBlur",
-        reValidateMode: "onBlur",
-        shouldFocusError: false,
-        defaultValues: formDefaultValues,
-    });
-
-    const messageMutation = useSendCreate({
-        mutation: {
-            onSettled: () => {
-                form.clearErrors();
-                setPendingSubmit(false);
-                toast.dismiss(DRAFT_TOAST_ID);
-            },
-            onSuccess: async (response) => {
-                const data = (response as sendCreateResponse200).data
-                const taskId = data.task_id;
-                addQueuedMessage(taskId);
-                onSuccess?.();
-            }
-        }
-    });
-
-    const handleDraftMutationSuccess = () => {
-        addToast(
-            <ToasterItem type="info">
-                <span>{t("message_form.success.saved")}</span>
-            </ToasterItem>,
-            {
-                toastId: DRAFT_TOAST_ID
-            }
-        );
-    }
-
-    const draftCreateMutation = useDraftCreate({
-        mutation: { onSuccess: () => {
-            invalidateThreadsStats();
-            handleDraftMutationSuccess();
-        }}
-    });
-
-    const draftUpdateMutation = useDraftUpdate2({
-        mutation: { onSuccess: handleDraftMutationSuccess }
-    });
-
-    const deleteMessageMutation = useMessagesDestroy();
-
-    const handleDeleteMessage = (messageId: string) => {
-        if(window.confirm(t("message_form.confirm.delete"))) {
-            deleteMessageMutation.mutate({
-                id: messageId
-            }, {
-                onSuccess: () => {
-                    setDraft(undefined);
-                    invalidateThreadMessages();
-                    invalidateThreadsStats();
-                    unselectThread();
-                    addToast(
-                        <ToasterItem type="info">
-                            <span>{t("message_form.success.draft_deleted")}</span>
-                        </ToasterItem>
-                    );
-                    onClose?.();
-                },
-            });
-        }
-    }
-
-    /**
-     * If the user changes the message sender, we need to delete the draft,
-     * then recreate a new one. Once the new draft is created, we need to
-     * redirect the user to the new draft view.
-     */
-    const handleChangeSender = async (data: DraftMessageRequestRequest) => {
-        if (draft && form.formState.dirtyFields.from) {
-            await deleteMessageMutation.mutateAsync({ id: draft.id });
-            const response = await draftCreateMutation.mutateAsync({ data }, {
-                onSuccess: () => {addToast(
-                    <ToasterItem type="info">
-                        <span>{t("message_form.success.draft_transferred")}</span>
-                    </ToasterItem>,
-                );
-                }
-            });
-
-            if(router.asPath.includes("new")) {
-                setDraft(response.data as Message);
-                return;
-            }
-            const mailboxId = data.senderId;
-            const threadId = response.data.thread_id
-            // @TODO: Make something less hardcoded to improve the maintainability of the code
-            router.replace(`/mailbox/${mailboxId}/thread/${threadId}?has_draft=1`);
-        }
-    }
-
-    /**
-     * Update or create a draft message if any field to change.
-     */
-    const saveDraft = async (data: MessageFormFields) => {
-        if (Object.keys(form.formState.dirtyFields).length === 0) return draft;
-
-        const payload = {
-            to: data.to,
-            cc: data.cc || [],
-            bcc: data.bcc || [],
-            subject: data.subject,
-            senderId: data.from,
-            parentId: parentMessage?.id,
-            draftBody: data.messageEditorDraft,
-            attachments: form.getValues('attachments'),
-        }
-        let response;
-
-        if (!draft) {
-            response = await draftCreateMutation.mutateAsync({
-                data: payload,
-            });
-        } else if (form.formState.dirtyFields.from) {
-            handleChangeSender(payload);
-            return;
-        } else {
-            response = await draftUpdateMutation.mutateAsync({
-                messageId: draft.id,
-                data: payload,
-            });
-        }
-
-        const newDraft = response.data as Message;
-        setDraft(newDraft);
-        return newDraft;
-    }
-
-    /**
-     * Send the draft message
-     */
-    const handleSubmit = async (data: MessageFormFields) => {
-        setPendingSubmit(true);
-
-        // recipients are optional to save the draft but required to send the message
-        // so we have to manually check that at least one recipient is present.
-        const hasNoRecipients = data.to.length === 0 && data.cc.length === 0 && data.bcc.length === 0;
-        if (hasNoRecipients) {
-            setPendingSubmit(false);
-            form.setError("to", { message: t("message_form.error.min_recipient") });
-            return;
-        }
-
-        const draft = await saveDraft(data);
-
-        if (!draft) {
-            setPendingSubmit(false);
-            return;
-        }
-
-        messageMutation.mutate({
-            data: {
-                messageId: draft.id,
-                senderId: data.from,
-                htmlBody: form.getValues('messageEditorHtml'),
-                textBody: form.getValues('messageEditorText'),
-            }
-        });
-    };
-
-    /**
-     * Prevent the Enter key press to trigger onClick on input children (like file input)
-     */
-    const handleKeyDown = (event: React.KeyboardEvent) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-        }
-    }
-
-    useEffect(() => {
-        if (draftMessage) form.setFocus("subject");
-        else form.setFocus("to")
-    }, []);
-
-    useEffect(() => {
-        if (draft) {
-            form.reset(undefined, { keepSubmitCount: true, keepDirty: false, keepValues: true, keepDefaultValues: false });
-        }
-    }, [draft]);
-
-    useEffect(() => {
-        if (!showCCField && form.formState.errors?.cc) {
-            form.resetField("cc");
-            form.clearErrors("cc");
-        }
-    }, [showCCField])
-
-    useEffect(() => {
-        if (!showBCCField && form.formState.errors?.bcc) {
-            form.resetField("bcc");
-            form.clearErrors("bcc");
-        }
-    }, [showBCCField])
-
-    return (
-        <FormProvider {...form}>
-            <form
-                className="message-form"
-                onSubmit={form.handleSubmit(handleSubmit)}
-                onBlur={form.handleSubmit(saveDraft)}
-                onKeyDown={handleKeyDown}
-            >
-                <div className={clsx("form-field-row", {'form-field-row--hidden': hideFromField})}>
-                    <RhfSelect
-                        name="from"
-                        options={getMailboxOptions()}
-                        label={t("thread_message.from")}
-                        clearable={false}
-                        compact
-                        fullWidth
-                        showLabelWhenSelected={false}
-                        text={form.formState.errors.from && t(form.formState.errors.from.message as string)}
-                    />
-                </div>
-                <div className="form-field-row">
-                    <RhfInput
-                        name="to"
-                        label={t("thread_message.to")}
-                        icon={<span className="material-icons">group</span>}
-                        fullWidth
-                        text={form.formState.errors.to && !Array.isArray(form.formState.errors.to) ? t(form.formState.errors.to.message as string) : t("message_form.helper_text.recipients")}
-                        textItems={Array.isArray(form.formState.errors.to) ? form.formState.errors.to?.map((error, index) => t(error!.message as string, { email: form.getValues(`to`)!.split(',')[index] })) : undefined}
-                    />
-                    <Button tabIndex={-1} type="button" size="nano" color={showCCField ? "tertiary" : "tertiary-text"} onClick={() => setShowCCField(!showCCField)}>cc</Button>
-                    <Button tabIndex={-1} type="button" size="nano" color={showBCCField ? "tertiary" : "tertiary-text"} onClick={() => setShowBCCField(!showBCCField)}>bcc</Button>
-                </div>
-
-                {showCCField && (
-                    <div className="form-field-row">
-                        <RhfInput
-                            name="cc"
-                            label={t("thread_message.cc")}
-                            icon={<span className="material-icons">group</span>}
-                            text={form.formState.errors.cc && !Array.isArray(form.formState.errors.cc) ? t(form.formState.errors.cc.message as string) : t("message_form.helper_text.recipients")}
-                            textItems={Array.isArray(form.formState.errors.cc) ? form.formState.errors.cc?.map((error, index) => t(error!.message as string, { email: form.getValues('cc')?.split(',')[index] })) : []}
-                            fullWidth
-                        />
-                    </div>
-                )}
-
-                {showBCCField && (
-                    <div className="form-field-row">
-                        <RhfInput
-                            name="bcc"
-                            label={t("thread_message.bcc")}
-                            icon={<span className="material-icons">visibility_off</span>}
-                            text={form.formState.errors.bcc && !Array.isArray(form.formState.errors.bcc) ? t(form.formState.errors.bcc.message as string) : t("message_form.helper_text.recipients")}
-                            textItems={Array.isArray(form.formState.errors.bcc) ? form.formState.errors.bcc?.map((error, index) => t(error!.message as string, { email: form.getValues('bcc')?.split(',')[index] })) : []}
-                            fullWidth
-                        />
-                    </div>
-                )}
-
-                <div className={clsx("form-field-row", {'form-field-row--hidden': hideSubjectField})}>
-                        <RhfInput
-                            name="subject"
-                            label={t("thread_message.subject")}
-                            text={form.formState.errors.subject && t(form.formState.errors.subject.message as string)}
-                            fullWidth
-                        />
-                    </div>
-
-                <div className="form-field-row">
-                    <MessageEditor
-                        defaultValue={form.getValues('messageEditorDraft')}
-                        fullWidth
-                        state={form.formState.errors?.messageEditorDraft ? "error" : "default"}
-                        text={form.formState.errors?.messageEditorDraft?.message}
-                        quotedMessage={mode !== "new" ? parentMessage : undefined}
-                    />
-                </div>
-
-                <AttachmentUploader initialAttachments={getDefaultAttachments()} onChange={form.handleSubmit(saveDraft)} />
-
-                <footer className="form-footer">
-                    <Button
-                        color="primary"
-                        disabled={!draft || pendingSubmit}
-                        icon={pendingSubmit ? <Spinner size="sm" /> : undefined}
-                        type="submit"
-                    >
-                        {t("actions.send")}
-                    </Button>
-                    {!draft && onClose && (
-                        <Button
-                            type="button"
-                            color="secondary"
-                            onClick={onClose}
-                    >
-                            {t("actions.cancel")}
-                        </Button>
-                    )}
-                    {
-                        draft && (
-                            <Button
-                                type="button"
-                                color="secondary"
-                                onClick={() => handleDeleteMessage(draft.id)}
-                            >
-                                {t("actions.delete_draft")}
-                            </Button>
-                        )
-                    }
-                </footer>
-            </form>
-        </FormProvider>
+  const handleDraftMutationSuccess = () => {
+    addToast(
+      <ToasterItem type="info">
+        <span>{t("message_form.success.saved")}</span>
+      </ToasterItem>,
+      {
+        toastId: DRAFT_TOAST_ID,
+      }
     );
+  };
+
+  const draftCreateMutation = useDraftCreate({
+    mutation: {
+      onSuccess: () => {
+        invalidateThreadsStats();
+        handleDraftMutationSuccess();
+      },
+    },
+  });
+
+  const draftUpdateMutation = useDraftUpdate2({
+    mutation: { onSuccess: handleDraftMutationSuccess },
+  });
+
+  const deleteMessageMutation = useMessagesDestroy();
+
+  const handleDeleteMessage = (messageId: string) => {
+    if (window.confirm(t("message_form.confirm.delete"))) {
+      deleteMessageMutation.mutate(
+        {
+          id: messageId,
+        },
+        {
+          onSuccess: () => {
+            setDraft(undefined);
+            invalidateThreadMessages();
+            invalidateThreadsStats();
+            unselectThread();
+            addToast(
+              <ToasterItem type="info">
+                <span>{t("message_form.success.draft_deleted")}</span>
+              </ToasterItem>
+            );
+            onClose?.();
+          },
+        }
+      );
+    }
+  };
+
+  /**
+   * If the user changes the message sender, we need to delete the draft,
+   * then recreate a new one. Once the new draft is created, we need to
+   * redirect the user to the new draft view.
+   */
+  const handleChangeSender = async (data: DraftMessageRequestRequest) => {
+    if (draft && form.formState.dirtyFields.from) {
+      await deleteMessageMutation.mutateAsync({ id: draft.id });
+      const response = await draftCreateMutation.mutateAsync(
+        { data },
+        {
+          onSuccess: () => {
+            addToast(
+              <ToasterItem type="info">
+                <span>{t("message_form.success.draft_transferred")}</span>
+              </ToasterItem>
+            );
+          },
+        }
+      );
+
+      if (router.asPath.includes("new")) {
+        setDraft(response.data as Message);
+        return;
+      }
+      const mailboxId = data.senderId;
+      const threadId = response.data.thread_id;
+      // @TODO: Make something less hardcoded to improve the maintainability of the code
+      router.replace(`/mailbox/${mailboxId}/thread/${threadId}?has_draft=1`);
+    }
+  };
+
+  /**
+   * Update or create a draft message if any field to change.
+   */
+  const saveDraft = async (data: MessageFormFields) => {
+    if (Object.keys(form.formState.dirtyFields).length === 0) return draft;
+
+    const payload = {
+      to: data.to,
+      cc: data.cc || [],
+      bcc: data.bcc || [],
+      subject: data.subject,
+      senderId: data.from,
+      parentId: parentMessage?.id,
+      draftBody: data.messageEditorDraft,
+      attachments: form.getValues("attachments"),
+    };
+    let response;
+
+    if (!draft) {
+      response = await draftCreateMutation.mutateAsync({
+        data: payload,
+      });
+    } else if (form.formState.dirtyFields.from) {
+      handleChangeSender(payload);
+      return;
+    } else {
+      response = await draftUpdateMutation.mutateAsync({
+        messageId: draft.id,
+        data: payload,
+      });
+    }
+
+    const newDraft = response.data as Message;
+    setDraft(newDraft);
+    return newDraft;
+  };
+
+  /**
+   * Send the draft message
+   */
+  const handleSubmit = async (data: MessageFormFields) => {
+    setPendingSubmit(true);
+
+    // recipients are optional to save the draft but required to send the message
+    // so we have to manually check that at least one recipient is present.
+    const hasNoRecipients =
+      data.to.length === 0 && data.cc.length === 0 && data.bcc.length === 0;
+    if (hasNoRecipients) {
+      setPendingSubmit(false);
+      form.setError("to", { message: t("message_form.error.min_recipient") });
+      return;
+    }
+
+    const draft = await saveDraft(data);
+
+    if (!draft) {
+      setPendingSubmit(false);
+      return;
+    }
+
+    messageMutation.mutate({
+      data: {
+        messageId: draft.id,
+        senderId: data.from,
+        htmlBody: form.getValues("messageEditorHtml"),
+        textBody: form.getValues("messageEditorText"),
+      },
+    });
+  };
+
+  const areAttachmentsMentionnedInDraft = (): boolean => {
+    const keyWordsAttachments = [
+      "pièce jointe",
+      "document",
+      "fichier",
+      "image",
+      "pdf",
+      "zip",
+      "archive",
+      "annexe",
+      "joint",
+      "fichier joint",
+      "document joint",
+      "attachment",
+      "attached",
+      "veuillez trouver",
+      "pj",
+    ];
+    const messageEditorDraft =
+      form.getValues("messageEditorDraft")?.toLowerCase() || "";
+
+    // Check if any of the keywords are mentioned in the draft
+    return keyWordsAttachments.some((keyword) =>
+      messageEditorDraft.includes(keyword)
+    );
+  };
+
+  /**
+   * Prevent the Enter key press to trigger onClick on input children (like file input)
+   */
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+    }
+  };
+
+  useEffect(() => {
+    if (draftMessage) form.setFocus("subject");
+    else form.setFocus("to");
+  }, []);
+
+  useEffect(() => {
+    if (draft) {
+      form.reset(undefined, {
+        keepSubmitCount: true,
+        keepDirty: false,
+        keepValues: true,
+        keepDefaultValues: false,
+      });
+    }
+  }, [draft]);
+
+  useEffect(() => {
+    if (!showCCField && form.formState.errors?.cc) {
+      form.resetField("cc");
+      form.clearErrors("cc");
+    }
+  }, [showCCField]);
+
+  useEffect(() => {
+    if (!showBCCField && form.formState.errors?.bcc) {
+      form.resetField("bcc");
+      form.clearErrors("bcc");
+    }
+  }, [showBCCField]);
+
+  useEffect(() => {
+    setShowAttachmentsForgetAlert(
+      areAttachmentsMentionnedInDraft() &&
+        form.getValues("attachments")?.length === 0
+    );
+  }, [form.getValues("messageEditorDraft"), form.getValues("attachments")]);
+
+  return (
+    <FormProvider {...form}>
+      <form
+        className="message-form"
+        onSubmit={form.handleSubmit(handleSubmit)}
+        onBlur={form.handleSubmit(saveDraft)}
+        onKeyDown={handleKeyDown}
+      >
+        <div
+          className={clsx("form-field-row", {
+            "form-field-row--hidden": hideFromField,
+          })}
+        >
+          <RhfSelect
+            name="from"
+            options={getMailboxOptions()}
+            label={t("thread_message.from")}
+            clearable={false}
+            compact
+            fullWidth
+            showLabelWhenSelected={false}
+            text={
+              form.formState.errors.from &&
+              t(form.formState.errors.from.message as string)
+            }
+          />
+        </div>
+        <div className="form-field-row">
+          <RhfInput
+            name="to"
+            label={t("thread_message.to")}
+            icon={<span className="material-icons">group</span>}
+            fullWidth
+            text={
+              form.formState.errors.to &&
+              !Array.isArray(form.formState.errors.to)
+                ? t(form.formState.errors.to.message as string)
+                : t("message_form.helper_text.recipients")
+            }
+            textItems={
+              Array.isArray(form.formState.errors.to)
+                ? form.formState.errors.to?.map((error, index) =>
+                    t(error!.message as string, {
+                      email: form.getValues(`to`)!.split(",")[index],
+                    })
+                  )
+                : undefined
+            }
+          />
+          <Button
+            tabIndex={-1}
+            type="button"
+            size="nano"
+            color={showCCField ? "tertiary" : "tertiary-text"}
+            onClick={() => setShowCCField(!showCCField)}
+          >
+            cc
+          </Button>
+          <Button
+            tabIndex={-1}
+            type="button"
+            size="nano"
+            color={showBCCField ? "tertiary" : "tertiary-text"}
+            onClick={() => setShowBCCField(!showBCCField)}
+          >
+            bcc
+          </Button>
+        </div>
+
+        {showCCField && (
+          <div className="form-field-row">
+            <RhfInput
+              name="cc"
+              label={t("thread_message.cc")}
+              icon={<span className="material-icons">group</span>}
+              text={
+                form.formState.errors.cc &&
+                !Array.isArray(form.formState.errors.cc)
+                  ? t(form.formState.errors.cc.message as string)
+                  : t("message_form.helper_text.recipients")
+              }
+              textItems={
+                Array.isArray(form.formState.errors.cc)
+                  ? form.formState.errors.cc?.map((error, index) =>
+                      t(error!.message as string, {
+                        email: form.getValues("cc")?.split(",")[index],
+                      })
+                    )
+                  : []
+              }
+              fullWidth
+            />
+          </div>
+        )}
+
+        {showBCCField && (
+          <div className="form-field-row">
+            <RhfInput
+              name="bcc"
+              label={t("thread_message.bcc")}
+              icon={<span className="material-icons">visibility_off</span>}
+              text={
+                form.formState.errors.bcc &&
+                !Array.isArray(form.formState.errors.bcc)
+                  ? t(form.formState.errors.bcc.message as string)
+                  : t("message_form.helper_text.recipients")
+              }
+              textItems={
+                Array.isArray(form.formState.errors.bcc)
+                  ? form.formState.errors.bcc?.map((error, index) =>
+                      t(error!.message as string, {
+                        email: form.getValues("bcc")?.split(",")[index],
+                      })
+                    )
+                  : []
+              }
+              fullWidth
+            />
+          </div>
+        )}
+
+        <div
+          className={clsx("form-field-row", {
+            "form-field-row--hidden": hideSubjectField,
+          })}
+        >
+          <RhfInput
+            name="subject"
+            label={t("thread_message.subject")}
+            text={
+              form.formState.errors.subject &&
+              t(form.formState.errors.subject.message as string)
+            }
+            fullWidth
+          />
+        </div>
+
+        <div className="form-field-row">
+          <MessageEditor
+            defaultValue={form.getValues("messageEditorDraft")}
+            fullWidth
+            state={
+              form.formState.errors?.messageEditorDraft ? "error" : "default"
+            }
+            text={form.formState.errors?.messageEditorDraft?.message}
+            quotedMessage={mode !== "new" ? parentMessage : undefined}
+          />
+        </div>
+
+        <AttachmentUploader
+          initialAttachments={getDefaultAttachments()}
+          onChange={form.handleSubmit(saveDraft)}
+        />
+        
+        {showAttachmentsForgetAlert && 
+            <section className="attachments-forget__alert">
+              <p>
+                {t("attachments.forgot_question")}
+              </p>
+            </section>
+        }
+        
+
+        <footer className="form-footer">
+          <Button
+            color="primary"
+            disabled={!draft || pendingSubmit}
+            icon={pendingSubmit ? <Spinner size="sm" /> : undefined}
+            type="submit"
+          >
+            {t("actions.send")}
+          </Button>
+          {!draft && onClose && (
+            <Button type="button" color="secondary" onClick={onClose}>
+              {t("actions.cancel")}
+            </Button>
+          )}
+          {draft && (
+            <Button
+              type="button"
+              color="secondary"
+              onClick={() => handleDeleteMessage(draft.id)}
+            >
+              {t("actions.delete_draft")}
+            </Button>
+          )}
+        </footer>
+      </form>
+    </FormProvider>
+  );
 };

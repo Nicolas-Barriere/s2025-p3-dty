@@ -101,7 +101,8 @@
       "attachments": {
         "counter_zero": "No attachments",
         "counter_one": "{{count}} attachment",
-        "counter_other": "{{count}} attachments"
+        "counter_other": "{{count}} attachments",
+        "forgot_question": "Did you forget an attachment?"
       },
       "message_form": {
         "helper_text": {
@@ -373,7 +374,8 @@
       "attachments": {
         "counter_zero": "Aucune pièce jointe",
         "counter_one": "{{count}} pièce jointe",
-        "counter_other": "{{count}} pièces jointes"
+        "counter_other": "{{count}} pièces jointes",
+        "forgot_question": "N'avez-vous pas oublié une pièce jointe ?"
       },
       "message_form": {
         "helper_text": {
