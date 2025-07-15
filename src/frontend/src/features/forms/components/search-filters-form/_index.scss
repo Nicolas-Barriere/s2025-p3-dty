@@ -39,18 +39,62 @@
 }
 
 .search__advanced-research-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--c--theme--spacings--xs);
-    padding: var(--c--theme--spacings--sm);
-    background-color: var(--c--theme--colors--primary-50);
-    border-radius: var(--c--theme--spacings--3xs);
-    border: 1px solid var(--c--theme--colors--primary-200);
+    position: relative;
+    padding-top: var(--c--theme--spacings--sm);
     margin-top: var(--c--theme--spacings--sm);
+    
+    // Straight line separator above the chatbot input
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: var(--c--theme--colors--greyscale-300);
+    }
 }
 
-.search__advanced-research-actions {
+.search__advanced-research-input-wrapper {
+    position: relative;
     display: flex;
-    justify-content: flex-end;
-    gap: var(--c--theme--spacings--xs);
+    align-items: center;
+    
+    // Center the text in the input
+    input {
+        padding-right: 50px; // Make space for the button inside
+    }
+    
+    
+    // Ensure the labelled-box container doesn't interfere with centering
+    .labelled-box {
+        display: flex;
+        align-items: center;
+        height: 26px; // Match button height
+        
+        .labelled-box__children {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+    }
+}
+
+.search__advanced-research-send-button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    min-width: auto !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 6px !important;
+    border-radius: 50% !important;
+    z-index: 1;
+    
+    // Ensure button is visible inside input
+    .material-icons {
+        font-size: 18px;
+    }
 }

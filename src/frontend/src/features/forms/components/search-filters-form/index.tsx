@@ -174,17 +174,16 @@ export const SearchFiltersForm = ({ query, onChange }: SearchFiltersFormProps) =
             
             {/* Advanced Research Field */}
             <div className="search__advanced-research-container">
-                <Input
-                    name="advanced_research"
-                    label={t("search.filters.label.advanced_research")}
-                    value={advancedResearchValue}
-                    onChange={handleAdvancedResearchChange}
-                    onKeyDown={handleAdvancedResearchKeyPress}
-                    placeholder={t("search.filters.placeholder.advanced_research")}
-                    disabled={isSubmittingAdvancedResearch}
-                    fullWidth
-                />
-                <div className="search__advanced-research-actions">
+                <div className="search__advanced-research-input-wrapper">
+                    <Input
+                        name="advanced_research"
+                        value={advancedResearchValue}
+                        onChange={handleAdvancedResearchChange}
+                        onKeyDown={handleAdvancedResearchKeyPress}
+                        placeholder={t("search.filters.placeholder.advanced_research")}
+                        disabled={isSubmittingAdvancedResearch}
+                        fullWidth
+                    />
                     <Button
                         type="button"
                         color="primary"
@@ -192,6 +191,7 @@ export const SearchFiltersForm = ({ query, onChange }: SearchFiltersFormProps) =
                         onClick={() => updateQuery(true)}
                         disabled={!advancedResearchValue.trim() || isSubmittingAdvancedResearch}
                         title={t("search.filters.advanced_research.send")}
+                        className="search__advanced-research-send-button"
                     >
                         {isSubmittingAdvancedResearch ? (
                             <span className="material-icons">hourglass_empty</span>
