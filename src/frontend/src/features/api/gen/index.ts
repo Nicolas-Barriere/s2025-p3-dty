@@ -1,5 +1,6 @@
 export * from "./blob/blob";
 export * from "./config/config";
+export * from "./contacts/contacts";
 export * from "./messages/messages";
 export * from "./flags/flags";
 export * from "./import/import";
@@ -8,6 +9,7 @@ export * from "./mailboxes/mailboxes";
 export * from "./mailbox-accesses/mailbox-accesses";
 export * from "./maildomains/maildomains";
 export * from "./mta/mta";
+export * from "./prompt-evaluation/prompt-evaluation";
 export * from "./tasks/tasks";
 export * from "./threads/threads";
 export * from "./thread-access/thread-access";

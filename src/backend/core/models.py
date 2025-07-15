@@ -891,3 +891,23 @@ class MailDomainAccess(BaseModel):
 
     def __str__(self):
         return f"Access to {self.maildomain} for {self.user} with {self.role} role"
+
+class PromptEvaluation(BaseModel):
+    """
+    Model to store user evaluation of AI-generated prompts.
+    """
+    prompt_id = models.IntegerField(verbose_name=_("prompt id"))
+    prompt_type = models.CharField(
+        _("prompt type"),
+        max_length=50,
+        help_text=_('Type of prompt: "new_mail" or "answer_mail"')
+    )
+    accepted = models.BooleanField(_("liked"))
+
+    class Meta:
+        db_table = "messages_promptevaluation"
+        verbose_name = _("prompt evaluation")
+        verbose_name_plural = _("prompt evaluations")
+
+    def __str__(self):
+        return f"PromptEvaluation {self.prompt_id} ({self.prompt_type}) - Liked: {self.accepted}"

@@ -23,6 +23,7 @@ from core.api.viewsets.send import SendMessageView
 from core.api.viewsets.task import TaskDetailView
 from core.api.viewsets.thread import ThreadViewSet
 from core.api.viewsets.thread_access import ThreadAccessViewSet
+from core.api.viewsets.prompt_eval import PromptEvaluationViewSet
 from core.api.viewsets.user import UserViewSet
 from core.authentication.urls import urlpatterns as oidc_urls
 
@@ -37,6 +38,7 @@ router.register("threads", ThreadViewSet, basename="threads")
 router.register("labels", LabelViewSet, basename="labels")
 router.register("mailboxes", MailboxViewSet, basename="mailboxes")
 router.register("maildomains", MailDomainAdminViewSet, basename="maildomains")
+router.register("prompt-evaluation", PromptEvaluationViewSet, basename='prompt-evaluation')
 
 # Router for /threads/{thread_id}/accesses/
 thread_access_nested_router = DefaultRouter()

@@ -119,7 +119,8 @@
           "subject_required": "Subject is required.",
           "mailbox_required": "Mailbox is required.",
           "invalid_recipient": "The email {{email}} is invalid.",
-          "messageEditorHtml": "You must write a message."
+          "messageEditorHtml": "You must write a message.",
+          "pending_changes": "You must accept or revert the modifications"
         },
         "success": {
           "saved": "Draft saved",
@@ -143,6 +144,13 @@
       },
       "message_editor": {
         "start_typing": "Start typing..."
+      },
+      "aiToolbar": {
+        "placeholder": "AI prompt...",
+        "tooltip-open": "AI Assistant",
+        "tooltip-close": "Close AI Assistant",
+        "Cancel": "Cancel",
+        "Accept": "Accept"
       },
       "search": {
         "placeholder": "Search in messages...",
@@ -339,7 +347,7 @@
         "refresh_summary": "Rafraîchir le résumé"
       },
       "tooltips": {
-        "has_attachments": "Cette email contient une pièce jointe",
+        "has_attachments": "Cet email contient une pièce jointe",
         "more_options": "Plus d'options",
         "mark_as_important": "Marquer comme important",
         "reply": "Répondre",
@@ -391,7 +399,8 @@
           "subject_required": "Vous devez saisir un sujet.",
           "mailbox_required": "Vous devez choisir une boîte d'envoi.",
           "invalid_recipient": "Le courriel {{email}} est invalide.",
-          "messageEditorHtml": "Vous devez écrire un message."
+          "messageEditorHtml": "Vous devez écrire un message.",
+          "pending_changes": "Veuillez accepter ou refuser les modifications"
         },
         "success": {
           "saved": "Brouillon sauvegardé.",
@@ -415,6 +424,13 @@
       },
       "message_editor": {
         "start_typing": "Commencer à écrire..."
+      },
+      "aiToolbar": {
+        "placeholder": "Consigne IA...",
+        "tooltip-open": "Assistant IA",
+        "tooltip-close": "Fermer assistant IA",
+        "Cancel": "Annuler",
+        "Accept": "Accepter"
       },
       "search": {
         "placeholder": "Rechercher dans les messages...",

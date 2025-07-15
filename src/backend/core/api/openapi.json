@@ -144,6 +144,90 @@
                 }
             }
         },
+        "/api/v1.0/contacts/": {
+            "get": {
+                "operationId": "contacts_list",
+                "description": "List contacts with optional filtering by mailbox and search query.\n\nQuery parameters:\n- mailbox_id: Optional UUID to filter contacts by mailbox\n- q: Optional search query for name or email (case insensitive)",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "mailbox_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "Filter contacts by mailbox ID."
+                    },
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Search contacts by name or email (case insensitive)."
+                    }
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Contact"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/contacts/{id}/": {
+            "get": {
+                "operationId": "contacts_retrieve",
+                "description": "ViewSet for Contact model.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Contact"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/draft/": {
             "post": {
                 "operationId": "draft_create",
@@ -2585,6 +2669,214 @@
                 }
             }
         },
+        "/api/v1.0/prompt-evaluation/": {
+            "get": {
+                "operationId": "prompt_evaluation_list",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "prompt-evaluation"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedPromptEvaluationList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "prompt_evaluation_create",
+                "tags": [
+                    "prompt-evaluation"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PromptEvaluationRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PromptEvaluationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PromptEvaluation"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/prompt-evaluation/{id}/": {
+            "get": {
+                "operationId": "prompt_evaluation_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "prompt-evaluation"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PromptEvaluation"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "prompt_evaluation_destroy",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "prompt-evaluation"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1.0/prompt-evaluation/evaluate/": {
+            "post": {
+                "operationId": "prompt_evaluation_evaluate_create",
+                "tags": [
+                    "prompt-evaluation"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PromptEvaluationRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PromptEvaluationRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "prompt_id": {
+                                            "type": "integer"
+                                        },
+                                        "prompt_type": {
+                                            "type": "string"
+                                        },
+                                        "accepted": {
+                                            "type": "boolean"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Prompt evaluation successfully created."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "detail": "Permission denied"
+                                }
+                            }
+                        },
+                        "description": "User is not authenticated."
+                    }
+                }
+            }
+        },
         "/api/v1.0/send/": {
             "post": {
                 "operationId": "send_create",
@@ -2909,6 +3201,74 @@
                 "responses": {
                     "204": {
                         "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1.0/threads/{id}/generate-answer/": {
+            "post": {
+                "operationId": "threads_generate_answer_create",
+                "description": "ViewSet for Thread model.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "threads"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateAnswerRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateAnswerRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "answer": {
+                                            "type": "string"
+                                        },
+                                        "prompt_id": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Answer successfully generated."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "detail": "Permission denied"
+                                }
+                            }
+                        },
+                        "description": "User does not have permission to generate an answer to this thread."
                     }
                 }
             }
@@ -3315,6 +3675,64 @@
                 }
             }
         },
+        "/api/v1.0/threads/generate-new-message/": {
+            "post": {
+                "operationId": "threads_generate_new_message_create",
+                "description": "ViewSet for Thread model.",
+                "tags": [
+                    "threads"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateNewMessageRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateNewMessageRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "prompt_id": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Message successfully generated."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "detail": "Permission denied"
+                                }
+                            }
+                        },
+                        "description": "User does not have permission to generate a new message."
+                    }
+                }
+            }
+        },
         "/api/v1.0/threads/stats/": {
             "get": {
                 "operationId": "threads_stats_retrieve",
@@ -3649,6 +4067,36 @@
                 ],
                 "type": "string",
                 "description": "* `unread` - unread\n* `starred` - starred\n* `trashed` - trashed"
+            },
+            "GenerateAnswerRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "draft": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Brouillon du message actuel."
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Prompt de l'utilisateur pour l'IA."
+                    }
+                }
+            },
+            "GenerateNewMessageRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "draft": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Brouillon du message actuel."
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Prompt de l'utilisateur pour l'IA."
+                    }
+                }
             },
             "ImportFileRequest": {
                 "type": "object",
@@ -4134,7 +4582,8 @@
                     },
                     "subject": {
                         "type": "string",
-                        "readOnly": true
+                        "readOnly": true,
+                        "nullable": true
                     },
                     "created_at": {
                         "type": "string",
@@ -4387,6 +4836,37 @@
                     }
                 }
             },
+            "PaginatedPromptEvaluationList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PromptEvaluation"
+                        }
+                    }
+                }
+            },
             "PaginatedThreadAccessList": {
                 "type": "object",
                 "required": [
@@ -4513,6 +4993,101 @@
                     }
                 }
             },
+            "PromptEvaluation": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "prompt_id": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": -2147483648
+                    },
+                    "prompt_type": {
+                        "type": "string",
+                        "description": "Type of prompt: \"new_mail\" or \"answer_mail\"",
+                        "maxLength": 50
+                    },
+                    "accepted": {
+                        "type": "boolean",
+                        "title": "Liked"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "title": "Created on",
+                        "description": "date and time at which a record was created"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "title": "Updated on",
+                        "description": "date and time at which a record was last updated"
+                    }
+                },
+                "required": [
+                    "accepted",
+                    "created_at",
+                    "id",
+                    "prompt_id",
+                    "prompt_type",
+                    "updated_at"
+                ]
+            },
+            "PromptEvaluationRequest": {
+                "type": "object",
+                "properties": {
+                    "prompt_id": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": -2147483648
+                    },
+                    "prompt_type": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Type of prompt: \"new_mail\" or \"answer_mail\"",
+                        "maxLength": 50
+                    },
+                    "accepted": {
+                        "type": "boolean",
+                        "title": "Liked"
+                    }
+                },
+                "required": [
+                    "accepted",
+                    "prompt_id",
+                    "prompt_type"
+                ]
+            },
+            "PromptEvaluationRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "prompt_id": {
+                        "type": "integer",
+                        "description": "ID du prompt évalué."
+                    },
+                    "prompt_type": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Type du prompt (ex: new_mail, answer_mail)."
+                    },
+                    "accepted": {
+                        "type": "boolean",
+                        "description": "L'utilisateur a-t-il accepté la suggestion ?"
+                    }
+                },
+                "required": [
+                    "accepted",
+                    "prompt_id",
+                    "prompt_type"
+                ]
+            },
             "SendMessageRequestRequest": {
                 "type": "object",
                 "properties": {
@@ -4603,7 +5178,8 @@
                     },
                     "subject": {
                         "type": "string",
-                        "readOnly": true
+                        "readOnly": true,
+                        "nullable": true
                     },
                     "snippet": {
                         "type": "string",
