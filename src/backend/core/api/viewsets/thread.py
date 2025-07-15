@@ -11,12 +11,16 @@ from drf_spectacular.utils import (
     extend_schema,
 )
 from rest_framework import mixins, viewsets, status
+from rest_framework.response import Response
 
 from core import enums, models
 from core.search import search_threads
-from core.ai.thread_summarizer import summarize_thread
+from core.ai.thread_summarizer import summarize_thread, generate_answer
 
 from .. import permissions, serializers
+from drf_spectacular.utils import inline_serializer
+from rest_framework import serializers as drf_serializers
+
 
 
 class ThreadViewSet(
@@ -476,7 +480,45 @@ class ThreadViewSet(
             "summary": thread.summary
         }, status=status.HTTP_200_OK)
 
-
+    @extend_schema(
+        request=inline_serializer(
+            name="GenerateAnswerRequest",
+            fields={
+                "context": drf_serializers.CharField(required=False, help_text="Contexte optionnel pour la génération de la réponse"),
+            },
+        ),
+        responses={
+            200: OpenApiResponse(
+                response={"type": "object", "properties": {
+                    "answer": {"type": "string"}
+                }},
+                description="Answer successfully generated.",
+            ),
+            403: OpenApiResponse(
+                response={"detail": "Permission denied"},
+                description="User does not have permission to generate an answer to this thread.",
+            ),
+        },
+        tags=["threads"]
+    )
+    @drf.decorators.action(
+        detail=True,
+        methods=["post"],
+        url_path="generate-answer",
+        url_name="generate-answer",
+    )
+    def generate_answer_thread(self, request, pk=None, id=None):
+        pk = id or pk
+        self.kwargs["pk"] = pk
+        if not pk:
+            thread = None
+        else:
+            thread = self.get_object()
+        context = request.data.get("context")
+        answer = generate_answer(thread, context)
+        return Response({
+            "answer": answer
+        }, status=status.HTTP_200_OK)
     # @extend_schema(
     #     tags=["threads"],
     #     request=inline_serializer(

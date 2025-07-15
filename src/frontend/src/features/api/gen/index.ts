@@ -1,5 +1,6 @@
 export * from "./blob/blob";
 export * from "./config/config";
+export * from "./contacts/contacts";
 export * from "./messages/messages";
 export * from "./flags/flags";
 export * from "./import/import";
