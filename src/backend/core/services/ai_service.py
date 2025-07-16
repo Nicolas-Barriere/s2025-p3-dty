@@ -36,3 +36,20 @@ class AIService:
 
         return content
     
+    def call_ai_api_with_extra_instructions(self, instructions, prompt):
+        """Helper method to call the OpenAI API and process the response."""
+        data = {
+            "model": settings.AI_MODEL,
+            "messages": [{"role": "system", "content": instructions}, {"role": "user", "content": prompt}],
+            "stream": False,
+            "n": 1,
+        }
+
+        response = self.client.chat.completions.create(**data)
+        content = response.choices[0].message.content
+
+        if not content:
+            raise RuntimeError("AI response does not contain an answer")
+
+        return content
+    
