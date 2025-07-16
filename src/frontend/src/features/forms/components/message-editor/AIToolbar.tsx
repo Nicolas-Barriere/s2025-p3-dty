@@ -10,7 +10,7 @@ type AIToolbarProps = {
     onRevert?: () => void;
     onKeep?: () => void;
     showActionButtons: boolean;
-    onAIResponse?: (context: string) => Promise<void>;
+    onAIResponse?: (draft: string, prompt: string) => Promise<void>;
     isPending?: boolean;
     lastInstruction?: string;
 };
@@ -87,23 +87,16 @@ const AIToolbar = forwardRef(({
 
     const handleSend = async () => {
         if (editor && !isPending) {
-            // Récupérer le contenu actuel du brouillon
             let currentMessage = "";
             if (getCurrentMessage) {
                 currentMessage = await getCurrentMessage();
             }
-
-            // Construire le contexte pour l'IA
-            let context = `La demande est : ${instruction}`;
-
-            // Ajouter le message brouillon au contexte s'il existe
-            if (currentMessage) {
-                context += `\n\nVoici le brouillon que l'utilisateur est en train de rédiger:\n${currentMessage}. Notamment essaye de partir de ce brouillon pour ta réponse`;
-            }
+            const prompt = instruction;
+            const draft = currentMessage ? currentMessage : "";
             if (onAIResponse) {
-                await onAIResponse(context);
+                await onAIResponse(draft, prompt);
             } else {
-                await requestAIAnswer(context, editor);
+                await requestAIAnswer(draft, prompt, editor);
             }
             setInstruction(""); // Clear input after sending
         }

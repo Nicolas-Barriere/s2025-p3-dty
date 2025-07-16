@@ -15,7 +15,8 @@ from rest_framework.response import Response
 
 from core import enums, models
 from core.search import search_threads
-from core.ai.thread_summarizer import summarize_thread, generate_answer
+from core.ai.thread_summarizer import summarize_thread
+from core.ai.mail_generator import generate_new_mail, generate_answer_mail
 
 from .. import permissions, serializers
 from drf_spectacular.utils import inline_serializer
@@ -484,7 +485,9 @@ class ThreadViewSet(
         request=inline_serializer(
             name="GenerateAnswerRequest",
             fields={
-                "context": drf_serializers.CharField(required=False, help_text="Contexte optionnel pour la génération de la réponse"),
+                "draft": drf_serializers.CharField(required=False, help_text="Brouillon du message actuel."),
+                "prompt": drf_serializers.CharField(required=False, help_text="Prompt de l'utilisateur pour l'IA."),
+
             },
         ),
         responses={
@@ -507,18 +510,52 @@ class ThreadViewSet(
         url_path="generate-answer",
         url_name="generate-answer",
     )
-    def generate_answer_thread(self, request, pk=None, id=None):
-        pk = id or pk
-        self.kwargs["pk"] = pk
-        if not pk:
-            thread = None
-        else:
-            thread = self.get_object()
-        context = request.data.get("context")
-        answer = generate_answer(thread, context)
+    def generate_answer_thread(self, request, id):
+        thread = self.get_object()
+        draft = request.data.get("draft")
+        prompt = request.data.get("prompt")
+        answer = generate_answer_mail(thread, draft, prompt)
         return Response({
             "answer": answer
         }, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=inline_serializer(
+            name="GenerateNewMessageRequest",
+            fields={
+                "draft": drf_serializers.CharField(required=False, help_text="Brouillon du message actuel."),
+                "prompt": drf_serializers.CharField(required=False, help_text="Prompt de l'utilisateur pour l'IA."),
+            },
+        ),
+        responses={
+            200: OpenApiResponse(
+                response={"type": "object", "properties": {
+                    "message": {"type": "string"}
+                }},
+                description="Message successfully generated.",
+            ),
+            403: OpenApiResponse(
+                response={"detail": "Permission denied"},
+                description="User does not have permission to generate a new message.",
+            ),
+        },
+        tags=["threads"]
+    )
+    @drf.decorators.action(
+        detail=False,
+        methods=["post"],
+        url_path="generate-new-message",
+        url_name="generate-new-message",
+    )
+    def generate_new_message(self, request):
+        draft = request.data.get("draft")
+        prompt = request.data.get("prompt")
+        message = generate_new_mail(draft, prompt)
+        return Response({
+            "message": message
+        }, status=status.HTTP_200_OK)
+    
+
     # @extend_schema(
     #     tags=["threads"],
     #     request=inline_serializer(

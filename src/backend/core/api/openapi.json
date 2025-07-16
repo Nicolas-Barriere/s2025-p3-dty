@@ -3464,6 +3464,61 @@
                 }
             }
         },
+        "/api/v1.0/threads/generate-new-message/": {
+            "post": {
+                "operationId": "threads_generate_new_message_create",
+                "description": "ViewSet for Thread model.",
+                "tags": [
+                    "threads"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateNewMessageRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateNewMessageRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Message successfully generated."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "detail": "Permission denied"
+                                }
+                            }
+                        },
+                        "description": "User does not have permission to generate a new message."
+                    }
+                }
+            }
+        },
         "/api/v1.0/threads/stats/": {
             "get": {
                 "operationId": "threads_stats_retrieve",
@@ -3802,10 +3857,30 @@
             "GenerateAnswerRequestRequest": {
                 "type": "object",
                 "properties": {
-                    "context": {
+                    "draft": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "Contexte optionnel pour la génération de la réponse"
+                        "description": "Brouillon du message actuel."
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Prompt de l'utilisateur pour l'IA."
+                    }
+                }
+            },
+            "GenerateNewMessageRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "draft": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Brouillon du message actuel."
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Prompt de l'utilisateur pour l'IA."
                     }
                 }
             },

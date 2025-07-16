@@ -186,14 +186,10 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
         setShowActionButtons(false);
     };
 
-    const handleAIResponse = async (context: string) => {
+    const handleAIResponse = async (draft: string, prompt: string) => {
         try {
-            // Extraire et sauvegarder l'instruction à partir du contexte
-            const instructionMatch = context.match(/La demande est : (.*?)(?:\n|$)/);
-            const extractedInstruction = instructionMatch ? instructionMatch[1] : "";
-            setLastInstruction(extractedInstruction);
-
-            const result = await requestAIAnswer(context, editor);
+            setLastInstruction(prompt);
+            const result = await requestAIAnswer(draft, prompt, editor);
             // Afficher les boutons d'action uniquement si des modifications ont été appliquées
             if (result.hasChanges) {
                 setShowActionButtons(true);

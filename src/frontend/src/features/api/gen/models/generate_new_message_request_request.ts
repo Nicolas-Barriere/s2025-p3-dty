@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0.0 (v1.0)
  */
 
-export interface GenerateAnswerRequestRequest {
+export interface GenerateNewMessageRequestRequest {
   /**
    * Brouillon du message actuel.
    * @minLength 1
