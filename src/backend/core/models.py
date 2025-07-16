@@ -339,7 +339,6 @@ class Thread(BaseModel):
     messaged_at = models.DateTimeField(_("messaged at"), null=True, blank=True)
     sender_names = models.JSONField(_("sender names"), null=True, blank=True)
     summary = models.TextField(_("summary"), blank=True, default="")
-    tags = models.JSONField(_("tags"), blank=True, default=list)
 
     class Meta:
         db_table = "messages_thread"
@@ -465,7 +464,6 @@ class Thread(BaseModel):
                 "has_active",
                 "messaged_at",
                 "sender_names",
-                "tags",
             ]
         )
 
@@ -502,6 +500,12 @@ class Label(BaseModel):
         related_name="labels",
         help_text=_("Threads that have this label"),
         blank=True,
+    )
+    prompt = models.CharField(
+        _("prompt"),
+        max_length=255,
+        help_text=_("Prompt for the LLM"),
+        default="DEFAULT_VALUE",
     )
 
     class Meta:

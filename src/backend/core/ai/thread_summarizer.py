@@ -17,7 +17,6 @@ class Message:
     subject: str = ""
     body: str = ""
     attachments: List[str] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
     summary: str = ""
 
     def __str__(self):

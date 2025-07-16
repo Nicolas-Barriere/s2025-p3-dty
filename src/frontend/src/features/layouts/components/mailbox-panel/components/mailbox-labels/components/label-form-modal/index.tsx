@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Modal, ModalSize } from "@openfun/cunningham-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
@@ -23,6 +23,7 @@ const formSchema = z.object({
     name: z.string().min(1, { message: 'labels.form.errors.name_required' }),
     color: z.string().regex(/^#([0-9a-fA-F]{6})$/),
     parent_label: z.string().optional(),
+    prompt: z.string().optional(),
 });
 
 type FormFields = z.infer<typeof formSchema>;
@@ -32,18 +33,35 @@ type FormFields = z.infer<typeof formSchema>;
  */
 export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
     const { t } = useTranslation();
+    const [myLabel, setMyLabel] = useState(label);
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: label?.display_name ?? '',
-            color: label?.color ?? '#E3E3FD',
+            color: label?.color ?? '#FF0000', //'#E3E3FD',
             parent_label: label?.name.split('/').slice(0, -1).join('/') ?? undefined,
+            prompt: label?.prompt ?? 'TEST_FABIAN_45',
         },
     });
     const charColor = useMemo(
       () => ColorHelper.getContrastColor(form.watch('color')),
       [form.watch('color')]
-  );
+    );
+
+    // label.prompt = "bonjour"
+    // console.log('LABEL PROMPT FABIAN', label?.name, label?.prompt);
+
+    // Reset form values when label changes or modal opens
+    // useEffect(() => {
+    //     if (isOpen) {
+    //         form.reset({
+    //             name: label?.display_name ?? '',
+    //             color: label?.color ?? '#FF0000',
+    //             parent_label: label?.name.split('/').slice(0, -1).join('/') ?? undefined,
+    //             prompt: label?.prompt ?? '',
+    //         });
+    //     }
+    // }, [isOpen, label, form]);
 
     const createMutation = useLabelsCreate();
     const updateMutation = useLabelsUpdate();
@@ -85,25 +103,35 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
     const handleSubmit = (data: FormFields) => {
       const mutation = label ? updateMutation : createMutation;
 
+      console.log('Form data being submitted:', data);
+      console.log('Label being updated:', label);
+       // Update the label prompt with the form data
       mutation.mutate({
         id: label?.id || '',
         data: {
           name: data.parent_label ? `${data.parent_label}/${data.name}` : data.name,
           color: data.color,
           mailbox: selectedMailbox!.id,
+          prompt: data.prompt,
         }
       }, {
-        onSuccess: (data) => {
+        onSuccess: (responseData) => {
+          setMyLabel(responseData.prompt);
+          console.log('Response from backend:', responseData);
           queryClient.invalidateQueries({ queryKey: labelsQuery.queryKey });
           // If the active label has been updated, update the search params
           if (searchParams.get('label_slug') === label?.slug) {
             const newSearchParams = new URLSearchParams(searchParams.toString());
-            newSearchParams.set('label_slug', (data.data as Label).slug);
+            newSearchParams.set('label_slug', (responseData.data as Label).slug);
             router.push(`${pathname}?${newSearchParams.toString()}`);
           }
           handleClose();
+        },
+        onError: (error) => {
+          console.error('Error updating label:', error);
         }
       });
+
     }
 
     return (
@@ -135,6 +163,7 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
                   />
               </label>
             </div>
+
             <div className="form-field-row">
               <RhfSelect
                 name="parent_label"
@@ -152,6 +181,20 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
                 fullWidth
               />
             </div>
+
+            <div className="form-field-row">
+              <RhfInput
+                name="prompt"
+                label={t('Description du label')}
+                text={form.formState.errors.prompt?.message && t(form.formState.errors.prompt.message)}
+              />
+            </div>
+            {myLabel ? (
+                <span>{myLabel.prompt}</span>
+            ) : (
+                <span>Pas de prompt</span>
+            )}
+
             <footer className="form-field-row">
               <Button type="button" color="secondary" size="medium" onClick={onClose}>
                 {t('actions.cancel')}

@@ -26,4 +26,10 @@ export interface PatchedLabelRequest {
   mailbox?: string;
   /** Threads that have this label */
   threads?: string[];
+  /**
+   * Prompt for the LLM
+   * @minLength 1
+   * @maxLength 255
+   */
+  prompt?: string;
 }

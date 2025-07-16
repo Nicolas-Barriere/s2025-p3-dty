@@ -31,4 +31,9 @@ export interface Label {
   mailbox: string;
   /** Threads that have this label */
   threads?: string[];
+  /**
+   * Prompt for the LLM
+   * @maxLength 255
+   */
+  prompt?: string;
 }

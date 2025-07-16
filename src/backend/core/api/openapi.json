@@ -144,6 +144,90 @@
                 }
             }
         },
+        "/api/v1.0/contacts/": {
+            "get": {
+                "operationId": "contacts_list",
+                "description": "List contacts with optional filtering by mailbox and search query.\n\nQuery parameters:\n- mailbox_id: Optional UUID to filter contacts by mailbox\n- q: Optional search query for name or email (case insensitive)",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "mailbox_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "Filter contacts by mailbox ID."
+                    },
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Search contacts by name or email (case insensitive)."
+                    }
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Contact"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/contacts/{id}/": {
+            "get": {
+                "operationId": "contacts_retrieve",
+                "description": "ViewSet for Contact model.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Contact"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/draft/": {
             "post": {
                 "operationId": "draft_create",
@@ -3816,6 +3900,11 @@
                             "format": "uuid"
                         },
                         "description": "Threads that have this label"
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "Prompt for the LLM",
+                        "maxLength": 255
                     }
                 },
                 "required": [
@@ -3853,6 +3942,12 @@
                             "format": "uuid"
                         },
                         "description": "Threads that have this label"
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Prompt for the LLM",
+                        "maxLength": 255
                     }
                 },
                 "required": [
@@ -4185,7 +4280,8 @@
                     },
                     "subject": {
                         "type": "string",
-                        "readOnly": true
+                        "readOnly": true,
+                        "nullable": true
                     },
                     "created_at": {
                         "type": "string",
@@ -4528,6 +4624,12 @@
                             "format": "uuid"
                         },
                         "description": "Threads that have this label"
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Prompt for the LLM",
+                        "maxLength": 255
                     }
                 }
             },
@@ -4654,7 +4756,8 @@
                     },
                     "subject": {
                         "type": "string",
-                        "readOnly": true
+                        "readOnly": true,
+                        "nullable": true
                     },
                     "snippet": {
                         "type": "string",
@@ -4737,9 +4840,6 @@
                     "summary": {
                         "type": "string",
                         "readOnly": true
-                    },
-                    "tags": {
-                        "readOnly": true
                     }
                 },
                 "required": [
@@ -4760,7 +4860,6 @@
                     "snippet",
                     "subject",
                     "summary",
-                    "tags",
                     "updated_at",
                     "user_role"
                 ]
@@ -4894,6 +4993,11 @@
                     "display_name": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "Prompt for the LLM",
+                        "maxLength": 255
                     }
                 },
                 "required": [
@@ -4934,6 +5038,11 @@
                             "$ref": "#/components/schemas/TreeLabel"
                         },
                         "readOnly": true
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Prompt for the LLM"
                     }
                 },
                 "required": [
@@ -4942,6 +5051,7 @@
                     "display_name",
                     "id",
                     "name",
+                    "prompt",
                     "slug"
                 ]
             },

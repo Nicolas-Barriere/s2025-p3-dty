@@ -28,4 +28,9 @@ export interface ThreadLabel {
    */
   color?: string;
   readonly display_name: string;
+  /**
+   * Prompt for the LLM
+   * @maxLength 255
+   */
+  prompt?: string;
 }

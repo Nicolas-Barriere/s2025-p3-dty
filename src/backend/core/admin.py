@@ -203,7 +203,7 @@ class ThreadAdmin(admin.ModelAdmin):
     search_fields = ("subject", "snippet", "labels__name")
     list_filter = ("labels",)
     fieldsets = (
-        (None, {"fields": ("subject", "snippet", "display_labels", "summary", "tags")}),
+        (None, {"fields": ("subject", "snippet", "display_labels", "summary")}),
         (
             _("Statistics"),
             {
@@ -242,7 +242,6 @@ class ThreadAdmin(admin.ModelAdmin):
         "sender_names",
         "created_at",
         "updated_at",
-        "tags",
     )
 
     def get_labels(self, obj):

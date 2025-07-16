@@ -16,4 +16,6 @@ export interface TreeLabel {
   readonly color: string;
   readonly display_name: string;
   readonly children: readonly TreeLabel[];
+  /** Prompt for the LLM */
+  readonly prompt: string;
 }

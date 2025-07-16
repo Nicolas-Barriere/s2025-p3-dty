@@ -98,6 +98,7 @@ export  const LabelItem = ({ level = 0, ...label }: LabelItemProps) => {
                 label: t('actions.undo'), onClick: () => deleteThreadMutation.mutate(variables)
               }]}
             >
+
               <span className="material-icons">label</span>
               <span>{t('labels.thread_assigned', { label: label.name })}</span>
             </ToasterItem>, {
@@ -189,6 +190,7 @@ export  const LabelItem = ({ level = 0, ...label }: LabelItemProps) => {
                   },
                 ]}
               >
+
                 <Button
                   onClick={() => setIsDropdownOpen(true)}
                   icon={<span className="material-icons">more_vert</span>}

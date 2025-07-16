@@ -219,9 +219,13 @@ class LabelViewSet(
             "color",
             models.Label._meta.get_field("color").default,  # noqa: SLF001
         )
+        prompt = serializer.validated_data.get("prompt", "")
+        print("received prompt FABIAN:", prompt)
 
         # Create the actual label with color if provided, otherwise use model default
-        label = models.Label.objects.create(name=name, mailbox=mailbox, color=color)
+        label = models.Label.objects.create(
+            name=name, mailbox=mailbox, color=color, prompt=prompt
+        )
 
         # Get all labels for the mailbox to build the tree structure
         all_labels = models.Label.objects.filter(mailbox=mailbox).order_by("slug")
@@ -239,6 +243,7 @@ class LabelViewSet(
                 "parent_name": label.parent_name,
                 "depth": label.depth,
                 "children": [],
+                "prompt": label.prompt,
             }
             label_dict[label.id] = label_data
 
