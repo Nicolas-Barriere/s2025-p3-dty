@@ -2600,6 +2600,44 @@
                 }
             }
         },
+        "/api/v1.0/maildomains/{id}/": {
+            "get": {
+                "operationId": "maildomains_retrieve",
+                "description": "ViewSet for listing MailDomains the user administers.\nProvides a top-level entry for mail domain administration.\nEndpoint: /maildomains/",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "maildomains"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MailDomainAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/messages/": {
             "get": {
                 "operationId": "messages_list",
@@ -2891,6 +2929,14 @@
                             "type": "integer"
                         },
                         "description": "Filter threads that have active messages (1=true, 0=false)."
+                    },
+                    {
+                        "in": "query",
+                        "name": "has_attachments",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Filter threads with attachments (1=true, 0=false)."
                     },
                     {
                         "in": "query",
@@ -3469,6 +3515,14 @@
                 "parameters": [
                     {
                         "in": "query",
+                        "name": "has_attachments",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Filter threads with attachments (1=true, 0=false)."
+                    },
+                    {
+                        "in": "query",
                         "name": "has_draft",
                         "schema": {
                             "type": "integer"
@@ -3534,7 +3588,7 @@
                                 "all_unread"
                             ]
                         },
-                        "description": "Comma-separated list of fields to aggregate.\n                Special values: 'all' (count all threads), 'all_unread' (count all unread threads).\n                Boolean fields: has_trashed, has_draft, has_starred, has_sender, has_active, is_spam, has_messages.\n                Unread variants ('_unread' suffix): count threads where the condition is true AND the thread is unread.\n                Examples: 'all,all_unread', 'has_starred,has_starred_unread', 'is_spam,is_spam_unread'",
+                        "description": "Comma-separated list of fields to aggregate.\n                Special values: 'all' (count all threads), 'all_unread' (count all unread threads).\n                Boolean fields: has_trashed, has_draft, has_starred, has_attachments, has_sender, has_active, is_spam, has_messages.\n                Unread variants ('_unread' suffix): count threads where the condition is true AND the thread is unread.\n                Examples: 'all,all_unread', 'has_starred,has_starred_unread', 'is_spam,is_spam_unread'",
                         "required": true,
                         "explode": false,
                         "style": "form"
@@ -3912,6 +3966,11 @@
                             "format": "uuid"
                         },
                         "description": "Threads that have this label"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the label, used by AI to understand its purpose",
+                        "maxLength": 255
                     }
                 },
                 "required": [
@@ -3949,6 +4008,11 @@
                             "format": "uuid"
                         },
                         "description": "Threads that have this label"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the label, used by AI to understand its purpose",
+                        "maxLength": 255
                     }
                 },
                 "required": [
@@ -3958,7 +4022,7 @@
             },
             "MailDomainAdmin": {
                 "type": "object",
-                "description": "Serialize MailDomain basic information for admin listing.",
+                "description": "Serialize mail domains for admin view.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -3983,10 +4047,15 @@
                         "readOnly": true,
                         "title": "Updated on",
                         "description": "date and time at which a record was last updated"
+                    },
+                    "expected_dns_records": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "created_at",
+                    "expected_dns_records",
                     "id",
                     "name",
                     "updated_at"
@@ -4046,11 +4115,7 @@
                         "readOnly": true
                     },
                     "role": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/MailboxAccessRoleEnum"
-                            }
-                        ],
+                        "type": "string",
                         "readOnly": true
                     }
                 },
@@ -4079,11 +4144,7 @@
                         "readOnly": true
                     },
                     "role": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/MailboxAccessRoleEnum"
-                            }
-                        ],
+                        "type": "string",
                         "readOnly": true
                     },
                     "created_at": {
@@ -4109,15 +4170,6 @@
                     "user_details"
                 ]
             },
-            "MailboxAccessRoleEnum": {
-                "enum": [
-                    "viewer",
-                    "editor",
-                    "admin"
-                ],
-                "type": "string",
-                "description": "* `viewer` - Viewer\n* `editor` - Editor\n* `admin` - Admin"
-            },
             "MailboxAccessWrite": {
                 "type": "object",
                 "description": "Serializer for creating and updating mailbox access records.\nMailbox is set from the view based on URL parameters.",
@@ -4134,7 +4186,7 @@
                         "description": "primary key for the record as UUID"
                     },
                     "role": {
-                        "$ref": "#/components/schemas/MailboxAccessRoleEnum"
+                        "type": "string"
                     },
                     "created_at": {
                         "type": "string",
@@ -4154,6 +4206,7 @@
                 "required": [
                     "created_at",
                     "id",
+                    "role",
                     "updated_at",
                     "user"
                 ]
@@ -4168,10 +4221,11 @@
                         "description": "primary key for the record as UUID"
                     },
                     "role": {
-                        "$ref": "#/components/schemas/MailboxAccessRoleEnum"
+                        "type": "string"
                     }
                 },
                 "required": [
+                    "role",
                     "user"
                 ]
             },
@@ -4486,6 +4540,10 @@
                     "is_trashed": {
                         "type": "boolean",
                         "readOnly": true
+                    },
+                    "has_attachments": {
+                        "type": "boolean",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -4494,6 +4552,7 @@
                     "cc",
                     "created_at",
                     "draftBody",
+                    "has_attachments",
                     "htmlBody",
                     "id",
                     "is_draft",
@@ -4726,6 +4785,11 @@
                             "format": "uuid"
                         },
                         "description": "Threads that have this label"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the label, used by AI to understand its purpose",
+                        "maxLength": 255
                     }
                 }
             },
@@ -4739,7 +4803,7 @@
                         "description": "primary key for the record as UUID"
                     },
                     "role": {
-                        "$ref": "#/components/schemas/MailboxAccessRoleEnum"
+                        "type": "string"
                     }
                 }
             },
@@ -4758,7 +4822,7 @@
                         "description": "primary key for the record as UUID"
                     },
                     "role": {
-                        "$ref": "#/components/schemas/ThreadAccessRoleEnum"
+                        "type": "string"
                     }
                 }
             },
@@ -4879,6 +4943,10 @@
                         "type": "boolean",
                         "readOnly": true
                     },
+                    "has_attachments": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
                     "has_sender": {
                         "type": "boolean",
                         "readOnly": true
@@ -4941,6 +5009,7 @@
                 "required": [
                     "accesses",
                     "has_active",
+                    "has_attachments",
                     "has_draft",
                     "has_messages",
                     "has_sender",
@@ -4981,7 +5050,7 @@
                         "description": "primary key for the record as UUID"
                     },
                     "role": {
-                        "$ref": "#/components/schemas/ThreadAccessRoleEnum"
+                        "type": "string"
                     },
                     "created_at": {
                         "type": "string",
@@ -5002,6 +5071,7 @@
                     "created_at",
                     "id",
                     "mailbox",
+                    "role",
                     "thread",
                     "updated_at"
                 ]
@@ -5020,7 +5090,8 @@
                         "$ref": "#/components/schemas/MailboxLight"
                     },
                     "role": {
-                        "$ref": "#/components/schemas/ThreadAccessRoleEnum"
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -5044,21 +5115,14 @@
                         "description": "primary key for the record as UUID"
                     },
                     "role": {
-                        "$ref": "#/components/schemas/ThreadAccessRoleEnum"
+                        "type": "string"
                     }
                 },
                 "required": [
                     "mailbox",
+                    "role",
                     "thread"
                 ]
-            },
-            "ThreadAccessRoleEnum": {
-                "enum": [
-                    "viewer",
-                    "editor"
-                ],
-                "type": "string",
-                "description": "* `viewer` - Viewer\n* `editor` - Editor"
             },
             "ThreadLabel": {
                 "type": "object",
@@ -5089,6 +5153,11 @@
                     "display_name": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the label, used by AI to understand its purpose",
+                        "maxLength": 255
                     }
                 },
                 "required": [
@@ -5123,6 +5192,10 @@
                         "type": "string",
                         "readOnly": true
                     },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true
+                    },
                     "children": {
                         "type": "array",
                         "items": {
@@ -5134,6 +5207,7 @@
                 "required": [
                     "children",
                     "color",
+                    "description",
                     "display_name",
                     "id",
                     "name",
@@ -5170,25 +5244,12 @@
                         "type": "string",
                         "readOnly": true,
                         "nullable": true
-                    },
-                    "short_name": {
-                        "type": "string",
-                        "readOnly": true,
-                        "nullable": true
-                    },
-                    "abilities": {
-                        "type": "object",
-                        "additionalProperties": {},
-                        "description": "Return abilities of the logged-in user on the mail domain.",
-                        "readOnly": true
                     }
                 },
                 "required": [
-                    "abilities",
                     "email",
                     "full_name",
-                    "id",
-                    "short_name"
+                    "id"
                 ]
             }
         },

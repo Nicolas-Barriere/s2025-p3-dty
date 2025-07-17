@@ -23,6 +23,7 @@ const formSchema = z.object({
     name: z.string().min(1, { message: 'labels.form.errors.name_required' }),
     color: z.string().regex(/^#([0-9a-fA-F]{6})$/),
     parent_label: z.string().optional(),
+    description: z.string().optional(),
 });
 
 type FormFields = z.infer<typeof formSchema>;
@@ -38,6 +39,7 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
             name: label?.display_name ?? '',
             color: label?.color ?? '#E3E3FD',
             parent_label: label?.name.split('/').slice(0, -1).join('/') ?? undefined,
+            description: label?.description ?? '',
         },
     });
     const charColor = useMemo(
@@ -91,6 +93,7 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
           name: data.parent_label ? `${data.parent_label}/${data.name}` : data.name,
           color: data.color,
           mailbox: selectedMailbox!.id,
+          description: data.description,
         }
       }, {
         onSuccess: (data) => {
@@ -150,6 +153,13 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
                 }))}
                 searchable
                 fullWidth
+              />
+            </div>
+            <div className="form-field-row">
+              <RhfInput
+                name="description"
+                label={t('Description')}
+                text={form.formState.errors.description?.message && t(form.formState.errors.description.message)}
               />
             </div>
             <footer className="form-field-row">

@@ -15,5 +15,6 @@ export interface TreeLabel {
   readonly slug: string;
   readonly color: string;
   readonly display_name: string;
+  readonly description: string;
   readonly children: readonly TreeLabel[];
 }

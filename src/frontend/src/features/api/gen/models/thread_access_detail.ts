@@ -6,7 +6,6 @@
  * OpenAPI spec version: 1.0.0 (v1.0)
  */
 import type { MailboxLight } from "./mailbox_light";
-import type { ThreadAccessRoleEnum } from "./thread_access_role_enum";
 
 /**
  * Serializer for thread access details.
@@ -15,5 +14,5 @@ export interface ThreadAccessDetail {
   /** primary key for the record as UUID */
   readonly id: string;
   mailbox: MailboxLight;
-  role: ThreadAccessRoleEnum;
+  readonly role: string;
 }

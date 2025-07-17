@@ -6,7 +6,6 @@
  * OpenAPI spec version: 1.0.0 (v1.0)
  */
 import type { User } from "./user";
-import type { MailboxAccessRoleEnum } from "./mailbox_access_role_enum";
 
 /**
  * Serialize mailbox access information for read operations with nested user details.
@@ -16,7 +15,7 @@ export interface MailboxAccessRead {
   /** primary key for the record as UUID */
   readonly id: string;
   readonly user_details: User;
-  readonly role: MailboxAccessRoleEnum;
+  readonly role: string;
   /** date and time at which a record was created */
   readonly created_at: string;
   /** date and time at which a record was last updated */

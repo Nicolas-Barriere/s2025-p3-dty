@@ -31,4 +31,9 @@ export interface Label {
   mailbox: string;
   /** Threads that have this label */
   threads?: string[];
+  /**
+   * Description of the label, used by AI to understand its purpose
+   * @maxLength 255
+   */
+  description?: string;
 }

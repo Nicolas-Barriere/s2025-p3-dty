@@ -1,6 +1,7 @@
 """
 Declare and configure the models for the messages core application
 """
+
 # pylint: disable=too-many-lines,too-many-instance-attributes
 
 import base64
@@ -355,11 +356,9 @@ class MailDomain(BaseModel):
 
     def get_active_dkim_key(self):
         """Get the most recent active DKIM key for this domain."""
-        return (
-            DKIMKey.objects.filter(
-                domain=self, is_active=True
-            ).first()  # Most recent due to ordering in model
-        )
+        return DKIMKey.objects.filter(
+            domain=self, is_active=True
+        ).first()  # Most recent due to ordering in model
 
 
 class Mailbox(BaseModel):
@@ -684,6 +683,13 @@ class Label(BaseModel):
         related_name="labels",
         help_text=_("Threads that have this label"),
         blank=True,
+    )
+    description = models.CharField(
+        _("description"),
+        max_length=255,
+        blank=True,
+        default="",
+        help_text=_("Description of the label, used by AI to understand its purpose"),
     )
 
     class Meta:

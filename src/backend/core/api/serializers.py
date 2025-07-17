@@ -251,7 +251,7 @@ class ThreadLabelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Label
-        fields = ["id", "name", "slug", "color", "display_name"]
+        fields = ["id", "name", "slug", "color", "display_name", "description"]
         read_only_fields = ["id", "slug", "display_name"]
 
     def get_display_name(self, instance):
@@ -267,11 +267,20 @@ class TreeLabelSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(read_only=True)
     color = serializers.CharField(read_only=True)
     display_name = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
     children = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Label
-        fields = ["id", "name", "slug", "color", "display_name", "children"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "color",
+            "display_name",
+            "description",
+            "children",
+        ]
         read_only_fields = fields
 
     @extend_schema_field(
@@ -289,7 +298,7 @@ class LabelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Label
-        fields = ["id", "name", "slug", "color", "mailbox", "threads"]
+        fields = ["id", "name", "slug", "color", "mailbox", "threads", "description"]
         read_only_fields = ["id", "slug"]
 
     def validate_mailbox(self, value):
@@ -376,8 +385,8 @@ class ThreadSerializer(serializers.ModelSerializer):
         return ThreadLabelSerializer(labels, many=True).data
 
     def get_summary(self, instance):
-            """Return the summary of the thread."""
-            return instance.summary or ""
+        """Return the summary of the thread."""
+        return instance.summary or ""
 
     class Meta:
         model = models.Thread
@@ -401,7 +410,7 @@ class ThreadSerializer(serializers.ModelSerializer):
             "user_role",
             "accesses",
             "labels",
-            "summary"
+            "summary",
         ]
         read_only_fields = fields  # Mark all as read-only for safety
 

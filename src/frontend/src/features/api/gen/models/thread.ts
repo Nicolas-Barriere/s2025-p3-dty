@@ -22,6 +22,7 @@ export interface Thread {
   readonly has_trashed: boolean;
   readonly has_draft: boolean;
   readonly has_starred: boolean;
+  readonly has_attachments: boolean;
   readonly has_sender: boolean;
   readonly has_messages: boolean;
   readonly is_spam: boolean;
