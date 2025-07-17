@@ -2,6 +2,7 @@ import { Spinner } from "@gouvfr-lasuite/ui-kit";
 import { Button } from "@openfun/cunningham-react";
 import { clsx } from "clsx";
 import { useEffect, useMemo, useState } from "react";
+import detectionMap from "@/features/i18n/attachments-detection-map.json";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -355,28 +356,21 @@ export const MessageForm = ({
     });
   };
 
+  // Dynamically build the keywords list from attachments-detection-map.json
+  type DetectionMap = Record<string, Record<string, string[]>>;
+  const keyWordsAttachments = useMemo(() => {
+    const allKeywords = new Set<string>();
+    Object.values(detectionMap as DetectionMap).forEach((langObj) => {
+      Object.values(langObj).forEach((arr) => {
+        (arr as string[]).forEach((kw) => allKeywords.add(kw.toLowerCase()));
+      });
+    });
+    return Array.from(allKeywords);
+  }, []);
+
   const areAttachmentsMentionnedInDraft = (): boolean => {
-    const keyWordsAttachments = [
-      "pièce jointe",
-      "document",
-      "fichier",
-      "image",
-      "pdf",
-      "zip",
-      "archive",
-      "annexe",
-      "joint",
-      "fichier joint",
-      "document joint",
-      "attachment",
-      "attached",
-      "veuillez trouver",
-      "pj",
-    ];
     const messageEditorDraft =
       form.getValues("messageEditorDraft")?.toLowerCase() || "";
-
-    // Check if any of the keywords are mentioned in the draft
     return keyWordsAttachments.some((keyword) =>
       messageEditorDraft.includes(keyword)
     );

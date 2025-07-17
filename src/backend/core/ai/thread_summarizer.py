@@ -1,4 +1,5 @@
 
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List
@@ -12,7 +13,7 @@ class Message:
     datetime: str
     sender: str
     recipients: List[str]
-    id: str = field(default_factory=lambda: str(datetime.now().timestamp()))
+    id: str = field(default_factory=uuid.uuid4)
     cc: List[str] = field(default_factory=list)
     subject: str = ""
     body: str = ""
@@ -94,11 +95,12 @@ def get_messages_from_thread(thread: Thread) -> List[Message]:
     """
     messages = []
     for message in thread.messages.all():
-        parsed_data = message.get_parsed_data()
-        if parsed_data:
-            msg = get_message_from_parsed_mime_data(parsed_data)
-            msg.id = str(message.id)
-            messages.append(msg)
+        if not (message.is_draft or message.is_trashed):
+            parsed_data = message.get_parsed_data()
+            if parsed_data:
+                msg = get_message_from_parsed_mime_data(parsed_data)
+                msg.id = str(message.id)
+                messages.append(msg)
     return messages
 
 
@@ -118,9 +120,9 @@ def count_tokens_in_messages(messages: List[Message]) -> int:
     return token_count
 
 
-def summarize_thread(thread: Thread) -> str:
+def summarize_thread(thread: Thread, language: str="fr") -> str:
     """
-    Summarizes a thread using the ALBERT model.
+    Summarizes a thread using the OpenAI client.
     Args:
         thread (Thread): Thread to summarize.
     Returns:
@@ -132,8 +134,8 @@ def summarize_thread(thread: Thread) -> str:
 
     # Prepare the prompt for the AI model
     conversation_text = "\n\n".join([str(message) for message in messages])
-    prompt_query = "Tu es un assistant intelligent qui résume des boucles de mails. Tu dois résumer le contenu de la conversation en une ou deux lignes maximum sans préciser 'Résumé:'. Si des liens importants apparaissent dans les emails, tu dois les mentionner dans le résumé de façon cliquable."
-    prompt = prompt_query + conversation_text + "\n\nRésumé Markdown en français des emails ci-dessus :\n"
+    prompt_query = "Tu es un assistant intelligent qui résume des boucles de mails. Tu dois résumer le contenu de la conversation en une ou deux lignes maximum sans préciser 'Résumé:'. Si des liens importants apparaissent dans les emails, tu dois les mentionner dans le résumé de façon claire en Markdown et intégré au résumé et sinon ne pas les mentionner."
+    prompt = prompt_query + conversation_text + f"\n\nRésumé Markdown dans la langue '{language}' des emails ci-dessus :\n"
     
     # Make the API call to get the summary
     summary = AIService().call_ai_api(prompt)

@@ -1,30 +1,87 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button, Tooltip } from "@openfun/cunningham-react";
 import { Spinner } from "@gouvfr-lasuite/ui-kit";
 import { addToast, ToasterItem } from "@/features/ui/components/toaster";
 import ReactMarkdown from "react-markdown";
 import { useThreadsRefreshSummaryCreate } from "@/features/api/gen";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 interface ThreadSummaryProps {
   threadId: string;
   summary: string;
+  selectedMailboxId?: string;
+  searchParams?: URLSearchParams;
+  selectedThread?: { id: string };
   onSummaryUpdated?: (newSummary: string) => void;
 }
 
 export const ThreadSummary = ({
   threadId,
   summary,
+  selectedMailboxId,
+  searchParams,
+  selectedThread,
   onSummaryUpdated,
 }: ThreadSummaryProps) => {
   const { t } = useTranslation();
   const [localSummary, setLocalSummary] = useState(summary);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Build the cache key for the thread 
+  const threadQueryKey = useMemo(() => {
+    if (!selectedMailboxId || !searchParams) return ["threads"];
+    const queryKey = ["threads", selectedMailboxId];
+    if (searchParams.get("search")) {
+      return [...queryKey, "search"];
+    }
+    return [...queryKey, searchParams.toString()];
+  }, [selectedMailboxId, searchParams]);
+
+  const queryClient = useQueryClient();
+  /**
+   * Cache the new summary in the thread query data.
+   * This is used to update the thread summary in the thread list
+   * when the summary is updated.
+   */
+  const cacheNewSummary = (newSummary: string) => {
+    queryClient.setQueryData(
+      threadQueryKey,
+      (
+        oldData:
+          | {
+              pages: Array<{
+                data: {
+                  results: { id: string; summary?: string }[];
+                  count: number;
+                  next: string | null;
+                  previous: string | null;
+                };
+              }>;
+            }
+          | undefined
+      ) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            data: {
+              ...page.data,
+              results: page.data.results.map((thread) =>
+                thread.id === selectedThread?.id
+                  ? { ...thread, summary: newSummary }
+                  : thread
+              ),
+            },
+          })),
+        };
+      }
+    );
+  };
 
   const refreshMutation = useThreadsRefreshSummaryCreate({
     mutation: {
       onMutate: () => {
-        setIsRefreshing(true);
         addToast(
           <ToasterItem type="info">
             {t("summary.generation_in_progress")}
@@ -32,7 +89,6 @@ export const ThreadSummary = ({
         );
       },
       onSuccess: (data) => {
-        // Type guard for API response
         const newSummary =
           data &&
           typeof data === "object" &&
@@ -42,14 +98,13 @@ export const ThreadSummary = ({
           "summary" in data.data
             ? (data.data as { summary?: string }).summary
             : undefined;
+
         if (newSummary) {
           setLocalSummary(newSummary);
-          if (onSummaryUpdated) {
-            onSummaryUpdated(newSummary);
-          }
+          cacheNewSummary(newSummary);
+          onSummaryUpdated?.(newSummary);
           addToast(<ToasterItem type="info">{t("summary.refresh_success")}</ToasterItem>);
         }
-        setIsRefreshing(false);
       },
       onError: () => {
         addToast(
@@ -57,7 +112,6 @@ export const ThreadSummary = ({
             {t("summary.refresh_error")}
           </ToasterItem>
         );
-        setIsRefreshing(false);
       },
     },
   });
@@ -72,7 +126,7 @@ export const ThreadSummary = ({
 
   return (
     <div className="thread-summary__container">
-      {isRefreshing ? (
+      {refreshMutation.isPending ? (
         <div className="thread-summary__content">
           <Spinner />
         </div>

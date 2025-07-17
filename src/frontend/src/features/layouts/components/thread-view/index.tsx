@@ -4,7 +4,7 @@ import { ThreadMessage } from "./components/thread-message";
 import { useMailboxContext } from "@/features/providers/mailbox";
 import useRead from "@/features/message/use-read";
 import { useDebounceCallback } from "@/hooks/use-debounce-callback";
-import { Message, Thread } from "@/features/api/gen/models";
+import { Message } from "@/features/api/gen/models";
 import { Spinner } from "@gouvfr-lasuite/ui-kit";
 import { useSearchParams } from "next/navigation";
 import { Banner } from "@/features/ui/components/banner";
@@ -12,7 +12,6 @@ import { Button } from "@openfun/cunningham-react";
 import { useTranslation } from "react-i18next";
 import { ThreadViewLabelsList } from "./components/thread-view-labels-list";
 import { ThreadSummary } from "./components/thread-summary";
-import { useQueryClient } from "@tanstack/react-query";
 
 type MessageWithDraftChild = Message & {
   draft_message?: Message;
@@ -129,51 +128,6 @@ export const ThreadView = () => {
     [selectedThread]
   );
 
-  // Build the cache key for the thread
-  // This is used to update the thread summary in the thread list
-  const threadQueryKey = useMemo(() => {
-    const queryKey = ["threads", selectedMailbox?.id];
-    if (searchParams.get("search")) {
-      return [...queryKey, "search"];
-    }
-    return [...queryKey, searchParams.toString()];
-  }, [selectedMailbox?.id, searchParams]);
-
-  const queryClient = useQueryClient();
-    /**
-     * Cache the new summary in the thread query data.
-     * This is used to update the thread summary in the thread list
-     * when the summary is updated.
-     */
-  const cacheNewSummary = (newSummary: string) => {
-    queryClient.setQueryData(threadQueryKey, (oldData: {
-      pages: Array<{
-        data: {
-          results: Thread[];
-          count: number;
-          next: string | null;
-          previous: string | null;
-        };
-      }>;
-    } | undefined) => {
-      if (!oldData) return oldData;
-      return {
-        ...oldData,
-        pages: oldData.pages.map((page) => ({
-          ...page,
-          data: {
-            ...page.data,
-            results: page.data.results.map((thread) =>
-              thread.id === selectedThread?.id
-                ? { ...thread, summary: newSummary }
-                : thread
-            ),
-          },
-        })),
-      };
-    });
-  };
-
   if (!selectedThread) return null;
 
   if (queryStates.messages.isLoading)
@@ -190,7 +144,9 @@ export const ThreadView = () => {
       <ThreadSummary
         threadId={selectedThread.id}
         summary={selectedThread.summary}
-        onSummaryUpdated={cacheNewSummary}
+        selectedMailboxId={selectedMailbox?.id}
+        searchParams={searchParams}
+        selectedThread={selectedThread}
       />
       <div className="thread-view__messages-list">
         {selectedThread!.labels.length > 0 && (
