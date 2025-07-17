@@ -7,7 +7,6 @@ This module contains configuration classes and settings for the chatbot system.
 from dataclasses import dataclass
 from enum import Enum
 
-
 @dataclass
 class AlbertConfig:
     """Configuration for Albert API."""

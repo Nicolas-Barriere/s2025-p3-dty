@@ -34,15 +34,13 @@ class AlbertAPIClient:
     
     def make_request(
         self, 
-        messages: List[Dict[str, str]], 
-        functions: Optional[List[Dict]] = None
+        messages: List[Dict[str, str]],
     ) -> Dict[str, Any]:
         """
-        Make a request to Albert API with optional function calling.
+        Make a request to Albert API.
         
         Args:
             messages: List of message objects for the conversation
-            functions: Optional list of function definitions for function calling
             
         Returns:
             Response from Albert API
@@ -57,15 +55,8 @@ class AlbertAPIClient:
                 "temperature": self.config.temperature,
                 "max_tokens": self.config.max_tokens,
             }
-            
-            # Add function calling parameters if functions are provided
-            if functions:
-                payload["tools"] = [{"type": "function", "function": func} for func in functions]
-                payload["tool_choice"] = "auto"
-            
+           
             logger.info(f"Making request to Albert API with {len(messages)} messages")
-            if functions:
-                logger.info(f"Including {len(functions)} available tools")
             
             response = self.session.post(
                 f"{self.config.base_url}/chat/completions",
