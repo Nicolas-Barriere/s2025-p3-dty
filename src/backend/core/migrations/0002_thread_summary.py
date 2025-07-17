@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0018_alter_label_options_alter_message_subject_and_more'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='thread',
-            name='summary',
-            field=models.TextField(blank=True, default='', verbose_name='summary'),
+            model_name="thread",
+            name="summary",
+            field=models.TextField(blank=True, default="", verbose_name="summary"),
         ),
     ]

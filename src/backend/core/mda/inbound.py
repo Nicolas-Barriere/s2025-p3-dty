@@ -1,4 +1,5 @@
 """Handles inbound email delivery logic: receiving messages and delivering to mailboxes."""
+
 # pylint: disable=broad-exception-caught
 
 import html
@@ -13,7 +14,13 @@ from django.utils import timezone
 
 from core import models
 
-from core.ai.thread_summarizer import summarize_thread, get_messages_from_thread, count_tokens_in_messages
+from core.ai.thread_summarizer import (
+    summarize_thread,
+    get_messages_from_thread,
+    count_tokens_in_messages,
+)
+from core.api.viewsets.call_label import assign_label_to_thread
+
 
 logger = logging.getLogger(__name__)
 
@@ -586,6 +593,9 @@ def deliver_inbound_message(  # pylint: disable=too-many-branches, too-many-stat
             if new_summary:
                 thread.summary = new_summary
                 thread.save(update_fields=["summary"])
+
+        # Label assignment
+        assign_label_to_thread(thread, mailbox.id)
 
     except Exception as e:
         logger.exception(

@@ -1,0 +1,10 @@
+prompts:
+  prompt_solo: |
+    Date et heure actuelle: [DATE_TIME]
+    Email conversation: [THREAD_EMAILS]
+    Liste des labels existants: [LABELS]
+
+    A partir de ce mail ou de cette conversation d'emails, tu dois déterminer les labels les plus pertinents à attribuer à ce mail ou cette conversation.
+    Ta réponse doit être au format suivant:
+    ["LABEL1", "LABEL2", ...]
+    Sans aucun texte supplémentaire du style "Voici les labels que j'ai déterminé comme pertinents:".
