@@ -57,7 +57,7 @@
     background: #fff;
     border-bottom: 1px solid var(--c--theme--colors--greyscale-200);
     padding: 0 12px 4px 5px;
-    height: 43px; // même hauteur que la toolbar
+    min-height: 43px; // même hauteur que la toolbar
     box-sizing: border-box;
 }
 
@@ -75,6 +75,10 @@
     background: #fff;
     outline: none;
     color: #3f3f3f;
+    min-height: 36px;
+    max-height: 120px;
+    line-height: 1.5;
+    resize: none;
 }
 
 .ai-toolbar-send {

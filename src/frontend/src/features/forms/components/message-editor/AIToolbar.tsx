@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } f
 import { useAIAnswer } from "./utils/ai";
 import { BlockNoteEditor } from "@blocknote/core";
 import { Spinner } from "@gouvfr-lasuite/ui-kit";
+import TextareaAutosize from 'react-textarea-autosize';
 
 type AIToolbarProps = {
     threadId?: string;
@@ -28,7 +29,7 @@ const AIToolbar = forwardRef(({
 }: AIToolbarProps, ref) => {
     const [instruction, setInstruction] = useState(lastInstruction);
     const { requestAIAnswer } = useAIAnswer(threadId);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
     const isInitialMount = useRef(true);
 
     useImperativeHandle(ref, () => ({
@@ -98,14 +99,24 @@ const AIToolbar = forwardRef(({
             } else {
                 await requestAIAnswer(draft, prompt, editor);
             }
-            setInstruction(""); // Clear input after sending
+            setInstruction("");
         }
     };
 
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === 'Enter' && !isPending && instruction.trim()) {
-            event.preventDefault(); // Empêche le comportement par défaut
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (event.key === 'Enter' && !event.shiftKey && !isPending && instruction.trim()) {
+            event.preventDefault();
             handleSend();
+        }
+        if (event.key === 'Enter' && event.shiftKey) {
+            event.preventDefault();
+            const textarea = event.target as HTMLTextAreaElement;
+            const { selectionStart, selectionEnd, value } = textarea;
+            const newValue = value.slice(0, selectionStart) + "\n" + value.slice(selectionEnd);
+            setInstruction(newValue);
+            setTimeout(() => {
+                textarea.selectionStart = textarea.selectionEnd = selectionStart + 1;
+            }, 0);
         }
     };
 
@@ -138,15 +149,16 @@ const AIToolbar = forwardRef(({
                 </div>
             ) : (
                 <>
-                    <input
+                    <TextareaAutosize
                         ref={inputRef}
-                        type="text"
                         value={instruction}
                         onChange={e => setInstruction(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Consigne IA…"
                         className="ai-toolbar-input"
                         disabled={isPending}
+                        minRows={1}
+                        maxRows={10}
                     />
                     <button
                         type="button"
