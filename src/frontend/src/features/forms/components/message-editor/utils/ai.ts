@@ -1,6 +1,7 @@
 import { useThreadsGenerateAnswerCreate, useThreadsGenerateNewMessageCreate } from "@/features/api/gen/threads/threads";
 import { BlockNoteEditor } from "@blocknote/core";
 import { diffWords } from 'diff'; // Vous devez installer la bibliothèque 'diff' : npm install diff @types/diff
+import { Span } from "next/dist/trace";
 import { useState } from "react";
 
 interface AIAnswerResponse {
@@ -44,6 +45,47 @@ export const useAIAnswer = (threadId?: string) => {
         return false;
     };
 
+    function addTagToNewlines(text: string, tag: string): string {
+        if (!text.trim()) return text;
+        let ends_with_return = false;
+        if (text[text.length - 1] === "\n") {
+            ends_with_return = true;
+            text = text.slice(0, -1);
+            if (text[text.length - 1] === "\n") {
+                text = text.slice(0, -1);
+            }
+        }
+        let newText = `(${tag})`;
+        for (let i = 0; i < text.length; i++) {
+            if (text[i] === "\n" && i != 0) {
+                newText += `(/${tag})\n(${tag})`;
+            } else {
+                newText += text[i];
+                if (i === text.length - 1) {
+                    newText += `(/${tag})`;
+                }
+            }
+        }
+        if (ends_with_return) {
+            newText += "\n";
+        }
+        return newText;
+    }
+
+    function extractRemovedAndUnchanged(text: string): string {
+        let newText = text;
+        let cleaned = newText.replace(/\(ADDEDGREEN\)(.*?)\(\/ADDEDGREEN\)/g, "");
+        cleaned = cleaned.replace(/\(REMOVEDRED\)/g, "").replace(/\(\/REMOVEDRED\)/g, "");
+        return cleaned;
+    }
+
+    function extractAddedAndUnchanged(text: string): string {
+        let newText = text;
+        let cleaned = newText.replace(/\(REMOVEDRED\)(.*?)\(\/REMOVEDRED\)/g, "");
+        cleaned = cleaned.replace(/\(ADDEDGREEN\)/g, "").replace(/\(\/ADDEDGREEN\)/g, "");
+        return cleaned;
+    }
+
     const requestAIAnswer = async (draft: string, prompt: string, editor?: BlockNoteEditor<any, any, any>) => {
         if (editor) {
             const currentContent = JSON.parse(JSON.stringify(editor.document));
@@ -66,28 +108,47 @@ export const useAIAnswer = (threadId?: string) => {
                 : (response.data as { message: string }).message || "";
 
             setRawAnswer(answer);
-
+            console.log(answer);
             if (hasExistingContent) {
                 editor.removeBlocks(editor.document.map(block => block.id));
                 let formattedContent = "";
                 const differences = diffWords(currentMarkdown, answer);
                 differences.forEach(part => {
                     if (part.added) {
-                        formattedContent += `<span style="font-style: italic;">${part.value}</span>`;
+                        formattedContent += addTagToNewlines(part.value, "ADDEDGREEN");
                     } else if (part.removed) {
-                        formattedContent += `<span style="text-decoration: line-through; color: #FF6666">${part.value}</span>`;
+                        formattedContent += addTagToNewlines(part.value, "REMOVEDRED");
                     } else {
                         formattedContent += part.value;
                     }
                 });
                 setFormattedAnswer(formattedContent);
-
                 try {
                     const html = `${formattedContent.split('\n').map(line =>
                         line ? `<p>${line}</p>` : ''
                     ).join('')}`;
-                    // Essayer de convertir le HTML formaté en blocs BlockNote
-                    const blocks = await editor.tryParseHTMLToBlocks(html);
+                    let blocks = await editor.tryParseHTMLToBlocks(html);
+                    blocks.forEach((block, index) => {
+                        const text = block.content ? (block.content as any)[0].text.toString() : "";
+                        if (text.includes("ADDEDGREEN")) {
+                            if (text.includes("REMOVEDRED")) {
+                                let duplicatedBlock = JSON.parse(JSON.stringify(block));
+                                block.props.backgroundColor = "red";
+                                (block.content as any)[0].text = extractRemovedAndUnchanged(text);
+                                duplicatedBlock.props.backgroundColor = "green";
+                                (duplicatedBlock.content as any)[0].text = extractAddedAndUnchanged(text);
+                                blocks.splice(index + 1, 0, duplicatedBlock);
+                            } else {
+                                block.props.backgroundColor = "green";
+                                (block.content as any)[0].text = extractAddedAndUnchanged(text);
+                            }
+                        } else {
+                            if (text.includes("REMOVEDRED")) {
+                                block.props.backgroundColor = "red";
+                                (block.content as any)[0].text = extractRemovedAndUnchanged(text);
+                            }
+                        }
+                    });
                     // Si le document est vide après avoir supprimé tous les blocs
                     editor.insertBlocks(blocks, editor.document[editor.document.length - 1].id);
                 } catch (error) {
