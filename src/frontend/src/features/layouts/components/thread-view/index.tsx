@@ -12,6 +12,8 @@ import { Button } from "@openfun/cunningham-react";
 import { useTranslation } from "react-i18next";
 import { ThreadViewLabelsList } from "./components/thread-view-labels-list";
 import { ThreadSummary } from "./components/thread-summary";
+import { useConfigRetrieve } from "@/features/api/gen/config/config";
+
 
 type MessageWithDraftChild = Message & {
   draft_message?: Message;
@@ -87,6 +89,10 @@ export const ThreadView = () => {
   const isThreadTrashed =
     trashedMessageIds.length === messages?.results?.length;
 
+  // Get AI Configuration
+  const { data: configData } = useConfigRetrieve();
+  const isIaEnabled = !!configData?.data?.["AI_ENABLED"];
+
   /**
    * Setup an intersection observer to mark messages as read when they are
    * scrolled into view.
@@ -128,6 +134,8 @@ export const ThreadView = () => {
     [selectedThread]
   );
 
+
+
   if (!selectedThread) return null;
 
   if (queryStates.messages.isLoading)
@@ -139,15 +147,18 @@ export const ThreadView = () => {
 
   return (
     <div className="thread-view" ref={rootRef}>
+      
       <ActionBar canUndelete={isThreadTrashed} />
       <h2 className="thread-view__subject">{selectedThread.subject}</h2>
-      <ThreadSummary
-        threadId={selectedThread.id}
-        summary={selectedThread.summary}
-        selectedMailboxId={selectedMailbox?.id}
-        searchParams={searchParams}
-        selectedThread={selectedThread}
-      />
+      {isIaEnabled && (
+        <ThreadSummary
+          threadId={selectedThread.id}
+          summary={selectedThread.summary}
+          selectedMailboxId={selectedMailbox?.id}
+          searchParams={searchParams}
+          selectedThread={selectedThread}
+        />
+      )}
       <div className="thread-view__messages-list">
         {selectedThread!.labels.length > 0 && (
           <ThreadViewLabelsList labels={selectedThread!.labels} />
