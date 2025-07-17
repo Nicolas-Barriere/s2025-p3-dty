@@ -339,7 +339,7 @@
         "refresh_summary": "Rafraîchir le résumé"
       },
       "tooltips": {
-        "has_attachments": "Cette email contient une pièce jointe",
+        "has_attachments": "Cet email contient une pièce jointe",
         "more_options": "Plus d'options",
         "mark_as_important": "Marquer comme important",
         "reply": "Répondre",
