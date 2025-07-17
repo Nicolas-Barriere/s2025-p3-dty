@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { useAIAnswer } from "./utils/ai";
 import { BlockNoteEditor } from "@blocknote/core";
-
+import { Spinner } from "@gouvfr-lasuite/ui-kit";
 
 type AIToolbarProps = {
     threadId?: string;
@@ -155,7 +155,7 @@ const AIToolbar = forwardRef(({
                         disabled={isPending || !instruction.trim()}
                     >
                         {isPending ? (
-                            <span className="material-icons">hourglass_empty</span>
+                            <Spinner />
                         ) : (
                             <span className="material-icons">check</span>
                         )}
