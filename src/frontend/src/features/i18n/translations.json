@@ -144,6 +144,9 @@
       "message_editor": {
         "start_typing": "Start typing..."
       },
+      "aiToolbar": {
+        "placeholder": "AI prompt..."
+      },
       "search": {
         "placeholder": "Search in messages...",
         "filters": {
@@ -415,6 +418,9 @@
       },
       "message_editor": {
         "start_typing": "Commencer à écrire..."
+      },
+      "aiToolbar": {
+        "placeholder": "Consigne IA..."
       },
       "search": {
         "placeholder": "Rechercher dans les messages...",

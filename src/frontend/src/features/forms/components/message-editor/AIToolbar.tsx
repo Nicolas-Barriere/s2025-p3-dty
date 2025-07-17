@@ -3,6 +3,7 @@ import { useAIAnswer } from "./utils/ai";
 import { BlockNoteEditor } from "@blocknote/core";
 import { Spinner } from "@gouvfr-lasuite/ui-kit";
 import TextareaAutosize from 'react-textarea-autosize';
+import { useTranslation } from "react-i18next";
 
 type AIToolbarProps = {
     threadId?: string;
@@ -31,6 +32,7 @@ const AIToolbar = forwardRef(({
     const { requestAIAnswer } = useAIAnswer(threadId);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const isInitialMount = useRef(true);
+    const { t } = useTranslation();
 
     useImperativeHandle(ref, () => ({
         focus: () => {
@@ -154,7 +156,7 @@ const AIToolbar = forwardRef(({
                         value={instruction}
                         onChange={e => setInstruction(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Consigne IA…"
+                        placeholder={t("aiToolbar.placeholder")}
                         className="ai-toolbar-input"
                         disabled={isPending}
                         minRows={1}
