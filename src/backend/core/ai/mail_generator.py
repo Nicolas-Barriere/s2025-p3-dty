@@ -11,7 +11,7 @@ with open(PROMPTS_FILE_PATH, "r") as f:
     AI_PROMPTS = json.load(f)
 
 
-def generate_answer_mail(thread: Optional[Thread], draft: str, prompt: str) -> str:
+def generate_answer_mail(thread: Optional[Thread], draft: str, prompt: str, name: str) -> str:
     """
     Generates an answer to a thread using the ALBERT model.
     Args:
@@ -35,13 +35,14 @@ def generate_answer_mail(thread: Optional[Thread], draft: str, prompt: str) -> s
         thread_context=conversation_text,
         example=example,
         draft=draft,
+        name=name
     )
     print(global_prompt)
     answer = AIService().call_ai_api_with_extra_instructions(global_prompt, prompt)
     return answer
 
 
-def generate_new_mail(draft: str, prompt: str) -> str:
+def generate_new_mail(draft: str, prompt: str, name: str) -> str:
     """
     Generates a new mail using the ALBERT model.
     Args:
@@ -60,6 +61,7 @@ def generate_new_mail(draft: str, prompt: str) -> str:
         answer_rules=answer_rules,
         example=example,
         draft=draft,
+        name=name
     )
     print(global_prompt)
     answer = AIService().call_ai_api_with_extra_instructions(global_prompt, prompt)

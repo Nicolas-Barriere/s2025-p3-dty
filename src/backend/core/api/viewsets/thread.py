@@ -514,7 +514,9 @@ class ThreadViewSet(
         thread = self.get_object()
         draft = request.data.get("draft")
         prompt = request.data.get("prompt")
-        answer = generate_answer_mail(thread, draft, prompt)
+        user = self.request.user
+        name = user.full_name
+        answer = generate_answer_mail(thread, draft, prompt, name)
         return Response({
             "answer": answer
         }, status=status.HTTP_200_OK)
@@ -550,7 +552,9 @@ class ThreadViewSet(
     def generate_new_message(self, request):
         draft = request.data.get("draft")
         prompt = request.data.get("prompt")
-        message = generate_new_mail(draft, prompt)
+        user = self.request.user
+        name = user.full_name
+        message = generate_new_mail(draft, prompt, name)
         return Response({
             "message": message
         }, status=status.HTTP_200_OK)
