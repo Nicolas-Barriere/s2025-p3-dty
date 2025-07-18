@@ -108,7 +108,6 @@ export const useAIAnswer = (threadId?: string) => {
                 : (response.data as { message: string }).message || "";
 
             setRawAnswer(answer);
-            console.log(answer);
             if (hasExistingContent) {
                 editor.removeBlocks(editor.document.map(block => block.id));
                 let formattedContent = "";

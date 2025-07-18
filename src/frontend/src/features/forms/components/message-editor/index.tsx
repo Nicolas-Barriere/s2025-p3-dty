@@ -131,7 +131,6 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
 
     const handleChange = async () => {
         if (!showActionButtons && !isPending) {
-            console.log("draft saved");
             const markdown = await editor.blocksToMarkdownLossy(editor.document);
             setMessage(markdown);
             const html = await MailHelper.markdownToHtml(markdown);

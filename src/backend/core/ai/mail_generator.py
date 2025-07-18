@@ -37,7 +37,6 @@ def generate_answer_mail(thread: Optional[Thread], draft: str, prompt: str, name
         draft=draft,
         name=name
     )
-    print(global_prompt)
     answer = AIService().call_ai_api_with_extra_instructions(global_prompt, prompt)
     return answer
 
@@ -63,6 +62,5 @@ def generate_new_mail(draft: str, prompt: str, name: str) -> str:
         draft=draft,
         name=name
     )
-    print(global_prompt)
     answer = AIService().call_ai_api_with_extra_instructions(global_prompt, prompt)
     return answer
