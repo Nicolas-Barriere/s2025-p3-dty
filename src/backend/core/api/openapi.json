@@ -3060,6 +3060,71 @@
                 }
             }
         },
+        "/api/v1.0/threads/{id}/generate-answer/": {
+            "post": {
+                "operationId": "threads_generate_answer_create",
+                "description": "ViewSet for Thread model.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "threads"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateAnswerRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateAnswerRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "answer": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Answer successfully generated."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "detail": "Permission denied"
+                                }
+                            }
+                        },
+                        "description": "User does not have permission to generate an answer to this thread."
+                    }
+                }
+            }
+        },
         "/api/v1.0/threads/{id}/refresh-summary/": {
             "post": {
                 "operationId": "threads_refresh_summary_create",
@@ -3462,6 +3527,61 @@
                 }
             }
         },
+        "/api/v1.0/threads/generate-new-message/": {
+            "post": {
+                "operationId": "threads_generate_new_message_create",
+                "description": "ViewSet for Thread model.",
+                "tags": [
+                    "threads"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateNewMessageRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateNewMessageRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Message successfully generated."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "detail": "Permission denied"
+                                }
+                            }
+                        },
+                        "description": "User does not have permission to generate a new message."
+                    }
+                }
+            }
+        },
         "/api/v1.0/threads/stats/": {
             "get": {
                 "operationId": "threads_stats_retrieve",
@@ -3796,6 +3916,36 @@
                 ],
                 "type": "string",
                 "description": "* `unread` - unread\n* `starred` - starred\n* `trashed` - trashed"
+            },
+            "GenerateAnswerRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "draft": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Brouillon du message actuel."
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Prompt de l'utilisateur pour l'IA."
+                    }
+                }
+            },
+            "GenerateNewMessageRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "draft": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Brouillon du message actuel."
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Prompt de l'utilisateur pour l'IA."
+                    }
+                }
             },
             "ImportFileRequest": {
                 "type": "object",

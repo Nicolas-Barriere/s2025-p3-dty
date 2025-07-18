@@ -1,6 +1,22 @@
 import { BasicTextStyleButton, BlockTypeSelect, CreateLinkButton, FormattingToolbar } from "@blocknote/react";
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
-const MessageEditorToolbar = () => {
+
+type MessageEditorToolbarProps = {
+    onAIClick: () => void;
+    active?: boolean;
+};
+
+const MessageEditorToolbar = ({ onAIClick, active = false }: MessageEditorToolbarProps) => {
+
+    const [showTooltip, setShowTooltip] = useState(false);
+    const { t } = useTranslation();
+
+    const handleAIClick = () => {
+        onAIClick();
+    }
+
     return (
         <FormattingToolbar>
             <BlockTypeSelect key={"blockTypeSelect"} />
@@ -25,6 +41,24 @@ const MessageEditorToolbar = () => {
                 basicTextStyle={"code"}
             />
             <CreateLinkButton key={"createLinkButton"} />
+
+            <button
+                type="button"
+                onClick={handleAIClick}
+                className={`ai-toolbar-btn ${active ? 'ai-active' : ''}`}
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+            >
+                <span className="material-icons">edit</span>
+                {showTooltip && (
+                    <div className="ai-toolbar-tooltip">
+                        <div>
+                            {active ? t("aiToolbar.tooltip-close") : t("aiToolbar.tooltip-open")}
+                        </div>
+                        <div className="shortcut-hint">(⌘+Shift+L)</div>
+                    </div>
+                )}
+            </button>
         </FormattingToolbar>
     )
 }

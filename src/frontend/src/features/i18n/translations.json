@@ -151,6 +151,13 @@
       "message_editor": {
         "start_typing": "Start typing..."
       },
+      "aiToolbar": {
+        "placeholder": "AI prompt...",
+        "tooltip-open": "AI Assistant",
+        "tooltip-close": "Close AI Assistant",
+        "Cancel": "Cancel",
+        "Accept": "Accept"
+      },
       "search": {
         "placeholder": "Search in messages...",
         "filters": {
@@ -456,7 +463,7 @@
         "refresh_summary": "Rafraîchir le résumé"
       },
       "tooltips": {
-        "has_attachments": "Cette email contient une pièce jointe",
+        "has_attachments": "Cet email contient une pièce jointe",
         "more_options": "Plus d'options",
         "mark_as_important": "Marquer comme important",
         "reply": "Répondre",
@@ -533,6 +540,13 @@
       },
       "message_editor": {
         "start_typing": "Commencer à écrire..."
+      },
+      "aiToolbar": {
+        "placeholder": "Consigne IA...",
+        "tooltip-open": "Assistant IA",
+        "tooltip-close": "Fermer assistant IA",
+        "Cancel": "Annuler",
+        "Accept": "Accepter"
       },
       "search": {
         "placeholder": "Rechercher dans les messages...",
