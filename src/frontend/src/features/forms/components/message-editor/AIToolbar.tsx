@@ -135,7 +135,7 @@ const AIToolbar = forwardRef(({
                             disabled={isPending}
                         >
                             <span className="material-icons">undo</span>
-                            <span>Annuler</span>
+                            <span>{t("aiToolbar.Cancel")}</span>
                         </button>
                         <button
                             type="button"
@@ -145,7 +145,7 @@ const AIToolbar = forwardRef(({
                             disabled={isPending}
                         >
                             <span className="material-icons">check</span>
-                            <span>Accepter</span>
+                            <span>{t("aiToolbar.Accept")}</span>
                         </button>
                     </div>
                 </div>

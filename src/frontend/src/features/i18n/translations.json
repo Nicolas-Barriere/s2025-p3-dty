@@ -145,7 +145,11 @@
         "start_typing": "Start typing..."
       },
       "aiToolbar": {
-        "placeholder": "AI prompt..."
+        "placeholder": "AI prompt...",
+        "tooltip-open": "AI Assistant",
+        "tooltip-close": "Close AI Assistant",
+        "Cancel": "Cancel",
+        "Accept": "Accept"
       },
       "search": {
         "placeholder": "Search in messages...",
@@ -420,7 +424,11 @@
         "start_typing": "Commencer à écrire..."
       },
       "aiToolbar": {
-        "placeholder": "Consigne IA..."
+        "placeholder": "Consigne IA...",
+        "tooltip-open": "Assistant IA",
+        "tooltip-close": "Fermer assistant IA",
+        "Cancel": "Annuler",
+        "Accept": "Accepter"
       },
       "search": {
         "placeholder": "Rechercher dans les messages...",
