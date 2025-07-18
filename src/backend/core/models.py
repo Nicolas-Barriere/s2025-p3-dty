@@ -691,6 +691,11 @@ class Label(BaseModel):
         default="",
         help_text=_("Description of the label, used by AI to understand its purpose"),
     )
+    auto_labellisation = models.BooleanField(
+        _("auto labellisation"),
+        default=True,
+        help_text=_("Whether this label should be automatically applied by AI"),
+    )
 
     class Meta:
         db_table = "messages_label"

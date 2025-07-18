@@ -16,5 +16,6 @@ export interface TreeLabel {
   readonly color: string;
   readonly display_name: string;
   readonly description: string;
+  readonly auto_labellisation: boolean;
   readonly children: readonly TreeLabel[];
 }

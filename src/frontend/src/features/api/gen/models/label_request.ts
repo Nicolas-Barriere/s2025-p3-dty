@@ -31,4 +31,6 @@ export interface LabelRequest {
    * @maxLength 255
    */
   description?: string;
+  /** Whether this label should be automatically applied by AI */
+  auto_labellisation?: boolean;
 }

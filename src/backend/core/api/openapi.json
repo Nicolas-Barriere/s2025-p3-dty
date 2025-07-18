@@ -3971,6 +3971,10 @@
                         "type": "string",
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
+                    },
+                    "auto_labellisation": {
+                        "type": "boolean",
+                        "description": "Whether this label should be automatically applied by AI"
                     }
                 },
                 "required": [
@@ -4013,6 +4017,10 @@
                         "type": "string",
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
+                    },
+                    "auto_labellisation": {
+                        "type": "boolean",
+                        "description": "Whether this label should be automatically applied by AI"
                     }
                 },
                 "required": [
@@ -4790,6 +4798,10 @@
                         "type": "string",
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
+                    },
+                    "auto_labellisation": {
+                        "type": "boolean",
+                        "description": "Whether this label should be automatically applied by AI"
                     }
                 }
             },
@@ -5158,6 +5170,10 @@
                         "type": "string",
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
+                    },
+                    "auto_labellisation": {
+                        "type": "boolean",
+                        "description": "Whether this label should be automatically applied by AI"
                     }
                 },
                 "required": [
@@ -5196,6 +5212,10 @@
                         "type": "string",
                         "readOnly": true
                     },
+                    "auto_labellisation": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
                     "children": {
                         "type": "array",
                         "items": {
@@ -5205,6 +5225,7 @@
                     }
                 },
                 "required": [
+                    "auto_labellisation",
                     "children",
                     "color",
                     "description",

@@ -8,5 +8,6 @@
 
 export * from "./rhf-input";
 export * from "./rhf-select";
+export * from "./rhf-checkbox";
 
 

@@ -57,10 +57,15 @@ def assign_label_to_thread(thread: Thread, mailbox_id):
 
     for label_name in best_labels:
         label_id = list(filter(lambda x: x["name"] == label_name, labels))[0]["id"]
-        response = add_thread_to_label(
-            factory,
-            mailbox_id,
-            user,
-            label_id=label_id,
-            thread_id=thread.id,
-        )
+        auto_labellisation = list(filter(lambda x: x["name"] == label_name, labels))[0][
+            "auto_labellisation"
+        ]
+        print(f"Assigning label {label_name}, AUTO: {auto_labellisation}")
+        if auto_labellisation:
+            response = add_thread_to_label(
+                factory,
+                mailbox_id,
+                user,
+                label_id=label_id,
+                thread_id=thread.id,
+            )
