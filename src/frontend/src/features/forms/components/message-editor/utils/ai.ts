@@ -128,7 +128,8 @@ export const useAIAnswer = (threadId?: string) => {
                         line ? `<p>${line}</p>` : ''
                     ).join('')}`;
                     let blocks = await editor.tryParseHTMLToBlocks(html);
-                    blocks.forEach((block, index) => {
+                    for (let i = 0; i < blocks.length; i++) {
+                        const block = blocks[i];
                         const text = block.content ? (block.content as any)[0].text.toString() : "";
                         if (text.includes("ADDEDGREEN")) {
                             if (text.includes("REMOVEDRED")) {
@@ -137,7 +138,8 @@ export const useAIAnswer = (threadId?: string) => {
                                 (block.content as any)[0].text = extractRemovedAndUnchanged(text);
                                 duplicatedBlock.props.backgroundColor = "green";
                                 (duplicatedBlock.content as any)[0].text = extractAddedAndUnchanged(text);
-                                blocks.splice(index + 1, 0, duplicatedBlock);
+                                blocks.splice(i + 1, 0, duplicatedBlock);
+                                i++;
                             } else {
                                 block.props.backgroundColor = "green";
                                 (block.content as any)[0].text = extractAddedAndUnchanged(text);
@@ -148,7 +150,7 @@ export const useAIAnswer = (threadId?: string) => {
                                 (block.content as any)[0].text = extractRemovedAndUnchanged(text);
                             }
                         }
-                    });
+                    };
                     // Si le document est vide après avoir supprimé tous les blocs
                     editor.insertBlocks(blocks, editor.document[editor.document.length - 1].id);
                 } catch (error) {
