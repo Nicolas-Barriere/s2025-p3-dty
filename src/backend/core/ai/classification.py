@@ -1,11 +1,11 @@
 import json
 from core.services.ai_service import AIService
 import yaml
-from typing import Dict
 import os
+from datetime import datetime
 
 
-def get_prompt(prompt_name: str) -> Dict[str, str]:
+def get_prompt(prompt_name: str) -> dict[str, str]:
     """
     Load prompts from a YAML file.
 
@@ -31,12 +31,18 @@ def get_most_relevant_labels(single_emails: str, labels: list) -> dict[str, str 
     Giving too many emails at once may lead to an error as the LLM might make a mistake and forget an email.
     Returns a list of dictionaries with the email ID, tag, and explanation for each email.
     """
-    prompt_mail_solo: str = get_prompt("prompt_solo")
-
-    response = AIService().call_ai_api(
-        prompt_mail_solo.replace("[THREAD_EMAILS]", str(single_emails)).replace(
-            "[LABELS]", str(labels)
-        )
+    prompt: str = get_prompt("prompt_labels")
+    labels = [
+        {k: v for k, v in label.items() if k in ("name", "description")}
+        for label in labels
+    ]
+    current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " +00:00"
+    final_prompt = (
+        prompt.replace("[THREAD_EMAILS]", str(single_emails))
+        .replace("[LABELS]", str(labels))
+        .replace("[DATE_TIME]", current_datetime)
     )
+
+    response = AIService().call_ai_api(final_prompt)
 
     return json.loads(response)
