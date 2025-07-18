@@ -1,7 +1,7 @@
 import { Spinner } from "@gouvfr-lasuite/ui-kit";
 import { Button } from "@openfun/cunningham-react";
 import { clsx } from "clsx";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -17,7 +17,7 @@ import { useSentBox } from "@/features/providers/sent-box";
 import { useRouter } from "next/router";
 import { AttachmentUploader } from "./attachment-uploader";
 
-export type MessageFormMode = "new" |"reply" | "reply_all" | "forward";
+export type MessageFormMode = "new" | "reply" | "reply_all" | "forward";
 
 interface MessageFormProps {
     // For reply mode
@@ -39,17 +39,17 @@ const emailArraySchema = z.array(z.string().trim().email("message_form.error.inv
 const messageFormSchema = z.object({
     from: z.string().nonempty("message_form.error.mailbox_required"),
     to: z.string()
-         .optional()
-         .transform(toEmailArray)
-         .pipe(emailArraySchema),
+        .optional()
+        .transform(toEmailArray)
+        .pipe(emailArraySchema),
     cc: z.string()
-         .optional()
-         .transform(toEmailArray)
-         .pipe(emailArraySchema),
+        .optional()
+        .transform(toEmailArray)
+        .pipe(emailArraySchema),
     bcc: z.string()
-          .optional()
-          .transform(toEmailArray)
-          .pipe(emailArraySchema),
+        .optional()
+        .transform(toEmailArray)
+        .pipe(emailArraySchema),
     subject: z.string()
         .trim()
         .nonempty("message_form.error.subject_required"),
@@ -74,6 +74,7 @@ export const MessageForm = ({
     onSuccess
 }: MessageFormProps) => {
     const { t } = useTranslation();
+    const editorStatusRef = useRef({ isPending: false, showActionButtons: false });
     const router = useRouter();
     const [draft, setDraft] = useState<Message | undefined>(draftMessage);
     const [showCCField, setShowCCField] = useState((draftMessage?.cc?.length ?? 0) > 0);
@@ -89,7 +90,7 @@ export const MessageForm = ({
     const { addQueuedMessage } = useSentBox();
 
     const getMailboxOptions = () => {
-        if(!mailboxes) return [];
+        if (!mailboxes) return [];
         return mailboxes.map((mailbox) => ({
             label: mailbox.email,
             value: mailbox.id
@@ -102,10 +103,10 @@ export const MessageForm = ({
 
         if (mode === "reply_all") {
             return [...new Set([
-                {email: parentMessage.sender.email},
+                { email: parentMessage.sender.email },
                 ...parentMessage.to,
                 ...parentMessage.cc
-                ]
+            ]
                 .filter(contact => contact.email !== selectedMailbox!.email)
                 .map(contact => contact.email)
             )]
@@ -137,7 +138,7 @@ export const MessageForm = ({
     }
 
     const getDefaultAttachments = () => {
-        let attachments: readonly Attachment[]= [];
+        let attachments: readonly Attachment[] = [];
         if (draft?.attachments) attachments = draft.attachments;
         if (mode === "forward" && parentMessage?.attachments) attachments = parentMessage.attachments;
         return attachments;
@@ -191,10 +192,12 @@ export const MessageForm = ({
     }
 
     const draftCreateMutation = useDraftCreate({
-        mutation: { onSuccess: () => {
-            invalidateThreadsStats();
-            handleDraftMutationSuccess();
-        }}
+        mutation: {
+            onSuccess: () => {
+                invalidateThreadsStats();
+                handleDraftMutationSuccess();
+            }
+        }
     });
 
     const draftUpdateMutation = useDraftUpdate2({
@@ -204,7 +207,7 @@ export const MessageForm = ({
     const deleteMessageMutation = useMessagesDestroy();
 
     const handleDeleteMessage = (messageId: string) => {
-        if(window.confirm(t("message_form.confirm.delete"))) {
+        if (window.confirm(t("message_form.confirm.delete"))) {
             deleteMessageMutation.mutate({
                 id: messageId
             }, {
@@ -233,15 +236,16 @@ export const MessageForm = ({
         if (draft && form.formState.dirtyFields.from) {
             await deleteMessageMutation.mutateAsync({ id: draft.id });
             const response = await draftCreateMutation.mutateAsync({ data }, {
-                onSuccess: () => {addToast(
-                    <ToasterItem type="info">
-                        <span>{t("message_form.success.draft_transferred")}</span>
-                    </ToasterItem>,
-                );
+                onSuccess: () => {
+                    addToast(
+                        <ToasterItem type="info">
+                            <span>{t("message_form.success.draft_transferred")}</span>
+                        </ToasterItem>,
+                    );
                 }
             });
 
-            if(router.asPath.includes("new")) {
+            if (router.asPath.includes("new")) {
                 setDraft(response.data as Message);
                 return;
             }
@@ -304,6 +308,12 @@ export const MessageForm = ({
             return;
         }
 
+        if (editorStatusRef.current.isPending || editorStatusRef.current.showActionButtons) {
+            setPendingSubmit(false);
+            form.setError("messageEditorDraft", { message: t("message_form.error.pending_changes") });
+            return;
+        }
+
         const draft = await saveDraft(data);
 
         if (!draft) {
@@ -363,7 +373,7 @@ export const MessageForm = ({
                 onBlur={form.handleSubmit(saveDraft)}
                 onKeyDown={handleKeyDown}
             >
-                <div className={clsx("form-field-row", {'form-field-row--hidden': hideFromField})}>
+                <div className={clsx("form-field-row", { 'form-field-row--hidden': hideFromField })}>
                     <RhfSelect
                         name="from"
                         options={getMailboxOptions()}
@@ -414,22 +424,24 @@ export const MessageForm = ({
                     </div>
                 )}
 
-                <div className={clsx("form-field-row", {'form-field-row--hidden': hideSubjectField})}>
-                        <RhfInput
-                            name="subject"
-                            label={t("thread_message.subject")}
-                            text={form.formState.errors.subject && t(form.formState.errors.subject.message as string)}
-                            fullWidth
-                        />
-                    </div>
+                <div className={clsx("form-field-row", { 'form-field-row--hidden': hideSubjectField })}>
+                    <RhfInput
+                        name="subject"
+                        label={t("thread_message.subject")}
+                        text={form.formState.errors.subject && t(form.formState.errors.subject.message as string)}
+                        fullWidth
+                    />
+                </div>
 
                 <div className="form-field-row">
                     <MessageEditor
+                        name="message-editor"
                         defaultValue={form.getValues('messageEditorDraft')}
                         fullWidth
                         state={form.formState.errors?.messageEditorDraft ? "error" : "default"}
                         text={form.formState.errors?.messageEditorDraft?.message}
                         quotedMessage={mode !== "new" ? parentMessage : undefined}
+                        statusRef={editorStatusRef}
                     />
                 </div>
 
@@ -449,7 +461,7 @@ export const MessageForm = ({
                             type="button"
                             color="secondary"
                             onClick={onClose}
-                    >
+                        >
                             {t("actions.cancel")}
                         </Button>
                     )}

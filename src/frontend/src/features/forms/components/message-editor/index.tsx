@@ -24,9 +24,11 @@ const BLOCKNOTE_SCHEMA = BlockNoteSchema.create({
 });
 
 type MessageEditorProps = FieldProps & {
+    name?: string;
     blockNoteOptions?: Partial<typeof BLOCKNOTE_SCHEMA>
     defaultValue?: string;
     quotedMessage?: Message;
+    statusRef?: React.RefObject<{ isPending: boolean; showActionButtons: boolean }>;
 }
 
 /**
@@ -50,6 +52,7 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
     const [showActionButtons, setShowActionButtons] = useState(false);
     const { requestAIAnswer, isPending, revertChanges, keepChanges } = useAIAnswer(selectedThread?.id);
     const [lastInstruction, setLastInstruction] = useState("");
+    const { statusRef } = props;
 
 
     // Detect the selection
@@ -79,6 +82,12 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
             editorNode.removeEventListener("keyup", handleSelection);
         };
     }, []);
+
+    useEffect(() => {
+        if (statusRef) {
+            statusRef.current = { isPending, showActionButtons };
+        }
+    }, [isPending, showActionButtons]);
 
     /**
      * Prepare initial content of the editor
@@ -121,12 +130,15 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
     }, [i18n.resolvedLanguage]);
 
     const handleChange = async () => {
-        const markdown = await editor.blocksToMarkdownLossy(editor.document);
-        setMessage(markdown);
-        const html = await MailHelper.markdownToHtml(markdown);
-        form.setValue("messageEditorDraft", JSON.stringify(editor.document), { shouldDirty: true });
-        form.setValue("messageEditorText", markdown);
-        form.setValue("messageEditorHtml", html);
+        if (!showActionButtons && !isPending) {
+            console.log("draft saved");
+            const markdown = await editor.blocksToMarkdownLossy(editor.document);
+            setMessage(markdown);
+            const html = await MailHelper.markdownToHtml(markdown);
+            form.setValue("messageEditorDraft", JSON.stringify(editor.document), { shouldDirty: true });
+            form.setValue("messageEditorText", markdown);
+            form.setValue("messageEditorHtml", html);
+        }
     }
 
     /**
@@ -190,7 +202,6 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
         try {
             setLastInstruction(prompt);
             const result = await requestAIAnswer(draft, prompt, editor);
-            // Afficher les boutons d'action uniquement si des modifications ont été appliquées
             if (result.hasChanges) {
                 setShowActionButtons(true);
             }
