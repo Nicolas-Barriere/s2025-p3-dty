@@ -34,7 +34,7 @@ export const SearchFiltersForm = ({ query, onChange }: SearchFiltersFormProps) =
                     results?: Array<{ id: string }>; 
                     error?: string; 
                 }>(
-                    "/api/v1.0/chatbot/intelligent-search/",
+                    "/api/v1.0/deep_search/intelligent-search/",
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },

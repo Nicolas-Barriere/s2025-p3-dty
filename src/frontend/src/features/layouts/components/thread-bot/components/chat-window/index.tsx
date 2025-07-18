@@ -49,7 +49,7 @@ export const ChatWindow = () => {
                 type: string, 
                 function_used: string,
                 error?: string 
-            }>("/api/v1.0/chatbot/conversation/", {
+            }>("/api/v1.0/deep_search/conversation/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

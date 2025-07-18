@@ -119,7 +119,7 @@ urlpatterns = [
         name="import-imap",
     ),
     path(
-        f"api/{settings.API_VERSION}/chatbot/",
-        include("chatbot.urls"),
+        f"api/{settings.API_VERSION}/deep_search/",
+        include("deep_search.urls"),
     ),
 ]

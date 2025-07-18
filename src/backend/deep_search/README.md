@@ -13,7 +13,7 @@ This module provides a chatbot implementation using the Albert API from Etalab f
 The chatbot uses the Albert API with the following configuration:
 
 ```python
-from chatbot import AlbertChatbot, AlbertConfig
+from deep_search import AlbertChatbot, AlbertConfig
 
 # Default configuration
 config = AlbertConfig(
@@ -31,7 +31,7 @@ chatbot = AlbertChatbot(config)
 ### 1. Summarize an Email
 
 ```python
-from chatbot import get_chatbot
+from deep_search import get_chatbot
 
 chatbot = get_chatbot()
 

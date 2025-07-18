@@ -18,7 +18,7 @@ type ChatbotSearchInputProps = {
  * It connects to the Albert API for RAG (Retrieval Augmented Generation) search capabilities.
  * 
  * The component:
- * 1. Sends user queries to the /api/v1.0/chatbot/intelligent-search/ endpoint
+ * 1. Sends user queries to the /api/v1.0/deep_search/intelligent-search/ endpoint
  * 2. Displays a summary of search results to the user
  * 3. Triggers a mailbox search with the message IDs returned from the RAG system
  * 4. Uses the message_ids parameter for direct mailbox filtering without polluting the text search
@@ -58,7 +58,7 @@ export const ChatbotSearchInput = ({
                 total_emails?: number;
                 query?: string;
                 error?: string;
-            }>("/api/v1.0/chatbot/intelligent-search/", {
+            }>("/api/v1.0/deep_search/intelligent-search/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
