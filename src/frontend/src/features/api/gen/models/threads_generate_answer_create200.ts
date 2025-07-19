@@ -8,4 +8,5 @@
 
 export type ThreadsGenerateAnswerCreate200 = {
   answer?: string;
+  prompt_id?: number;
 };

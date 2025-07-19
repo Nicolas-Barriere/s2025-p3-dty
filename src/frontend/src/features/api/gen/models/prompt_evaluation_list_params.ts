@@ -6,7 +6,9 @@
  * OpenAPI spec version: 1.0.0 (v1.0)
  */
 
-export type ThreadsGenerateNewMessageCreate200 = {
-  message?: string;
-  prompt_id?: number;
+export type PromptEvaluationListParams = {
+  /**
+   * A page number within the paginated result set.
+   */
+  page?: number;
 };

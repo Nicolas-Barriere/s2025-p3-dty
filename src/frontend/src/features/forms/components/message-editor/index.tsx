@@ -15,6 +15,7 @@ import { useAIAnswer } from "./utils/ai";
 import { useMailboxContext } from "@/features/providers/mailbox"
 import { QuotedMessageBlock } from '@/features/blocknote/quoted-message-block';
 import { Message } from '@/features/api/gen/models/message';
+import { usePromptEvaluationCreate } from "@/features/api/gen/prompt-evaluation/prompt-evaluation";
 
 const BLOCKNOTE_SCHEMA = BlockNoteSchema.create({
     blockSpecs: {
@@ -53,7 +54,8 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
     const { requestAIAnswer, isPending, revertChanges, keepChanges } = useAIAnswer(selectedThread?.id);
     const [lastInstruction, setLastInstruction] = useState("");
     const { statusRef } = props;
-
+    const { mutateAsync: createPromptEvaluation } = usePromptEvaluationCreate();
+    const [lastPromptId, setLastPromptId] = useState<number | null>(null);
 
     // Detect the selection
     const handleSelection = () => {
@@ -187,11 +189,33 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
     };
 
     const handleRevert = () => {
+        if (typeof lastPromptId === "number") {
+            createPromptEvaluation({
+                data: {
+                    prompt_id: lastPromptId,
+                    prompt_type: selectedThread ? "answer_mail" : "new_mail",
+                    accepted: false,
+                }
+            }).catch((err) => {
+                console.error("Prompt evaluation (refusée) non enregistrée :", err);
+            });
+        }
         revertChanges(editor);
         setShowActionButtons(false);
     };
 
     const handleKeep = () => {
+        if (typeof lastPromptId === "number") {
+            createPromptEvaluation({
+                data: {
+                    prompt_id: lastPromptId,
+                    prompt_type: selectedThread ? "answer_mail" : "new_mail",
+                    accepted: true,
+                }
+            }).catch((err) => {
+                console.error("Prompt evaluation (refusée) non enregistrée :", err);
+            });
+        }
         keepChanges(editor);
         setLastInstruction("");
         setShowActionButtons(false);
@@ -203,6 +227,11 @@ const MessageEditor = ({ blockNoteOptions, defaultValue, quotedMessage, ...props
             const result = await requestAIAnswer(draft, prompt, editor);
             if (result.hasChanges) {
                 setShowActionButtons(true);
+                if (typeof result.prompt_id === "number") {
+                    setLastPromptId(result.prompt_id);
+                } else {
+                    setLastPromptId(null);
+                }
             }
         } catch (error) {
             console.error("Erreur lors de la génération de la réponse IA:", error);

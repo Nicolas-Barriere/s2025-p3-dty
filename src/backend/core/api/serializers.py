@@ -584,3 +584,17 @@ class ImportIMAPSerializer(ImportBaseSerializer):
         default=0,
         min_value=0,
     )
+
+
+class PromptEvaluationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PromptEvaluation
+        fields = [
+            "id",
+            "prompt_id",
+            "prompt_type",
+            "accepted",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]

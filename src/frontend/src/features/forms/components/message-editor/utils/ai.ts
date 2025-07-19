@@ -6,6 +6,7 @@ import { useState } from "react";
 
 interface AIAnswerResponse {
     answer: string;
+    prompt_id: number;
 }
 
 export const useAIAnswer = (threadId?: string) => {
@@ -105,7 +106,13 @@ export const useAIAnswer = (threadId?: string) => {
 
             const answer = threadId
                 ? (response.data as AIAnswerResponse).answer || ""
-                : (response.data as { message: string }).message || "";
+                : (response.data as { message: string, prompt_id: number }).message || "";
+
+            const prompt_id = threadId
+                ? (response.data as AIAnswerResponse).prompt_id
+                : (response.data as { message: string, prompt_id: number }).prompt_id;
+
+
 
             setRawAnswer(answer);
             if (hasExistingContent) {
@@ -164,7 +171,8 @@ export const useAIAnswer = (threadId?: string) => {
             editor.focus();
             return {
                 answer,
-                hasChanges: hasExistingContent
+                hasChanges: hasExistingContent,
+                prompt_id
             };
         }
 

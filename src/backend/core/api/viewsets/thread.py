@@ -493,7 +493,8 @@ class ThreadViewSet(
         responses={
             200: OpenApiResponse(
                 response={"type": "object", "properties": {
-                    "answer": {"type": "string"}
+                    "answer": {"type": "string"},
+                    "prompt_id": {"type": "integer"}
                 }},
                 description="Answer successfully generated.",
             ),
@@ -516,9 +517,10 @@ class ThreadViewSet(
         prompt = request.data.get("prompt")
         user = self.request.user
         name = user.full_name
-        answer = generate_answer_mail(thread, draft, prompt, name)
+        result = generate_answer_mail(thread, draft, prompt, name)
         return Response({
-            "answer": answer
+            "answer": result["answer"],
+            "prompt_id": result["prompt_id"]
         }, status=status.HTTP_200_OK)
 
     @extend_schema(
@@ -532,7 +534,8 @@ class ThreadViewSet(
         responses={
             200: OpenApiResponse(
                 response={"type": "object", "properties": {
-                    "message": {"type": "string"}
+                    "message": {"type": "string"},
+                    "prompt_id": {"type": "integer"}
                 }},
                 description="Message successfully generated.",
             ),
@@ -554,9 +557,10 @@ class ThreadViewSet(
         prompt = request.data.get("prompt")
         user = self.request.user
         name = user.full_name
-        message = generate_new_mail(draft, prompt, name)
+        result = generate_new_mail(draft, prompt, name)
         return Response({
-            "message": message
+            "message": result["message"],
+            "prompt_id": result["prompt_id"]
         }, status=status.HTTP_200_OK)
     
 

@@ -1,6 +1,8 @@
 """Admin classes and registrations for core app."""
 
 import hashlib
+import json
+from pathlib import Path
 
 from django.contrib import admin, messages
 from django.contrib.auth import admin as auth_admin
@@ -10,6 +12,8 @@ from django.urls import path
 from django.utils.html import escape, format_html
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Count, Avg, Max, Q, IntegerField
+from django.db.models.functions import Cast
 
 from core.identity.keycloak import reset_keycloak_user_password
 from core.services.import_service import ImportService
@@ -17,6 +21,13 @@ from core.services.import_service import ImportService
 from . import models
 from .forms import IMAPImportForm, MessageImportForm
 
+PROMPT_FILE = Path(__file__).resolve().parent / "ai" / "ai_prompts.json"
+
+def get_prompt_content(prompt_id):
+    with open(PROMPT_FILE) as f:
+        prompts = json.load(f)
+    match = next((p for p in prompts if p["id"] == prompt_id), None)
+    return match["content"] if match else "(Non trouvé)"
 
 def reset_keycloak_password_action(_, request, queryset):
     """Admin action to reset Keycloak passwords for selected mailboxes."""
@@ -461,3 +472,31 @@ class BlobAdmin(admin.ModelAdmin):
     list_display = ("id", "mailbox", "type", "size", "created_at")
     search_fields = ("mailbox__local_part", "mailbox__domain__name")
     list_filter = ("mailbox", "type")
+
+@admin.register(models.PromptEvaluation)
+class PromptEvaluationAdmin(admin.ModelAdmin):
+    change_list_template = "admin/core/promptevaluation/prompt_stats.html"
+ 
+    list_display = ("id", "prompt_id", "prompt_type", "accepted", "created_at")
+    search_fields = ("prompt_id", "prompt_type")
+    list_filter = ("prompt_type", "accepted", "created_at")
+    readonly_fields = ("created_at", "updated_at")
+
+    def changelist_view(self, request, extra_context=None):
+        qs = (
+            self.get_queryset(request)
+            .values("prompt_id", "prompt_type")
+            .annotate(
+                total=Count("id"),
+                likes=Count("id", filter=Q(accepted=True)),
+                like_ratio=Avg(Cast("accepted", IntegerField())),
+                last_used=Max("created_at")
+            )
+        )
+
+        for row in qs:
+            row["like_percent"] = f"{(row['like_ratio'] or 0) * 100:.1f}%"
+
+        extra_context = extra_context or {}
+        extra_context["evaluations"] = qs
+        return super().changelist_view(request, extra_context=extra_context)

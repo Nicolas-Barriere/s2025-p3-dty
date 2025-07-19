@@ -6,7 +6,10 @@
  * OpenAPI spec version: 1.0.0 (v1.0)
  */
 
-export type ThreadsGenerateNewMessageCreate200 = {
-  message?: string;
+export type PromptEvaluationEvaluateCreate201 = {
+  id?: number;
   prompt_id?: number;
+  prompt_type?: string;
+  accepted?: boolean;
+  created_at?: string;
 };

@@ -66,7 +66,6 @@ const AIToolbar = forwardRef(({
     }, [showActionButtons, lastInstruction]);
 
     useEffect(() => {
-        // Ne créer l'écouteur que si les boutons d'action sont affichés
         if (showActionButtons && !isPending) {
             const handleActionKeys = (event: KeyboardEvent) => {
                 if (event.key === 'Enter') {
@@ -78,10 +77,8 @@ const AIToolbar = forwardRef(({
                 }
             };
 
-            // Ajouter l'écouteur au document
             document.addEventListener('keydown', handleActionKeys);
 
-            // Nettoyer l'écouteur lors du démontage ou quand showActionButtons devient false
             return () => {
                 document.removeEventListener('keydown', handleActionKeys);
             };

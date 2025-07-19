@@ -9,6 +9,7 @@ export * from "./mailboxes/mailboxes";
 export * from "./mailbox-accesses/mailbox-accesses";
 export * from "./maildomains/maildomains";
 export * from "./mta/mta";
+export * from "./prompt-evaluation/prompt-evaluation";
 export * from "./tasks/tasks";
 export * from "./threads/threads";
 export * from "./thread-access/thread-access";

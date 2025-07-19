@@ -1,0 +1,32 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+{{ block.super }}
+<h1>Statistiques des prompts IA</h1>
+<table class="adminstats">
+  <thead>
+    <tr>
+      <th>Prompt ID</th>
+      <th>Type</th>
+      <th>Contenu</th>
+      <th>Likes</th>
+      <th>Total</th>
+      <th>Like %</th>
+      <th>Dernier usage</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in evaluations %}
+    <tr>
+      <td>{{ row.prompt_id }}</td>
+      <td>{{ row.prompt_type }}</td>
+      <td style="max-width: 400px;">{{ row.content|truncatechars:150 }}</td>
+      <td>{{ row.likes }}</td>
+      <td>{{ row.total }}</td>
+      <td>{{ row.like_percent }}</td>
+      <td>{{ row.last_used }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
