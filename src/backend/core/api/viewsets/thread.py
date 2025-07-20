@@ -1,5 +1,7 @@
 """API ViewSet for Thread model."""
 
+import logging
+
 from django.conf import settings
 from django.db.models import Count, Exists, OuterRef, Q
 
@@ -11,12 +13,15 @@ from drf_spectacular.utils import (
     extend_schema,
 )
 from rest_framework import mixins, viewsets, status
+from rest_framework.response import Response
 
 from core import enums, models
 from core.search import search_threads
 from core.ai.thread_summarizer import summarize_thread
 
 from .. import permissions, serializers
+
+logger = logging.getLogger(__name__)
 
 
 class ThreadViewSet(
@@ -349,11 +354,62 @@ class ThreadViewSet(
                 location=OpenApiParameter.QUERY,
                 description="Filter threads that are spam (1=true, 0=false).",
             ),
+            OpenApiParameter(
+                name="message_ids",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Comma-separated list of message IDs to filter threads by specific messages (used by AI search).",
+            ),
         ],
     )
     def list(self, request, *args, **kwargs):
         """List threads with optional search functionality."""
         search_query = request.query_params.get("search", "").strip()
+        message_ids = request.query_params.get("message_ids", "").strip()
+
+        # Debug: Print the received message_ids parameter
+        if message_ids:
+            print(f"DEBUG: Received message_ids parameter: '{message_ids}'")
+
+        # Check if we have specific message IDs from deep search (RAG)
+        if message_ids:
+            # Parse message IDs from comma-separated string
+            try:
+                message_id_list = [mid.strip() for mid in message_ids.split(",") if mid.strip()]
+                print(f"DEBUG: Parsed message_id_list: {message_id_list}")
+                print(f"DEBUG: Number of message IDs: {len(message_id_list)}")
+                
+                # Check if this is the special "no results" UUID from contextual search
+                if len(message_id_list) == 1 and message_id_list[0] == "00000000-0000-0000-0000-000000000000":
+                    print("DEBUG: Detected contextual search empty results UUID - showing no emails as intended")
+                
+                # Get threads that contain these messages
+                threads_with_messages = models.Thread.objects.filter(
+                    messages__id__in=message_id_list
+                ).distinct()
+                
+                print(f"DEBUG: Found {threads_with_messages.count()} threads with these messages")
+                
+                # Apply additional filters from query parameters (mailbox, etc.)
+                queryset = self.get_queryset().filter(id__in=threads_with_messages)
+                
+                print(f"DEBUG: After applying additional filters: {queryset.count()} threads")
+                
+                # Use the paginator to create a paginated response
+                page = self.paginate_queryset(queryset)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True)
+                    print(f"DEBUG: Returning paginated response with {len(page)} threads")
+                    return self.get_paginated_response(serializer.data)
+
+                serializer = self.get_serializer(queryset, many=True)
+                print(f"DEBUG: Returning non-paginated response with {queryset.count()} threads")
+                return drf.response.Response(serializer.data)
+                
+            except Exception as e:
+                logger.error(f"Error processing message_ids: {e}")
+                print(f"DEBUG: Exception in message_ids processing: {e}")
+                # Fall back to regular search if message_ids processing fails
 
         # If search is provided and OpenSearch is available, use it
         if search_query and len(settings.OPENSEARCH_HOSTS[0]) > 0:

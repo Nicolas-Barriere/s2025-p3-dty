@@ -1,5 +1,5 @@
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from "react";
-import { Mailbox, PaginatedMessageList, PaginatedThreadList, Thread, useLabelsList, useMailboxesList, useMessagesList, useThreadsListInfinite } from "../api/gen";
+import { Mailbox, PaginatedMessageList, PaginatedThreadList, Thread, ThreadsListParams, useLabelsList, useMailboxesList, useMessagesList, useThreadsListInfinite } from "../api/gen";
 import { FetchStatus, QueryStatus, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import usePrevious from "@/hooks/use-previous";
@@ -115,7 +115,19 @@ export const MailboxProvider = ({ children }: PropsWithChildren) => {
         }
         return [...queryKey, searchParams.toString()];
     }, [selectedMailbox?.id, searchParams]);
-    const threadsQuery = useThreadsListInfinite(undefined, {
+    // Build thread list params from router query
+    const threadListParams = useMemo(() => {
+        const params: ThreadsListParams = {
+            ...(router.query as Record<string, string>),
+            mailbox_id: selectedMailbox?.id ?? '',
+        };
+        // Remove non-thread params
+        delete (params as any).mailboxId;
+        delete (params as any).threadId;
+        return params;
+    }, [router.query, selectedMailbox?.id]);
+
+    const threadsQuery = useThreadsListInfinite(threadListParams, {
         query: {
             enabled: !!selectedMailbox,
             initialPageParam: 1,
@@ -124,12 +136,6 @@ export const MailboxProvider = ({ children }: PropsWithChildren) => {
                 return pages.length + 1;
             },
         },
-        request: {
-            params: {
-                ...(router.query as Record<string, string>),
-                mailbox_id: selectedMailbox?.id ?? '',
-            }
-        }
     });
 
     /**

@@ -91,6 +91,8 @@ urlpatterns = [
                         mailbox_management_nested_router.urls
                     ),  # Includes /maildomains/{id}/mailboxes/, # Includes /maildomains/{id}/users/
                 ),
+                # Deep search endpoints for AI-powered search
+                path("deep_search/", include("deep_search.urls")),
                 *oidc_urls,
             ]
         ),
