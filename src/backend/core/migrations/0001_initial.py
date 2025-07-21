@@ -55,6 +55,7 @@ class Migration(migrations.Migration):
                 ('has_active', models.BooleanField(default=False, verbose_name='has active')),
                 ('messaged_at', models.DateTimeField(blank=True, null=True, verbose_name='messaged at')),
                 ('sender_names', models.JSONField(blank=True, null=True, verbose_name='sender names')),
+                ('summary', models.TextField(blank=True, default='', verbose_name='summary')),
             ],
             options={
                 'verbose_name': 'thread',

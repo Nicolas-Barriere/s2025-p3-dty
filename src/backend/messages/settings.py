@@ -92,26 +92,30 @@ class Base(Configuration):
 
     # Database
     DATABASES = {
-        "default": dj_database_url.config()
-        if os.environ.get("DATABASE_URL")
-        else {
-            "ENGINE": values.Value(
-                "django.db.backends.postgresql_psycopg2",
-                environ_name="DB_ENGINE",
-                environ_prefix=None,
-            ),
-            "NAME": values.Value(
-                "messages", environ_name="DB_NAME", environ_prefix=None
-            ),
-            "USER": values.Value("dbuser", environ_name="DB_USER", environ_prefix=None),
-            "PASSWORD": values.Value(
-                "dbpass", environ_name="DB_PASSWORD", environ_prefix=None
-            ),
-            "HOST": values.Value(
-                "localhost", environ_name="DB_HOST", environ_prefix=None
-            ),
-            "PORT": values.Value(5432, environ_name="DB_PORT", environ_prefix=None),
-        }
+        "default": (
+            dj_database_url.config()
+            if os.environ.get("DATABASE_URL")
+            else {
+                "ENGINE": values.Value(
+                    "django.db.backends.postgresql_psycopg2",
+                    environ_name="DB_ENGINE",
+                    environ_prefix=None,
+                ),
+                "NAME": values.Value(
+                    "messages", environ_name="DB_NAME", environ_prefix=None
+                ),
+                "USER": values.Value(
+                    "dbuser", environ_name="DB_USER", environ_prefix=None
+                ),
+                "PASSWORD": values.Value(
+                    "dbpass", environ_name="DB_PASSWORD", environ_prefix=None
+                ),
+                "HOST": values.Value(
+                    "localhost", environ_name="DB_HOST", environ_prefix=None
+                ),
+                "PORT": values.Value(5432, environ_name="DB_PORT", environ_prefix=None),
+            }
+        )
     }
     DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
