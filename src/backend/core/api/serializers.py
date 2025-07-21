@@ -417,6 +417,10 @@ class ThreadSerializer(serializers.ModelSerializer):
         ).distinct()
         return ThreadLabelSerializer(labels, many=True).data
 
+    def get_summary(self, instance):
+        """Get the summary of the thread."""
+        return instance.summary or ""
+
     class Meta:
         model = models.Thread
         fields = [
