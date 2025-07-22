@@ -4127,6 +4127,15 @@
                             "format": "uuid"
                         },
                         "description": "Threads that have this label"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the label, used by AI to understand its purpose",
+                        "maxLength": 255
+                    },
+                    "auto_labellisation": {
+                        "type": "boolean",
+                        "description": "Whether this label should be automatically applied by AI"
                     }
                 },
                 "required": [
@@ -4164,6 +4173,15 @@
                             "format": "uuid"
                         },
                         "description": "Threads that have this label"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the label, used by AI to understand its purpose",
+                        "maxLength": 255
+                    },
+                    "auto_labellisation": {
+                        "type": "boolean",
+                        "description": "Whether this label should be automatically applied by AI"
                     }
                 },
                 "required": [
@@ -4972,6 +4990,15 @@
                             "format": "uuid"
                         },
                         "description": "Threads that have this label"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the label, used by AI to understand its purpose",
+                        "maxLength": 255
+                    },
+                    "auto_labellisation": {
+                        "type": "boolean",
+                        "description": "Whether this label should be automatically applied by AI"
                     }
                 }
             },
@@ -5350,6 +5377,15 @@
                     "display_name": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the label, used by AI to understand its purpose",
+                        "maxLength": 255
+                    },
+                    "auto_labellisation": {
+                        "type": "boolean",
+                        "description": "Whether this label should be automatically applied by AI"
                     }
                 },
                 "required": [
@@ -5390,11 +5426,21 @@
                             "$ref": "#/components/schemas/TreeLabel"
                         },
                         "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "auto_labellisation": {
+                        "type": "boolean",
+                        "readOnly": true
                     }
                 },
                 "required": [
+                    "auto_labellisation",
                     "children",
                     "color",
+                    "description",
                     "display_name",
                     "id",
                     "name",

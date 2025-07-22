@@ -10,5 +10,5 @@ prompts:
      
      Ta réponse doit être au format suivant:
      ["LABEL1", "LABEL2", ...]
-     Sans aucun texte supplémentaire du style "Voici les labels que j'ai déterminé comme pertinents:".
-     Si aucun label n'est pertinent, tu dois renvoyer une liste vide: []
+     Sans aucun texte supplémentaire du style "Voici la liste des labels pertinents:".
+     Si aucun label n'est pertinent, tu dois renvoyer une liste vide: [] !!

@@ -14,7 +14,8 @@ from django.utils import timezone
 
 from core import models
 from core.ai.thread_summarizer import summarize_thread
-from core.ai.utils import get_messages_from_thread, is_ai_summary_enabled
+from core.ai.utils import is_ai_summary_enabled, get_messages_from_thread
+from core.api.viewsets.call_label import assign_label_to_thread
 
 logger = logging.getLogger(__name__)
 
