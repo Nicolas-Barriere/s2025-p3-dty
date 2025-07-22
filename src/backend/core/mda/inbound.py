@@ -680,6 +680,9 @@ def deliver_inbound_message(  # pylint: disable=too-many-branches, too-many-stat
                     thread.summary = new_summary
                     thread.save(update_fields=["summary"])
 
+        # Assign labels to the thread
+        assign_label_to_thread(thread, mailbox.id)
+
     except Exception as e:
         logger.exception(
             "Error updating thread %s after message delivery: %s",

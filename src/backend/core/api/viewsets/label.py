@@ -1,4 +1,5 @@
 """API ViewSet for Label model."""
+
 # pylint: disable=line-too-long
 
 import uuid
@@ -126,6 +127,8 @@ class LabelViewSet(
                 "color": label.color,
                 "display_name": label.name.split("/")[-1],
                 "children": [],
+                "description": label.description,
+                "auto_labellisation": label.auto_labellisation,
             }
 
         # Second pass: build the tree structure
@@ -232,8 +235,17 @@ class LabelViewSet(
             models.Label._meta.get_field("color").default,  # noqa: SLF001
         )
 
+        description = serializer.validated_data.get("description", "")
+        auto_labellisation = serializer.validated_data.get("auto_labellisation", True)
+
         # Create the actual label with color if provided, otherwise use model default
-        label = models.Label.objects.create(name=name, mailbox=mailbox, color=color)
+        label = models.Label.objects.create(
+            name=name,
+            mailbox=mailbox,
+            color=color,
+            description=description,
+            auto_labellisation=auto_labellisation,
+        )
 
         # Get all labels for the mailbox to build the tree structure
         all_labels = models.Label.objects.filter(mailbox=mailbox).order_by("slug")
@@ -251,6 +263,8 @@ class LabelViewSet(
                 "parent_name": label.parent_name,
                 "depth": label.depth,
                 "children": [],
+                "description": label.description,
+                "auto_labellisation": label.auto_labellisation,
             }
             label_dict[label.id] = label_data
 
