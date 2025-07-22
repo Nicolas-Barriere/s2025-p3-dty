@@ -4133,8 +4133,9 @@
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
                     },
-                    "auto_labellisation": {
+                    "is_enabled": {
                         "type": "boolean",
+                        "title": "Auto labellisation",
                         "description": "Whether this label should be automatically applied by AI"
                     }
                 },
@@ -4179,8 +4180,9 @@
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
                     },
-                    "auto_labellisation": {
+                    "is_enabled": {
                         "type": "boolean",
+                        "title": "Auto labellisation",
                         "description": "Whether this label should be automatically applied by AI"
                     }
                 },
@@ -4996,8 +4998,9 @@
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
                     },
-                    "auto_labellisation": {
+                    "is_enabled": {
                         "type": "boolean",
+                        "title": "Auto labellisation",
                         "description": "Whether this label should be automatically applied by AI"
                     }
                 }
@@ -5383,8 +5386,9 @@
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
                     },
-                    "auto_labellisation": {
+                    "is_enabled": {
                         "type": "boolean",
+                        "title": "Auto labellisation",
                         "description": "Whether this label should be automatically applied by AI"
                     }
                 },
@@ -5431,18 +5435,18 @@
                         "type": "string",
                         "readOnly": true
                     },
-                    "auto_labellisation": {
+                    "is_enabled": {
                         "type": "boolean",
                         "readOnly": true
                     }
                 },
                 "required": [
-                    "auto_labellisation",
                     "children",
                     "color",
                     "description",
                     "display_name",
                     "id",
+                    "is_enabled",
                     "name",
                     "slug"
                 ]
