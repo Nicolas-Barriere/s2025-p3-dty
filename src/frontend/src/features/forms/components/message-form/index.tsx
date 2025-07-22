@@ -446,11 +446,14 @@ export const MessageForm = ({
     }, [showBCCField])
 
     useEffect(() => {
-      setShowAttachmentsForgetAlert(
-      areAttachmentsMentionnedInDraft() &&
-        form.getValues("attachments")?.length === 0
-    );
-  }, [form.getValues("messageEditorDraft"), form.getValues("attachments")]);
+      const subscription = form.watch((values) => {
+        setShowAttachmentsForgetAlert(
+          areAttachmentsMentionnedInDraft() &&
+          values.attachments?.length === 0
+        );
+      });
+      return () => subscription.unsubscribe();
+    }, [areAttachmentsMentionnedInDraft, form.watch]);
 
     return (
         <FormProvider {...form}>
