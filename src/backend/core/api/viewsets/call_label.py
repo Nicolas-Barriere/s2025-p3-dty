@@ -3,7 +3,7 @@ from core.api.viewsets.label import LabelViewSet
 from core.models import User
 from core import factories
 from core.ai.thread_summarizer import get_messages_from_thread
-from core.ai.classification import get_most_relevant_labels
+from core.ai.thread_classifier import get_most_relevant_labels
 from core.models import Thread
 from django.db.models import Exists, OuterRef
 from core.models import Label, MailboxAccess
@@ -45,16 +45,11 @@ def add_thread_to_label(factory, mailbox_id, user, label_id, thread_id):
 
 
 def assign_label_to_thread(thread: Thread, mailbox_id):
-    thread_messages = get_messages_from_thread(thread)
-
-    # Initializations
     factory = APIRequestFactory()
 
     # Get recipients from the last message
-    last_message = thread_messages[-1]
-    recipients = last_message.recipients.select_related(
-        "contact"
-    ).all()  # Optimize the query
+    last_message = get_messages_from_thread(thread)[-1]
+    recipients = last_message.recipients.select_related("contact").all()
 
     if not recipients:
         print("No recipients found for the message")
@@ -62,20 +57,19 @@ def assign_label_to_thread(thread: Thread, mailbox_id):
 
     # Get the email from the first recipient's contact
     recipient_email = recipients[0].contact.email
-    print(f"FABIAN: Found recipient email: {recipient_email}")
 
     user = User.objects.get(email=recipient_email)
 
     labels = list_labels_of_user(factory, user, mailbox_id)
-    best_labels = get_most_relevant_labels(thread_messages, labels)
+    best_labels = get_most_relevant_labels(thread, labels)
 
     for label_name in best_labels:
         label_id = list(filter(lambda x: x["name"] == label_name, labels))[0]["id"]
-        auto_labellisation = list(filter(lambda x: x["name"] == label_name, labels))[0][
-            "auto_labellisation"
+        is_enabled = list(filter(lambda x: x["name"] == label_name, labels))[0][
+            "is_enabled"
         ]
-        print(f"Assigning label {label_name}, AUTO: {auto_labellisation}")
-        if auto_labellisation:
+
+        if is_enabled:
             response = add_thread_to_label(
                 factory,
                 mailbox_id,

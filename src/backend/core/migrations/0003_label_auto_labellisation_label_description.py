@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='label',
-            name='auto_labellisation',
+            name='is_enabled',
             field=models.BooleanField(default=True, help_text='Whether this label should be automatically applied by AI', verbose_name='auto labellisation'),
         ),
         migrations.AddField(

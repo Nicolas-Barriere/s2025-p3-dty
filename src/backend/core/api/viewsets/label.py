@@ -128,7 +128,7 @@ class LabelViewSet(
                 "display_name": label.name.split("/")[-1],
                 "children": [],
                 "description": label.description,
-                "auto_labellisation": label.auto_labellisation,
+                "is_enabled": label.is_enabled,
             }
 
         # Second pass: build the tree structure
@@ -236,7 +236,7 @@ class LabelViewSet(
         )
 
         description = serializer.validated_data.get("description", "")
-        auto_labellisation = serializer.validated_data.get("auto_labellisation", True)
+        is_enabled = serializer.validated_data.get("is_enabled", True)
 
         # Create the actual label with color if provided, otherwise use model default
         label = models.Label.objects.create(
@@ -244,7 +244,7 @@ class LabelViewSet(
             mailbox=mailbox,
             color=color,
             description=description,
-            auto_labellisation=auto_labellisation,
+            is_enabled=is_enabled,
         )
 
         # Get all labels for the mailbox to build the tree structure
@@ -264,7 +264,7 @@ class LabelViewSet(
                 "depth": label.depth,
                 "children": [],
                 "description": label.description,
-                "auto_labellisation": label.auto_labellisation,
+                "is_enabled": label.is_enabled,
             }
             label_dict[label.id] = label_data
 

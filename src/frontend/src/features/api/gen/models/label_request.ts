@@ -32,5 +32,5 @@ export interface LabelRequest {
    */
   description?: string;
   /** Whether this label should be automatically applied by AI */
-  auto_labellisation?: boolean;
+  is_enabled?: boolean;
 }

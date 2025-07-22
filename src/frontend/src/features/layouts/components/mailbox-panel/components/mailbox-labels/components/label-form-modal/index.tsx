@@ -24,7 +24,7 @@ const formSchema = z.object({
     color: z.string().regex(/^#([0-9a-fA-F]{6})$/),
     parent_label: z.string().optional(),
     description: z.string().optional(),
-    auto_labellisation: z.boolean().optional(),
+    is_enabled: z.boolean().optional(),
 });
 
 type FormFields = z.infer<typeof formSchema>;
@@ -39,7 +39,7 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
       color: label?.color ?? '#E3E3FD',
       parent_label: label?.name.split('/').slice(0, -1).join('/') ?? undefined,
       description: label?.description ?? '',
-      auto_labellisation: label?.auto_labellisation ?? true,
+      is_enabled: label?.is_enabled ?? true,
     }), [label]);
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -96,7 +96,7 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
           color: data.color,
           mailbox: selectedMailbox!.id,
           description: data.description,
-          auto_labellisation: data.auto_labellisation,
+          is_enabled: data.is_enabled,
         }
       }, {
         onSuccess: (data) => {
@@ -173,9 +173,9 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
              </div>
              <div className="form-field-row">
                <RhfCheckbox
-                 name="auto_labellisation"
+                 name="is_enabled"
                  label={t('Auto-labellisation')}
-                 text={form.formState.errors.auto_labellisation?.message && t(form.formState.errors.auto_labellisation.message)}
+                 text={form.formState.errors.is_enabled?.message && t(form.formState.errors.is_enabled.message)}
                />
              </div>
             <footer className="form-field-row">
