@@ -8,6 +8,9 @@ from core.ai.utils import get_messages_from_thread
 from core.models import Thread
 from core.services.ai_service import AIService
 
+import json
+from pathlib import Path
+
 
 def summarize_thread(thread: Thread) -> str:
     """Summarizes a thread using the OpenAI client based on the active Django language."""
