@@ -49,7 +49,21 @@ def assign_label_to_thread(thread: Thread, mailbox_id):
 
     # Initializations
     factory = APIRequestFactory()
-    recipient_email = thread_messages[-1].recipients[0].split("<")[-1].split(">")[0]
+
+    # Get recipients from the last message
+    last_message = thread_messages[-1]
+    recipients = last_message.recipients.select_related(
+        "contact"
+    ).all()  # Optimize the query
+
+    if not recipients:
+        print("No recipients found for the message")
+        return
+
+    # Get the email from the first recipient's contact
+    recipient_email = recipients[0].contact.email
+    print(f"FABIAN: Found recipient email: {recipient_email}")
+
     user = User.objects.get(email=recipient_email)
 
     labels = list_labels_of_user(factory, user, mailbox_id)

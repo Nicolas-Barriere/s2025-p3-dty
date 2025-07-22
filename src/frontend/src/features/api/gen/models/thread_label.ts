@@ -29,9 +29,9 @@ export interface ThreadLabel {
   color?: string;
   readonly display_name: string;
   /**
-  * Description of the label, used by AI to understand its purpose
-  * @maxLength 255
-  */
+   * Description of the label, used by AI to understand its purpose
+   * @maxLength 255
+   */
   description?: string;
   /** Whether this label should be automatically applied by AI */
   auto_labellisation?: boolean;
