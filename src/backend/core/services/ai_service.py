@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from core.ai.utils import is_ai_enabled
 
 from openai import OpenAI
 

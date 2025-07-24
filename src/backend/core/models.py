@@ -1093,43 +1093,6 @@ class Message(BaseModel):
         for mr in self.recipients.select_related("contact").all():
             recipients_by_type[mr.type].append(mr.contact)
         return recipients_by_type
-    
-    def get_as_text(self) -> str:
-        """Get the message as text, similar to the Message dataclass __str__ in utils.py."""
-        # Date
-        date_str = self.sent_at.isoformat() if self.sent_at else ""
-        # Sender: "Name <email>" or just email
-        sender = str(self.sender)
-        # Recipients: list of "Name <email>" or just email
-        to_contacts = self.recipients.filter(type=MessageRecipientTypeChoices.TO).select_related("contact")
-        recipients = [str(mr.contact) for mr in to_contacts]
-        # CC
-        cc_contacts = self.recipients.filter(type=MessageRecipientTypeChoices.CC).select_related("contact")
-        cc = [str(mr.contact) for mr in cc_contacts]
-        # Subject
-        subject = self.subject or "Aucun objet"
-        # Body: try to get text/plain from parsed data
-        body = ""
-        parsed_data = self.get_parsed_data()
-        for part in parsed_data.get("textBody", []):
-            if part.get("type") == "text/plain":
-                body = part.get("content", "")
-                break
-        # Message ID
-        msg_id = str(self.id)
-        return (
-            f"Message ID: {msg_id}\n"
-            f"De: {sender}\n"
-            f"À: {', '.join(recipients)}\n"
-            f"CC: {', '.join(cc)}\n"
-            f"Date: {date_str}\n"
-            f"Sujet: {subject}\n\n"
-            f"{body}"
-        )
-
-    def get_tokens_count(self) -> int:
-        """Get the number of tokens in the message (word count of get_as_text)."""
-        return len(self.get_as_text().split())
 
     def get_as_text(self) -> str:
         """Get the message as text, similar to the Message dataclass __str__ in utils.py."""

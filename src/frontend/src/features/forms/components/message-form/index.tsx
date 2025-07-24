@@ -89,7 +89,6 @@ export const MessageForm = ({
     })?.id ?? mailboxes?.[0]?.id;
     const hideFromField = defaultSenderId && (mailboxes?.length ?? 0) === 1;
     const { addQueuedMessage } = useSentBox();
-    const [showAttachmentsForgetAlert, setShowAttachmentsForgetAlert] = useState(false);
 
     const getMailboxOptions = () => {
         if(!mailboxes) return [];
@@ -374,27 +373,7 @@ export const MessageForm = ({
         });
     };
 
-    // Dynamically build the keywords list from attachments-detection-map.json
-    type DetectionMap = Record<string, Record<string, string[]>>;
-    const keyWordsAttachments = useMemo(() => {
-      const allKeywords = new Set<string>();
-      Object.values(detectionMap as DetectionMap).forEach((langObj) => {
-        Object.values(langObj).forEach((arr) => {
-          (arr as string[]).forEach((kw) => allKeywords.add(kw.toLowerCase()));
-        });
-      });
-      return Array.from(allKeywords);
-    }, []);
-
-
-    const areAttachmentsMentionnedInDraft = (): boolean => {
-    const messageEditorDraft =
-      form.getValues("messageEditorDraft")?.toLowerCase() || "";
-    return keyWordsAttachments.some((keyword) =>
-      messageEditorDraft.includes(keyword)
-    );
-  };
-
+  
     /**
      * Prevent the Enter key press to trigger onClick on input children (like file input)
      */
@@ -456,16 +435,6 @@ export const MessageForm = ({
             form.clearErrors("bcc");
         }
     }, [showBCCField])
-
-    useEffect(() => {
-      const subscription = form.watch((values) => {
-        setShowAttachmentsForgetAlert(
-          areAttachmentsMentionnedInDraft() &&
-          values.attachments?.length === 0
-        );
-      });
-      return () => subscription.unsubscribe();
-    }, [areAttachmentsMentionnedInDraft, form.watch]);
 
     return (
         <FormProvider {...form}>
