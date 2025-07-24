@@ -78,9 +78,6 @@ export const ThreadView = () => {
     const trashedMessageIds = messages?.results?.filter((m) => m.is_trashed).map((m) => m.id) || [];
     const isThreadTrashed = trashedMessageIds.length === messages?.results?.length;
 
-    // Get AI Configuration
-    const { data: configData } = useConfigRetrieve();
-    const isIaEnabled = !!configData?.data?.["AI_ENABLED"];
 
     /**
      * Setup an intersection observer to mark messages as read when they are

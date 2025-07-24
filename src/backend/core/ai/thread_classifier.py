@@ -1,9 +1,10 @@
 import json
-from core.services.ai_service import AIService
 from datetime import datetime
 from pathlib import Path
+
 from core.ai.utils import get_messages_from_thread
 from core.models import Thread
+from core.services.ai_service import AIService
 
 
 def get_most_relevant_labels(
@@ -32,7 +33,7 @@ def get_most_relevant_labels(
 
     # Get the appropriate prompt template based on the language
     prompt_template = prompts.get(
-        language, prompts["fr"]
+        language, prompts["fr-fr"]
     )  # Fallback to 'fr' if not found
     prompt_query = prompt_template["classification_query"]
     prompt = prompt_query.format(
@@ -43,8 +44,6 @@ def get_most_relevant_labels(
     )
 
     # Make the API call to get the best labels
-    print(f"FABIAN AI PROMPT: {prompt}")
     best_labels = AIService().call_ai_api(prompt)
-    print(f"FABIAN AI BEST LABELS: {best_labels}")
 
     return json.loads(best_labels)
