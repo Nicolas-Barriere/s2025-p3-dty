@@ -1,8 +1,23 @@
+import json
+from pathlib import Path
 from typing import List
 
 from django.conf import settings
+from django.utils import translation
 
 from core.models import Message, Thread
+
+
+def get_active_language() -> str:
+    """Get the active language or fallback to the default language code."""
+    return translation.get_language() or settings.LANGUAGE_CODE
+
+
+def load_ai_prompts() -> dict:
+    """Load AI prompts from the ai_prompts.json file."""
+    prompts_path = Path(__file__).parent / "ai_prompts.json"
+    with open(prompts_path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def get_messages_from_thread(thread: Thread) -> List[Message]:
