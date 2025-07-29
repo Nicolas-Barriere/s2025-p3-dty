@@ -6,7 +6,7 @@ import rest_framework as drf
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework.permissions import AllowAny
 
-from core.ai.utils import is_ai_enabled, is_ai_summary_enabled
+from core.ai.utils import is_ai_enabled, is_ai_summary_enabled, is_auto_labels_enabled
 
 
 class ConfigView(drf.views.APIView):
@@ -49,6 +49,10 @@ class ConfigView(drf.views.APIView):
                             "type": "boolean",
                             "readOnly": True,
                         },
+                        "AI_FEATURE_AUTOLABELS_ENABLED": {
+                            "type": "boolean",
+                            "readOnly": True,
+                        },
                     },
                     "required": [
                         "ENVIRONMENT",
@@ -59,6 +63,7 @@ class ConfigView(drf.views.APIView):
                         "LANGUAGE_CODE",
                         "AI_ENABLED",
                         "AI_FEATURE_SUMMARY_ENABLED",
+                        "AI_FEATURE_AUTOLABELS_ENABLED",
                     ],
                 },
             )
@@ -85,5 +90,6 @@ class ConfigView(drf.views.APIView):
 
         dict_settings["AI_ENABLED"] = is_ai_enabled()
         dict_settings["AI_FEATURE_SUMMARY_ENABLED"] = is_ai_summary_enabled()
+        dict_settings["AI_FEATURE_AUTOLABELS_ENABLED"] = is_auto_labels_enabled()
 
         return drf.response.Response(dict_settings)

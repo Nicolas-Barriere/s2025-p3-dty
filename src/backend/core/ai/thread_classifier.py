@@ -2,22 +2,18 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+from django.conf import settings
+from django.utils import translation
+
 from core.ai.utils import get_messages_from_thread
 from core.models import Thread
 from core.services.ai_service import AIService
 
 
-def get_most_relevant_labels(
-    thread: Thread, labels: list, language: str = "fr"
-) -> list[str]:
+def get_most_relevant_labels(thread: Thread, labels: list) -> list[str]:
     """
     Classifies the given email(s) into the most relevant labels using an AI service.
     """
-
-    # Extract messages from the thread
-    messages = get_messages_from_thread(thread)
-    messages_as_text = "\n\n".join([message.get_as_text() for message in messages])
-
     # Prepare labels for the prompt
     labels = [
         {k: v for k, v in label.items() if k in ("name", "description")}
@@ -26,24 +22,31 @@ def get_most_relevant_labels(
 
     current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " +00:00"
 
-    # Load the prompt template from ai_prompts.json
+    # Determine the active or fallback language
+    active_language = translation.get_language() or settings.LANGUAGE_CODE
+
+    # Extract messages from the thread
+    messages = get_messages_from_thread(thread)
+    messages_as_text = "\n\n".join([message.get_as_text() for message in messages])
+
+    # Load prompt templates from ai_prompts.json
     prompts_path = Path(__file__).parent / "ai_prompts.json"
     with open(prompts_path, encoding="utf-8") as f:
         prompts = json.load(f)
 
-    # Get the appropriate prompt template based on the language
-    prompt_template = prompts.get(
-        language, prompts["fr-fr"]
-    )  # Fallback to 'fr' if not found
+    # Get the prompt for the active language
+    prompt_template = prompts.get(active_language)
     prompt_query = prompt_template["classification_query"]
     prompt = prompt_query.format(
         messages=messages_as_text,
         labels=labels,
         date_time=current_datetime,
-        language=language,
+        language=active_language,
     )
 
-    # Make the API call to get the best labels
-    best_labels = AIService().call_ai_api(prompt)
+    with translation.override(active_language):
+        best_labels = AIService().call_ai_api(prompt)
+
+    best_labels = '["' + best_labels.split('["')[1].split('"]')[0] + '"]'
 
     return json.loads(best_labels)

@@ -16,1250 +16,1250 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("auth", "0012_alter_user_first_name_max_length"),
+        ('auth', '0012_alter_user_first_name_max_length'),
     ]
 
     operations = [
         UnaccentExtension(),
         migrations.CreateModel(
-            name="Contact",
+            name='Contact',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "name",
+                    'name',
                     models.CharField(
-                        blank=True, max_length=255, null=True, verbose_name="name"
+                        blank=True, max_length=255, null=True, verbose_name='name'
                     ),
                 ),
-                ("email", models.EmailField(max_length=254, verbose_name="email")),
+                ('email', models.EmailField(max_length=254, verbose_name='email')),
             ],
             options={
-                "verbose_name": "contact",
-                "verbose_name_plural": "contacts",
-                "db_table": "messages_contact",
+                'verbose_name': 'contact',
+                'verbose_name_plural': 'contacts',
+                'db_table': 'messages_contact',
             },
         ),
         migrations.CreateModel(
-            name="Thread",
+            name='Thread',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "subject",
+                    'subject',
                     models.CharField(
-                        blank=True, max_length=255, null=True, verbose_name="subject"
+                        blank=True, max_length=255, null=True, verbose_name='subject'
                     ),
                 ),
-                ("snippet", models.TextField(blank=True, verbose_name="snippet")),
+                ('snippet', models.TextField(blank=True, verbose_name='snippet')),
                 (
-                    "has_unread",
-                    models.BooleanField(default=False, verbose_name="has unread"),
+                    'has_unread',
+                    models.BooleanField(default=False, verbose_name='has unread'),
                 ),
                 (
-                    "has_trashed",
-                    models.BooleanField(default=False, verbose_name="has trashed"),
+                    'has_trashed',
+                    models.BooleanField(default=False, verbose_name='has trashed'),
                 ),
                 (
-                    "has_draft",
-                    models.BooleanField(default=False, verbose_name="has draft"),
+                    'has_draft',
+                    models.BooleanField(default=False, verbose_name='has draft'),
                 ),
                 (
-                    "has_starred",
-                    models.BooleanField(default=False, verbose_name="has starred"),
+                    'has_starred',
+                    models.BooleanField(default=False, verbose_name='has starred'),
                 ),
                 (
-                    "has_sender",
-                    models.BooleanField(default=False, verbose_name="has sender"),
+                    'has_sender',
+                    models.BooleanField(default=False, verbose_name='has sender'),
                 ),
                 (
-                    "has_messages",
-                    models.BooleanField(default=True, verbose_name="has messages"),
+                    'has_messages',
+                    models.BooleanField(default=True, verbose_name='has messages'),
                 ),
                 (
-                    "has_attachments",
-                    models.BooleanField(default=False, verbose_name="has attachments"),
+                    'has_attachments',
+                    models.BooleanField(default=False, verbose_name='has attachments'),
                 ),
-                ("is_spam", models.BooleanField(default=False, verbose_name="is spam")),
+                ('is_spam', models.BooleanField(default=False, verbose_name='is spam')),
                 (
-                    "has_active",
-                    models.BooleanField(default=False, verbose_name="has active"),
+                    'has_active',
+                    models.BooleanField(default=False, verbose_name='has active'),
                 ),
                 (
-                    "messaged_at",
+                    'messaged_at',
                     models.DateTimeField(
-                        blank=True, null=True, verbose_name="messaged at"
+                        blank=True, null=True, verbose_name='messaged at'
                     ),
                 ),
                 (
-                    "sender_names",
+                    'sender_names',
                     models.JSONField(
-                        blank=True, null=True, verbose_name="sender names"
+                        blank=True, null=True, verbose_name='sender names'
                     ),
                 ),
             ],
             options={
-                "verbose_name": "thread",
-                "verbose_name_plural": "threads",
-                "db_table": "messages_thread",
+                'verbose_name': 'thread',
+                'verbose_name_plural': 'threads',
+                'db_table': 'messages_thread',
             },
         ),
         migrations.CreateModel(
-            name="User",
+            name='User',
             fields=[
-                ("password", models.CharField(max_length=128, verbose_name="password")),
+                ('password', models.CharField(max_length=128, verbose_name='password')),
                 (
-                    "last_login",
+                    'last_login',
                     models.DateTimeField(
-                        blank=True, null=True, verbose_name="last login"
+                        blank=True, null=True, verbose_name='last login'
                     ),
                 ),
                 (
-                    "is_superuser",
+                    'is_superuser',
                     models.BooleanField(
                         default=False,
-                        help_text="Designates that this user has all permissions without explicitly assigning them.",
-                        verbose_name="superuser status",
+                        help_text='Designates that this user has all permissions without explicitly assigning them.',
+                        verbose_name='superuser status',
                     ),
                 ),
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "sub",
+                    'sub',
                     models.CharField(
                         blank=True,
-                        help_text="Required. 255 characters or fewer. Letters, numbers, and @/./+/-/_/: characters only.",
+                        help_text='Required. 255 characters or fewer. Letters, numbers, and @/./+/-/_/: characters only.',
                         max_length=255,
                         null=True,
                         unique=True,
                         validators=[
                             django.core.validators.RegexValidator(
-                                message="Enter a valid sub. This value may contain only letters, numbers, and @/./+/-/_/: characters.",
-                                regex="^[\\w.@+-:]+\\Z",
+                                message='Enter a valid sub. This value may contain only letters, numbers, and @/./+/-/_/: characters.',
+                                regex='^[\\w.@+-:]+\\Z',
                             )
                         ],
-                        verbose_name="sub",
+                        verbose_name='sub',
                     ),
                 ),
                 (
-                    "full_name",
+                    'full_name',
                     models.CharField(
-                        blank=True, max_length=255, null=True, verbose_name="full name"
+                        blank=True, max_length=255, null=True, verbose_name='full name'
                     ),
                 ),
                 (
-                    "email",
+                    'email',
                     models.EmailField(
                         blank=True,
                         max_length=254,
                         null=True,
-                        verbose_name="identity email address",
+                        verbose_name='identity email address',
                     ),
                 ),
                 (
-                    "admin_email",
+                    'admin_email',
                     models.EmailField(
                         blank=True,
                         max_length=254,
                         null=True,
                         unique=True,
-                        verbose_name="admin email address",
+                        verbose_name='admin email address',
                     ),
                 ),
                 (
-                    "language",
+                    'language',
                     models.CharField(
                         choices=[
-                            ("en-us", "English"),
-                            ("fr-fr", "French"),
-                            ("de-de", "German"),
+                            ('en-us', 'English'),
+                            ('fr-fr', 'French'),
+                            ('de-de', 'German'),
                         ],
-                        default="en-us",
-                        help_text="The language in which the user wants to see the interface.",
+                        default='en-us',
+                        help_text='The language in which the user wants to see the interface.',
                         max_length=10,
-                        verbose_name="language",
+                        verbose_name='language',
                     ),
                 ),
                 (
-                    "timezone",
+                    'timezone',
                     timezone_field.fields.TimeZoneField(
-                        choices_display="WITH_GMT_OFFSET",
-                        default="UTC",
-                        help_text="The timezone in which the user wants to see times.",
+                        choices_display='WITH_GMT_OFFSET',
+                        default='UTC',
+                        help_text='The timezone in which the user wants to see times.',
                         use_pytz=False,
                     ),
                 ),
                 (
-                    "is_staff",
+                    'is_staff',
                     models.BooleanField(
                         default=False,
-                        help_text="Whether the user can log into this admin site.",
-                        verbose_name="staff status",
+                        help_text='Whether the user can log into this admin site.',
+                        verbose_name='staff status',
                     ),
                 ),
                 (
-                    "is_active",
+                    'is_active',
                     models.BooleanField(
                         default=True,
-                        help_text="Whether this user should be treated as active. Unselect this instead of deleting accounts.",
-                        verbose_name="active",
+                        help_text='Whether this user should be treated as active. Unselect this instead of deleting accounts.',
+                        verbose_name='active',
                     ),
                 ),
                 (
-                    "custom_attributes",
+                    'custom_attributes',
                     models.JSONField(
                         blank=True,
                         default=None,
-                        help_text="Metadata to sync to the user in the identity provider.",
+                        help_text='Metadata to sync to the user in the identity provider.',
                         null=True,
-                        verbose_name="Custom attributes",
+                        verbose_name='Custom attributes',
                     ),
                 ),
                 (
-                    "groups",
+                    'groups',
                     models.ManyToManyField(
                         blank=True,
-                        help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
-                        related_name="user_set",
-                        related_query_name="user",
-                        to="auth.group",
-                        verbose_name="groups",
+                        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
+                        related_name='user_set',
+                        related_query_name='user',
+                        to='auth.group',
+                        verbose_name='groups',
                     ),
                 ),
                 (
-                    "user_permissions",
+                    'user_permissions',
                     models.ManyToManyField(
                         blank=True,
-                        help_text="Specific permissions for this user.",
-                        related_name="user_set",
-                        related_query_name="user",
-                        to="auth.permission",
-                        verbose_name="user permissions",
+                        help_text='Specific permissions for this user.',
+                        related_name='user_set',
+                        related_query_name='user',
+                        to='auth.permission',
+                        verbose_name='user permissions',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "user",
-                "verbose_name_plural": "users",
-                "db_table": "messages_user",
+                'verbose_name': 'user',
+                'verbose_name_plural': 'users',
+                'db_table': 'messages_user',
             },
             managers=[
-                ("objects", core.models.UserManager()),
+                ('objects', core.models.UserManager()),
             ],
         ),
         migrations.CreateModel(
-            name="Mailbox",
+            name='Mailbox',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "local_part",
+                    'local_part',
                     models.CharField(
                         max_length=64,
                         validators=[
                             django.core.validators.RegexValidator(
-                                regex="^[a-zA-Z0-9_.-]+$"
+                                regex='^[a-zA-Z0-9_.-]+$'
                             )
                         ],
-                        verbose_name="local part",
+                        verbose_name='local part',
                     ),
                 ),
                 (
-                    "alias_of",
+                    'alias_of',
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        to="core.mailbox",
+                        to='core.mailbox',
                     ),
                 ),
                 (
-                    "contact",
+                    'contact',
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="mailboxes",
-                        to="core.contact",
+                        related_name='mailboxes',
+                        to='core.contact',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "mailbox",
-                "verbose_name_plural": "mailboxes",
-                "db_table": "messages_mailbox",
-                "ordering": ["-created_at"],
+                'verbose_name': 'mailbox',
+                'verbose_name_plural': 'mailboxes',
+                'db_table': 'messages_mailbox',
+                'ordering': ['-created_at'],
             },
         ),
         migrations.AddField(
-            model_name="contact",
-            name="mailbox",
+            model_name='contact',
+            name='mailbox',
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="contacts",
-                to="core.mailbox",
+                related_name='contacts',
+                to='core.mailbox',
             ),
         ),
         migrations.CreateModel(
-            name="Blob",
+            name='Blob',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "sha256",
+                    'sha256',
                     models.BinaryField(
                         db_index=True,
-                        help_text="SHA-256 hash of the uncompressed blob content",
+                        help_text='SHA-256 hash of the uncompressed blob content',
                         max_length=32,
-                        verbose_name="sha256 hash",
+                        verbose_name='sha256 hash',
                     ),
                 ),
                 (
-                    "size",
+                    'size',
                     models.PositiveIntegerField(
-                        help_text="Size of the blob in bytes", verbose_name="file size"
+                        help_text='Size of the blob in bytes', verbose_name='file size'
                     ),
                 ),
                 (
-                    "content_type",
+                    'content_type',
                     models.CharField(
-                        help_text="MIME type of the blob",
+                        help_text='MIME type of the blob',
                         max_length=127,
-                        verbose_name="content type",
+                        verbose_name='content type',
                     ),
                 ),
                 (
-                    "compression",
+                    'compression',
                     models.SmallIntegerField(
-                        choices=[(0, "None"), (1, "Zstd")],
+                        choices=[(0, 'None'), (1, 'Zstd')],
                         default=0,
-                        verbose_name="compression",
+                        verbose_name='compression',
                     ),
                 ),
                 (
-                    "raw_content",
+                    'raw_content',
                     models.BinaryField(
-                        help_text="Compressed binary content of the blob",
-                        verbose_name="raw content",
+                        help_text='Compressed binary content of the blob',
+                        verbose_name='raw content',
                     ),
                 ),
                 (
-                    "mailbox",
+                    'mailbox',
                     models.ForeignKey(
-                        help_text="Mailbox that owns this blob",
+                        help_text='Mailbox that owns this blob',
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="blobs",
-                        to="core.mailbox",
+                        related_name='blobs',
+                        to='core.mailbox',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "blob",
-                "verbose_name_plural": "blobs",
-                "db_table": "messages_blob",
-                "ordering": ["-created_at"],
+                'verbose_name': 'blob',
+                'verbose_name_plural': 'blobs',
+                'db_table': 'messages_blob',
+                'ordering': ['-created_at'],
             },
         ),
         migrations.CreateModel(
-            name="MailDomain",
+            name='MailDomain',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "name",
+                    'name',
                     models.CharField(
                         max_length=253,
                         unique=True,
                         validators=[
                             django.core.validators.RegexValidator(
-                                message="Enter a valid domain name. This value may contain only lowercase letters, numbers, dots and - characters.",
-                                regex="^[a-z0-9][a-z0-9.-]*[a-z0-9]$",
+                                message='Enter a valid domain name. This value may contain only lowercase letters, numbers, dots and - characters.',
+                                regex='^[a-z0-9][a-z0-9.-]*[a-z0-9]$',
                             )
                         ],
-                        verbose_name="name",
+                        verbose_name='name',
                     ),
                 ),
                 (
-                    "oidc_autojoin",
+                    'oidc_autojoin',
                     models.BooleanField(
                         default=False,
-                        help_text="Create mailboxes automatically based on OIDC emails.",
-                        verbose_name="oidc autojoin",
+                        help_text='Create mailboxes automatically based on OIDC emails.',
+                        verbose_name='oidc autojoin',
                     ),
                 ),
                 (
-                    "identity_sync",
+                    'identity_sync',
                     models.BooleanField(
                         default=False,
-                        help_text="Sync mailboxes to an identity provider.",
-                        verbose_name="Identity sync",
+                        help_text='Sync mailboxes to an identity provider.',
+                        verbose_name='Identity sync',
                     ),
                 ),
                 (
-                    "custom_attributes",
+                    'custom_attributes',
                     models.JSONField(
                         blank=True,
                         default=None,
-                        help_text="Metadata to sync to the maildomain group in the identity provider.",
+                        help_text='Metadata to sync to the maildomain group in the identity provider.',
                         null=True,
-                        verbose_name="Custom attributes",
+                        verbose_name='Custom attributes',
                     ),
                 ),
                 (
-                    "alias_of",
+                    'alias_of',
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        to="core.maildomain",
+                        to='core.maildomain',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "mail domain",
-                "verbose_name_plural": "mail domains",
-                "db_table": "messages_maildomain",
+                'verbose_name': 'mail domain',
+                'verbose_name_plural': 'mail domains',
+                'db_table': 'messages_maildomain',
             },
         ),
         migrations.AddField(
-            model_name="mailbox",
-            name="domain",
+            model_name='mailbox',
+            name='domain',
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="core.maildomain"
+                on_delete=django.db.models.deletion.CASCADE, to='core.maildomain'
             ),
         ),
         migrations.CreateModel(
-            name="DKIMKey",
+            name='DKIMKey',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "selector",
+                    'selector',
                     models.CharField(
-                        help_text="DKIM selector (e.g., 'default', 'mail')",
+                        help_text='DKIM selector (e.g., "default", "mail")',
                         max_length=255,
-                        verbose_name="selector",
+                        verbose_name='selector',
                     ),
                 ),
                 (
-                    "private_key",
+                    'private_key',
                     encrypted_fields.fields.EncryptedTextField(
-                        help_text="DKIM private key in PEM format (encrypted)",
-                        verbose_name="private key",
+                        help_text='DKIM private key in PEM format (encrypted)',
+                        verbose_name='private key',
                     ),
                 ),
                 (
-                    "public_key",
+                    'public_key',
                     models.TextField(
-                        help_text="DKIM public key for DNS record generation",
-                        verbose_name="public key",
+                        help_text='DKIM public key for DNS record generation',
+                        verbose_name='public key',
                     ),
                 ),
                 (
-                    "algorithm",
+                    'algorithm',
                     models.SmallIntegerField(
-                        choices=[(1, "rsa"), (2, "ed25519")],
+                        choices=[(1, 'rsa'), (2, 'ed25519')],
                         default=1,
-                        help_text="DKIM signing algorithm",
-                        verbose_name="algorithm",
+                        help_text='DKIM signing algorithm',
+                        verbose_name='algorithm',
                     ),
                 ),
                 (
-                    "key_size",
+                    'key_size',
                     models.PositiveIntegerField(
-                        help_text="Key size in bits (e.g., 2048, 4096 for RSA)",
-                        verbose_name="key size",
+                        help_text='Key size in bits (e.g., 2048, 4096 for RSA)',
+                        verbose_name='key size',
                     ),
                 ),
                 (
-                    "is_active",
+                    'is_active',
                     models.BooleanField(
                         default=True,
-                        help_text="Whether this DKIM key is active and should be used for signing",
-                        verbose_name="is active",
+                        help_text='Whether this DKIM key is active and should be used for signing',
+                        verbose_name='is active',
                     ),
                 ),
                 (
-                    "domain",
+                    'domain',
                     models.ForeignKey(
-                        help_text="Domain that owns this DKIM key",
+                        help_text='Domain that owns this DKIM key',
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="dkim_keys",
-                        to="core.maildomain",
+                        related_name='dkim_keys',
+                        to='core.maildomain',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "DKIM key",
-                "verbose_name_plural": "DKIM keys",
-                "db_table": "messages_dkimkey",
-                "ordering": ["-created_at"],
+                'verbose_name': 'DKIM key',
+                'verbose_name_plural': 'DKIM keys',
+                'db_table': 'messages_dkimkey',
+                'ordering': ['-created_at'],
             },
         ),
         migrations.CreateModel(
-            name="Message",
+            name='Message',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "subject",
+                    'subject',
                     models.CharField(
-                        blank=True, max_length=255, null=True, verbose_name="subject"
+                        blank=True, max_length=255, null=True, verbose_name='subject'
                     ),
                 ),
                 (
-                    "is_draft",
-                    models.BooleanField(default=False, verbose_name="is draft"),
+                    'is_draft',
+                    models.BooleanField(default=False, verbose_name='is draft'),
                 ),
                 (
-                    "is_sender",
-                    models.BooleanField(default=False, verbose_name="is sender"),
+                    'is_sender',
+                    models.BooleanField(default=False, verbose_name='is sender'),
                 ),
                 (
-                    "is_starred",
-                    models.BooleanField(default=False, verbose_name="is starred"),
+                    'is_starred',
+                    models.BooleanField(default=False, verbose_name='is starred'),
                 ),
                 (
-                    "is_trashed",
-                    models.BooleanField(default=False, verbose_name="is trashed"),
+                    'is_trashed',
+                    models.BooleanField(default=False, verbose_name='is trashed'),
                 ),
                 (
-                    "is_unread",
-                    models.BooleanField(default=False, verbose_name="is unread"),
+                    'is_unread',
+                    models.BooleanField(default=False, verbose_name='is unread'),
                 ),
-                ("is_spam", models.BooleanField(default=False, verbose_name="is spam")),
+                ('is_spam', models.BooleanField(default=False, verbose_name='is spam')),
                 (
-                    "is_archived",
-                    models.BooleanField(default=False, verbose_name="is archived"),
-                ),
-                (
-                    "has_attachments",
-                    models.BooleanField(default=False, verbose_name="has attachments"),
+                    'is_archived',
+                    models.BooleanField(default=False, verbose_name='is archived'),
                 ),
                 (
-                    "trashed_at",
+                    'has_attachments',
+                    models.BooleanField(default=False, verbose_name='has attachments'),
+                ),
+                (
+                    'trashed_at',
                     models.DateTimeField(
-                        blank=True, null=True, verbose_name="trashed at"
+                        blank=True, null=True, verbose_name='trashed at'
                     ),
                 ),
                 (
-                    "sent_at",
-                    models.DateTimeField(blank=True, null=True, verbose_name="sent at"),
+                    'sent_at',
+                    models.DateTimeField(blank=True, null=True, verbose_name='sent at'),
                 ),
                 (
-                    "read_at",
-                    models.DateTimeField(blank=True, null=True, verbose_name="read at"),
+                    'read_at',
+                    models.DateTimeField(blank=True, null=True, verbose_name='read at'),
                 ),
                 (
-                    "archived_at",
+                    'archived_at',
                     models.DateTimeField(
-                        blank=True, null=True, verbose_name="archived at"
+                        blank=True, null=True, verbose_name='archived at'
                     ),
                 ),
                 (
-                    "mime_id",
+                    'mime_id',
                     models.CharField(
-                        blank=True, max_length=998, null=True, verbose_name="mime id"
+                        blank=True, max_length=998, null=True, verbose_name='mime id'
                     ),
                 ),
                 (
-                    "blob",
+                    'blob',
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="messages",
-                        to="core.blob",
+                        related_name='messages',
+                        to='core.blob',
                     ),
                 ),
                 (
-                    "draft_blob",
+                    'draft_blob',
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="drafts",
-                        to="core.blob",
+                        related_name='drafts',
+                        to='core.blob',
                     ),
                 ),
                 (
-                    "parent",
+                    'parent',
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        to="core.message",
+                        to='core.message',
                     ),
                 ),
                 (
-                    "sender",
+                    'sender',
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="core.contact"
+                        on_delete=django.db.models.deletion.CASCADE, to='core.contact'
                     ),
                 ),
                 (
-                    "thread",
+                    'thread',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="messages",
-                        to="core.thread",
+                        related_name='messages',
+                        to='core.thread',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "message",
-                "verbose_name_plural": "messages",
-                "db_table": "messages_message",
-                "ordering": ["-created_at"],
+                'verbose_name': 'message',
+                'verbose_name_plural': 'messages',
+                'db_table': 'messages_message',
+                'ordering': ['-created_at'],
             },
         ),
         migrations.CreateModel(
-            name="Attachment",
+            name='Attachment',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "name",
+                    'name',
                     models.CharField(
-                        help_text="Original filename of the attachment",
+                        help_text='Original filename of the attachment',
                         max_length=255,
-                        verbose_name="file name",
+                        verbose_name='file name',
                     ),
                 ),
                 (
-                    "blob",
+                    'blob',
                     models.ForeignKey(
-                        help_text="Reference to the blob containing the attachment data",
+                        help_text='Reference to the blob containing the attachment data',
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="attachments",
-                        to="core.blob",
+                        related_name='attachments',
+                        to='core.blob',
                     ),
                 ),
                 (
-                    "mailbox",
+                    'mailbox',
                     models.ForeignKey(
-                        help_text="Mailbox that owns this attachment",
+                        help_text='Mailbox that owns this attachment',
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="attachments",
-                        to="core.mailbox",
+                        related_name='attachments',
+                        to='core.mailbox',
                     ),
                 ),
                 (
-                    "messages",
+                    'messages',
                     models.ManyToManyField(
-                        help_text="Messages that use this attachment",
-                        related_name="attachments",
-                        to="core.message",
+                        help_text='Messages that use this attachment',
+                        related_name='attachments',
+                        to='core.message',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "attachment",
-                "verbose_name_plural": "attachments",
-                "db_table": "messages_attachment",
-                "ordering": ["-created_at"],
+                'verbose_name': 'attachment',
+                'verbose_name_plural': 'attachments',
+                'db_table': 'messages_attachment',
+                'ordering': ['-created_at'],
             },
         ),
         migrations.AlterUniqueTogether(
-            name="contact",
-            unique_together={("email", "mailbox")},
+            name='contact',
+            unique_together={('email', 'mailbox')},
         ),
         migrations.CreateModel(
-            name="MailboxAccess",
+            name='MailboxAccess',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "role",
+                    'role',
                     models.SmallIntegerField(
                         choices=[
-                            (1, "viewer"),
-                            (2, "editor"),
-                            (3, "sender"),
-                            (4, "admin"),
+                            (1, 'viewer'),
+                            (2, 'editor'),
+                            (3, 'sender'),
+                            (4, 'admin'),
                         ],
                         default=1,
-                        verbose_name="role",
+                        verbose_name='role',
                     ),
                 ),
                 (
-                    "mailbox",
+                    'mailbox',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="accesses",
-                        to="core.mailbox",
+                        related_name='accesses',
+                        to='core.mailbox',
                     ),
                 ),
                 (
-                    "user",
+                    'user',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="mailbox_accesses",
+                        related_name='mailbox_accesses',
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
             options={
-                "verbose_name": "mailbox access",
-                "verbose_name_plural": "mailbox accesses",
-                "db_table": "messages_mailboxaccess",
-                "unique_together": {("mailbox", "user")},
+                'verbose_name': 'mailbox access',
+                'verbose_name_plural': 'mailbox accesses',
+                'db_table': 'messages_mailboxaccess',
+                'unique_together': {('mailbox', 'user')},
             },
         ),
         migrations.AlterUniqueTogether(
-            name="mailbox",
-            unique_together={("local_part", "domain")},
+            name='mailbox',
+            unique_together={('local_part', 'domain')},
         ),
         migrations.CreateModel(
-            name="MailDomainAccess",
+            name='MailDomainAccess',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "role",
+                    'role',
                     models.SmallIntegerField(
-                        choices=[(1, "admin")], default=1, verbose_name="role"
+                        choices=[(1, 'admin')], default=1, verbose_name='role'
                     ),
                 ),
                 (
-                    "maildomain",
+                    'maildomain',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="accesses",
-                        to="core.maildomain",
+                        related_name='accesses',
+                        to='core.maildomain',
                     ),
                 ),
                 (
-                    "user",
+                    'user',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="maildomain_accesses",
+                        related_name='maildomain_accesses',
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
             options={
-                "verbose_name": "mail domain access",
-                "verbose_name_plural": "mail domain accesses",
-                "db_table": "messages_maildomainaccess",
-                "unique_together": {("maildomain", "user")},
+                'verbose_name': 'mail domain access',
+                'verbose_name_plural': 'mail domain accesses',
+                'db_table': 'messages_maildomainaccess',
+                'unique_together': {('maildomain', 'user')},
             },
         ),
         migrations.CreateModel(
-            name="MessageRecipient",
+            name='MessageRecipient',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "type",
+                    'type',
                     models.SmallIntegerField(
-                        choices=[(1, "to"), (2, "cc"), (3, "bcc")],
+                        choices=[(1, 'to'), (2, 'cc'), (3, 'bcc')],
                         default=1,
-                        verbose_name="type",
+                        verbose_name='type',
                     ),
                 ),
                 (
-                    "delivered_at",
+                    'delivered_at',
                     models.DateTimeField(
-                        blank=True, null=True, verbose_name="delivered at"
+                        blank=True, null=True, verbose_name='delivered at'
                     ),
                 ),
                 (
-                    "delivery_status",
+                    'delivery_status',
                     models.SmallIntegerField(
                         blank=True,
                         choices=[
-                            (1, "internal"),
-                            (2, "sent"),
-                            (3, "failed"),
-                            (4, "retry"),
+                            (1, 'internal'),
+                            (2, 'sent'),
+                            (3, 'failed'),
+                            (4, 'retry'),
                         ],
                         null=True,
-                        verbose_name="delivery status",
+                        verbose_name='delivery status',
                     ),
                 ),
                 (
-                    "delivery_message",
+                    'delivery_message',
                     models.TextField(
-                        blank=True, null=True, verbose_name="delivery message"
+                        blank=True, null=True, verbose_name='delivery message'
                     ),
                 ),
                 (
-                    "retry_count",
-                    models.IntegerField(default=0, verbose_name="retry count"),
+                    'retry_count',
+                    models.IntegerField(default=0, verbose_name='retry count'),
                 ),
                 (
-                    "retry_at",
+                    'retry_at',
                     models.DateTimeField(
-                        blank=True, null=True, verbose_name="retry at"
+                        blank=True, null=True, verbose_name='retry at'
                     ),
                 ),
                 (
-                    "contact",
+                    'contact',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="messages",
-                        to="core.contact",
+                        related_name='messages',
+                        to='core.contact',
                     ),
                 ),
                 (
-                    "message",
+                    'message',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="recipients",
-                        to="core.message",
+                        related_name='recipients',
+                        to='core.message',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "message recipient",
-                "verbose_name_plural": "message recipients",
-                "db_table": "messages_messagerecipient",
-                "unique_together": {("message", "contact", "type")},
+                'verbose_name': 'message recipient',
+                'verbose_name_plural': 'message recipients',
+                'db_table': 'messages_messagerecipient',
+                'unique_together': {('message', 'contact', 'type')},
             },
         ),
         migrations.CreateModel(
-            name="Label",
+            name='Label',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "name",
+                    'name',
                     models.CharField(
-                        help_text="Name of the label/folder (can use slashes for hierarchy, e.g. 'Work/Projects')",
+                        help_text='Name of the label/folder (can use slashes for hierarchy, e.g. "Work/Projects")',
                         max_length=255,
-                        verbose_name="name",
+                        verbose_name='name',
                     ),
                 ),
                 (
-                    "slug",
+                    'slug',
                     models.SlugField(
-                        help_text="URL-friendly version of the name",
+                        help_text='URL-friendly version of the name',
                         max_length=255,
-                        verbose_name="slug",
+                        verbose_name='slug',
                     ),
                 ),
                 (
-                    "color",
+                    'color',
                     models.CharField(
-                        default="#E3E3FD",
-                        help_text="Color of the label in hex format (e.g. #FF0000)",
+                        default='#E3E3FD',
+                        help_text='Color of the label in hex format (e.g. #FF0000)',
                         max_length=7,
-                        verbose_name="color",
+                        verbose_name='color',
                     ),
                 ),
                 (
-                    "mailbox",
+                    'mailbox',
                     models.ForeignKey(
-                        help_text="Mailbox that owns this label",
+                        help_text='Mailbox that owns this label',
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="labels",
-                        to="core.mailbox",
+                        related_name='labels',
+                        to='core.mailbox',
                     ),
                 ),
                 (
-                    "threads",
+                    'threads',
                     models.ManyToManyField(
                         blank=True,
-                        help_text="Threads that have this label",
-                        related_name="labels",
-                        to="core.thread",
+                        help_text='Threads that have this label',
+                        related_name='labels',
+                        to='core.thread',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "label",
-                "verbose_name_plural": "labels",
-                "db_table": "messages_label",
-                "ordering": ["slug"],
-                "unique_together": {("slug", "mailbox")},
+                'verbose_name': 'label',
+                'verbose_name_plural': 'labels',
+                'db_table': 'messages_label',
+                'ordering': ['slug'],
+                'unique_together': {('slug', 'mailbox')},
             },
         ),
         migrations.CreateModel(
-            name="ThreadAccess",
+            name='ThreadAccess',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
-                        help_text="primary key for the record as UUID",
+                        help_text='primary key for the record as UUID',
                         primary_key=True,
                         serialize=False,
-                        verbose_name="id",
+                        verbose_name='id',
                     ),
                 ),
                 (
-                    "created_at",
+                    'created_at',
                     models.DateTimeField(
                         auto_now_add=True,
-                        help_text="date and time at which a record was created",
-                        verbose_name="created on",
+                        help_text='date and time at which a record was created',
+                        verbose_name='created on',
                     ),
                 ),
                 (
-                    "updated_at",
+                    'updated_at',
                     models.DateTimeField(
                         auto_now=True,
-                        help_text="date and time at which a record was last updated",
-                        verbose_name="updated on",
+                        help_text='date and time at which a record was last updated',
+                        verbose_name='updated on',
                     ),
                 ),
                 (
-                    "role",
+                    'role',
                     models.SmallIntegerField(
-                        choices=[(1, "viewer"), (2, "editor")],
+                        choices=[(1, 'viewer'), (2, 'editor')],
                         default=1,
-                        verbose_name="role",
+                        verbose_name='role',
                     ),
                 ),
                 (
-                    "mailbox",
+                    'mailbox',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="thread_accesses",
-                        to="core.mailbox",
+                        related_name='thread_accesses',
+                        to='core.mailbox',
                     ),
                 ),
                 (
-                    "thread",
+                    'thread',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="accesses",
-                        to="core.thread",
+                        related_name='accesses',
+                        to='core.thread',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "thread access",
-                "verbose_name_plural": "thread accesses",
-                "db_table": "messages_threadaccess",
-                "unique_together": {("thread", "mailbox")},
+                'verbose_name': 'thread access',
+                'verbose_name_plural': 'thread accesses',
+                'db_table': 'messages_threadaccess',
+                'unique_together': {('thread', 'mailbox')},
             },
         ),
     ]

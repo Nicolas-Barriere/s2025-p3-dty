@@ -17,5 +17,5 @@ export interface TreeLabel {
   readonly display_name: string;
   readonly children: readonly TreeLabel[];
   readonly description: string;
-  readonly is_enabled: boolean;
+  readonly is_auto: boolean;
 }

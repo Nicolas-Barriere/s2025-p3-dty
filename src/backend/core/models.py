@@ -757,8 +757,8 @@ class Label(BaseModel):
         default="",
         help_text=_("Description of the label, used by AI to understand its purpose"),
     )
-    is_enabled = models.BooleanField(
-        _("auto labellisation"),
+    is_auto = models.BooleanField(
+        _("auto labeling"),
         default=True,
         help_text=_("Whether this label should be automatically applied by AI"),
     )

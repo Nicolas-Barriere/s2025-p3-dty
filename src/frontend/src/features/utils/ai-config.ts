@@ -11,6 +11,11 @@ export const isAISummaryEnabled = (config?: ConfigRetrieve200): boolean => {
     return areAIFeaturesEnabled(config) && config?.AI_FEATURE_SUMMARY_ENABLED === true;
 }
 
+export const isAutoLabelsEnabled = (config?: ConfigRetrieve200): boolean => {
+    return areAIFeaturesEnabled(config) && config?.AI_FEATURE_AUTOLABELS_ENABLED === true;
+}
+
+
 // Hook to retrieve AI feature flags from config
 export function useAIFeaturesConfig() {
     const { data: configData } = useConfigRetrieve();
@@ -18,5 +23,6 @@ export function useAIFeaturesConfig() {
     return {
         areAIFeaturesEnabled : areAIFeaturesEnabled(config),
         isAISummaryEnabled: isAISummaryEnabled(config),
+        isAutoLabelsEnabled: isAutoLabelsEnabled(config),
     };
 }

@@ -10,6 +10,7 @@ const DEFAULT_CONFIG: ConfigRetrieve200 = {
     LANGUAGE_CODE: "",
     AI_ENABLED: false,
     AI_FEATURE_SUMMARY_ENABLED: false,
+    AI_FEATURE_AUTOLABELS_ENABLED: false,
 }
 
 const ConfigContext = createContext<ConfigRetrieve200>(DEFAULT_CONFIG)

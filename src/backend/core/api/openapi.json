@@ -181,6 +181,10 @@
                                         "AI_FEATURE_SUMMARY_ENABLED": {
                                             "type": "boolean",
                                             "readOnly": true
+                                        },
+                                        "AI_FEATURE_AUTOLABELS_ENABLED": {
+                                            "type": "boolean",
+                                            "readOnly": true
                                         }
                                     },
                                     "required": [
@@ -191,7 +195,8 @@
                                         "LANGUAGES",
                                         "LANGUAGE_CODE",
                                         "AI_ENABLED",
-                                        "AI_FEATURE_SUMMARY_ENABLED"
+                                        "AI_FEATURE_SUMMARY_ENABLED",
+                                        "AI_FEATURE_AUTOLABELS_ENABLED"
                                     ]
                                 }
                             }
@@ -4121,9 +4126,9 @@
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
                     },
-                    "is_enabled": {
+                    "is_auto": {
                         "type": "boolean",
-                        "title": "Auto labellisation",
+                        "title": "Auto labeling",
                         "description": "Whether this label should be automatically applied by AI"
                     }
                 },
@@ -4168,9 +4173,9 @@
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
                     },
-                    "is_enabled": {
+                    "is_auto": {
                         "type": "boolean",
-                        "title": "Auto labellisation",
+                        "title": "Auto labeling",
                         "description": "Whether this label should be automatically applied by AI"
                     }
                 },
@@ -4986,9 +4991,9 @@
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
                     },
-                    "is_enabled": {
+                    "is_auto": {
                         "type": "boolean",
-                        "title": "Auto labellisation",
+                        "title": "Auto labeling",
                         "description": "Whether this label should be automatically applied by AI"
                     }
                 }
@@ -5374,9 +5379,9 @@
                         "description": "Description of the label, used by AI to understand its purpose",
                         "maxLength": 255
                     },
-                    "is_enabled": {
+                    "is_auto": {
                         "type": "boolean",
-                        "title": "Auto labellisation",
+                        "title": "Auto labeling",
                         "description": "Whether this label should be automatically applied by AI"
                     }
                 },
@@ -5423,7 +5428,7 @@
                         "type": "string",
                         "readOnly": true
                     },
-                    "is_enabled": {
+                    "is_auto": {
                         "type": "boolean",
                         "readOnly": true
                     }
@@ -5434,7 +5439,7 @@
                     "description",
                     "display_name",
                     "id",
-                    "is_enabled",
+                    "is_auto",
                     "name",
                     "slug"
                 ]

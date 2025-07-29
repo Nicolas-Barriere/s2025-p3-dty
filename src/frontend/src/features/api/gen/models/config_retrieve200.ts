@@ -18,4 +18,5 @@ export type ConfigRetrieve200 = {
   readonly LANGUAGE_CODE: string;
   readonly AI_ENABLED: boolean;
   readonly AI_FEATURE_SUMMARY_ENABLED: boolean;
+  readonly AI_FEATURE_AUTOLABELS_ENABLED: boolean;
 };

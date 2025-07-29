@@ -34,5 +34,5 @@ export interface ThreadLabel {
    */
   description?: string;
   /** Whether this label should be automatically applied by AI */
-  is_enabled?: boolean;
+  is_auto?: boolean;
 }

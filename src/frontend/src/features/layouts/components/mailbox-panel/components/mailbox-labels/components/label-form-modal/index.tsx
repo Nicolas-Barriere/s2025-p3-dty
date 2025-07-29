@@ -12,6 +12,8 @@ import { useEffect, useMemo } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
+import { useAIFeaturesConfig } from "@/features/utils/ai-config";
+
 
 type LabelModalProps = {
     isOpen: boolean;
@@ -24,7 +26,7 @@ const formSchema = z.object({
     color: z.string().regex(/^#([0-9a-fA-F]{6})$/),
     parent_label: z.string().optional(),
     description: z.string().optional(),
-    is_enabled: z.boolean().optional(),
+    is_auto: z.boolean().optional(),
 });
 
 type FormFields = z.infer<typeof formSchema>;
@@ -34,12 +36,14 @@ type FormFields = z.infer<typeof formSchema>;
  */
 export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
     const { t } = useTranslation();
+    const { isAutoLabelsEnabled } = useAIFeaturesConfig();
+    
     const defaultValues = useMemo(() => ({
       name: label?.display_name ?? '',
       color: label?.color ?? '#E3E3FD',
       parent_label: label?.name.split('/').slice(0, -1).join('/') ?? undefined,
       description: label?.description ?? '',
-      is_enabled: label?.is_enabled ?? true,
+      is_auto: label?.is_auto ?? false,
     }), [label]);
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -49,6 +53,8 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
       () => ColorHelper.getContrastColor(form.watch('color')),
       [form.watch('color')]
   );
+  
+
 
     const createMutation = useLabelsCreate();
     const updateMutation = useLabelsUpdate();
@@ -96,7 +102,7 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
           color: data.color,
           mailbox: selectedMailbox!.id,
           description: data.description,
-          is_enabled: data.is_enabled,
+          is_auto: data.is_auto,
         }
       }, {
         onSuccess: (data) => {
@@ -171,13 +177,15 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
                  text={form.formState.errors.description?.message && t(form.formState.errors.description.message)}
                />
              </div>
-             <div className="form-field-row">
+             {isAutoLabelsEnabled && (
+               <div className="form-field-row">
                <RhfCheckbox
-                 name="is_enabled"
-                 label={t('Auto-labellisation')}
-                 text={form.formState.errors.is_enabled?.message && t(form.formState.errors.is_enabled.message)}
+                 name="is_auto"
+                 label={t('Auto-labeling')}
+                 text={form.formState.errors.is_auto?.message && t(form.formState.errors.is_auto.message)}
                />
              </div>
+             )}
             <footer className="form-field-row">
               <Button type="button" color="secondary" size="medium" onClick={onClose}>
                 {t('actions.cancel')}

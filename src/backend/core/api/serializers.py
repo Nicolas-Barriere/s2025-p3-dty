@@ -294,7 +294,7 @@ class ThreadLabelSerializer(serializers.ModelSerializer):
             "color",
             "display_name",
             "description",
-            "is_enabled",
+            "is_auto",
         ]
         read_only_fields = ["id", "slug", "display_name"]
 
@@ -313,7 +313,7 @@ class TreeLabelSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(read_only=True)
     children = serializers.SerializerMethodField(read_only=True)
     description = serializers.CharField(read_only=True)
-    is_enabled = serializers.BooleanField(read_only=True)
+    is_auto = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = models.Label
@@ -325,7 +325,7 @@ class TreeLabelSerializer(serializers.ModelSerializer):
             "display_name",
             "children",
             "description",
-            "is_enabled",
+            "is_auto",
         ]
         read_only_fields = fields
 
@@ -352,7 +352,7 @@ class LabelSerializer(serializers.ModelSerializer):
             "mailbox",
             "threads",
             "description",
-            "is_enabled",
+            "is_auto",
         ]
         read_only_fields = ["id", "slug"]
 
