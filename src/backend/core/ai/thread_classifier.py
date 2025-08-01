@@ -36,7 +36,7 @@ def get_most_relevant_labels(thread: Thread, labels: list) -> list[str]:
 
     # Get the prompt for the active language
     prompt_template = prompts.get(active_language)
-    prompt_query = prompt_template["classification_query"]
+    prompt_query = prompt_template["autolabels_query"]
     prompt = prompt_query.format(
         messages=messages_as_text,
         labels=labels,
@@ -49,4 +49,8 @@ def get_most_relevant_labels(thread: Thread, labels: list) -> list[str]:
 
     best_labels = '["' + best_labels.split('["')[1].split('"]')[0] + '"]'
 
-    return json.loads(best_labels)
+    try:
+        json = json.loads(best_labels)
+    except json.decoder.JSONDecodeError:
+        json = []
+    return json

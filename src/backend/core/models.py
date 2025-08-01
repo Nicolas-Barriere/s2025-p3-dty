@@ -759,7 +759,7 @@ class Label(BaseModel):
     )
     is_auto = models.BooleanField(
         _("auto labeling"),
-        default=True,
+        default=False,
         help_text=_("Whether this label should be automatically applied by AI"),
     )
 

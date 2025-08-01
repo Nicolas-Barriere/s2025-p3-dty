@@ -3,20 +3,9 @@ from core.ai.thread_summarizer import get_messages_from_thread
 from core.models import Label, Mailbox, Thread, User
 
 
-def list_labels_of_user(user, mailbox_id):
-    """Get all labels for a user in a specific mailbox."""
+def list_mailbox_labels(mailbox_id):
+    """Get all mailbox labels."""
     return Label.objects.filter(mailbox_id=mailbox_id).values()
-
-
-def create_label(mailbox_id, user, label_name: str, color: str):
-    """Create a new label."""
-    mailbox = Mailbox.objects.get(id=mailbox_id)
-    label = Label.objects.create(
-        name=label_name,
-        mailbox=mailbox,
-        color=color,
-    )
-    return label
 
 
 def add_thread_to_label(label_id, thread_id):

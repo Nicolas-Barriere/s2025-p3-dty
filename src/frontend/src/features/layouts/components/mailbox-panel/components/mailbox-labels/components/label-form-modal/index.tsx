@@ -170,22 +170,24 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
                 fullWidth
               />
             </div>
-            <div className="form-field-row">
-               <RhfInput
-                 name="description"
-                 label={t('Description')}
-                 text={form.formState.errors.description?.message && t(form.formState.errors.description.message)}
-               />
-             </div>
-             {isAutoLabelsEnabled && (
-               <div className="form-field-row">
-               <RhfCheckbox
-                 name="is_auto"
-                 label={t('Auto-labeling')}
-                 text={form.formState.errors.is_auto?.message && t(form.formState.errors.is_auto.message)}
-               />
-             </div>
-             )}
+            {isAutoLabelsEnabled && (
+              <>
+                <div className="form-field-row">
+                  <RhfInput
+                    name="description"
+                    label={t('labels.form.fields.description')}
+                    text={form.formState.errors.description?.message && t(form.formState.errors.description.message)}
+                  />
+                </div>
+                <div className="form-field-row">
+                  <RhfCheckbox
+                    name="is_auto"
+                    label={t('labels.form.fields.auto_labeling')}
+                    text={form.formState.errors.is_auto?.message && t(form.formState.errors.is_auto.message)}
+                  />
+                </div>
+              </>
+            )}
             <footer className="form-field-row">
               <Button type="button" color="secondary" size="medium" onClick={onClose}>
                 {t('actions.cancel')}
