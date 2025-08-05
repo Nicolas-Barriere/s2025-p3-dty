@@ -269,7 +269,7 @@
             "name": "Label name",
             "color": "Label color",
             "parent_label": "Select a parent label",
-            "description": "Description used by AI",
+            "description": "Description",
             "auto_labeling": "Auto-labeling"
           },
           "submit_create": "Create",
@@ -696,7 +696,7 @@
             "name": "Nom du libellé",
             "color": "Couleur du libellé",
             "parent_label": "Sélectionnez un libellé parent",
-            "description": "Description utilisée par l'IA",
+            "description": "Description",
             "auto_labeling": "Libellisation automatique"
           },
           "submit_create": "Créer",

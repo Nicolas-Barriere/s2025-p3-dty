@@ -176,7 +176,7 @@ export const LabelModal = ({ isOpen, onClose, label }: LabelModalProps) => {
                   <RhfInput
                     name="description"
                     label={t('labels.form.fields.description')}
-                    text={form.formState.errors.description?.message && t(form.formState.errors.description.message)}
+                    text={"Description du label utilisée par l'IA"}
                   />
                 </div>
                 <div className="form-field-row">
